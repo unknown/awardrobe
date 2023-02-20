@@ -1,0 +1,16 @@
+# DEPENDENCIES
+node_modules/
+/.pnp
+.pnp.js
+yarn.lock
+
+# BUILD
+dist/
+
+# ENV FILES
+.env
+
+# MAC
+._*
+.DS_Store
+Thumbs.db
