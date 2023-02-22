@@ -1,4 +1,5 @@
 import axios from "axios";
+import { supabase } from "../lib/supabase";
 import { dollarsToCents } from "../utils/currency";
 
 const getPriceEndpoint = (productId: string) => {
@@ -6,24 +7,18 @@ const getPriceEndpoint = (productId: string) => {
 };
 
 type ItemData = {
-  priceInCents: number;
-  inStock: boolean;
-  stock?: number;
+  store_id: number;
+  style: string;
+  size: string;
+  price_in_cents: number;
+  in_stock: boolean;
+  stock: number;
 };
 
-type ItemDataMap = Map<string, Map<string, ItemData>>;
+const getStoreId = async () => {
+  const { data } = await supabase.from("stores").select().eq("name", "Uniqlo");
 
-const addToDataMap = (
-  map: ItemDataMap,
-  style: string,
-  size: string,
-  itemData: ItemData
-) => {
-  if (!map.get(style)) {
-    map.set(style, new Map());
-  }
-
-  map.get(style)!.set(size, itemData);
+  return data![0].id;
 };
 
 export const getItemData = async (url: string) => {
@@ -37,7 +32,8 @@ export const getItemData = async (url: string) => {
     result: { stocks, prices, l2s },
   } = (await axios.get(priceEndpoint)).data;
 
-  const itemMap: ItemDataMap = new Map();
+  const storeId = await getStoreId();
+  const itemData: ItemData[] = [];
 
   Object.keys(stocks).map((key, index) => {
     const style: string = l2s[index].color.displayCode.toString();
@@ -45,12 +41,15 @@ export const getItemData = async (url: string) => {
     const stock: number = parseInt(stocks[key].quantity);
     const price: string = prices[key].base.value.toString();
 
-    addToDataMap(itemMap, style, size, {
-      priceInCents: dollarsToCents(price),
-      inStock: stock > 0,
+    itemData.push({
+      store_id: storeId,
+      style,
+      size,
+      price_in_cents: dollarsToCents(price),
+      in_stock: stock > 0,
       stock,
     });
   });
 
-  return itemMap;
+  return itemData;
 };

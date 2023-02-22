@@ -1,5 +1,9 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import express, { Application, Request, Response } from "express";
 import { getItemData } from "./services/uniqlo";
+import { supabase } from "./lib/supabase";
 
 const app: Application = express();
 const PORT: number = 3001;
@@ -9,19 +13,18 @@ app.get("/", (req: Request, res: Response): void => {
 });
 
 app.get("/uniqlo", async (req: Request, res: Response) => {
-  console.log("uniqlo");
   const itemData = await getItemData(
     "https://www.uniqlo.com/us/en/products/E457967-000/00?colorDisplayCode=56&sizeDisplayCode=028"
   );
 
-  const dataObject: any = {};
-  itemData.forEach((item, key) => {
-    dataObject[key] = Object.fromEntries(item);
-  });
+  const { error } = await supabase.from("prices").insert(itemData);
+  if (error) {
+    console.error(error);
+  }
 
-  res.json(dataObject);
+  res.json(itemData);
 });
 
-app.listen(PORT, (): void => {
+app.listen(PORT, () => {
   console.log(`Running on http://localhost:${PORT}`);
 });
