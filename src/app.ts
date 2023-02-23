@@ -15,10 +15,8 @@ app.get("/", (req: Request, res: Response): void => {
   res.send("Hello world!");
 });
 
-app.get("/uniqlo", async (req: Request, res: Response) => {
+app.get("/uniqlo-us", async (req: Request, res: Response) => {
   const { productUrl } = req.body;
-
-  console.log(productUrl);
 
   // TODO: more rigorous request body validation
   if (!productUrl) {

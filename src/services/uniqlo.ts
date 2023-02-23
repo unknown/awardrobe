@@ -7,7 +7,7 @@ const getPriceEndpoint = (productId: string) => {
 };
 
 type ItemData = {
-  store_id: number;
+  store_id: string;
   style: string;
   size: string;
   price_in_cents: number;
@@ -15,13 +15,13 @@ type ItemData = {
   stock: number;
 };
 
-let _storeId: number;
+let _storeId: string;
 const getStoreId = async () => {
   if (!_storeId) {
     const { data } = await supabase
       .from("stores")
       .select()
-      .eq("name", "Uniqlo");
+      .eq("name", "Uniqlo US");
     _storeId = data![0].id;
   }
   return _storeId;
