@@ -8,6 +8,7 @@ const getPriceEndpoint = (productId: string) => {
 
 type ItemData = {
   store_id: string;
+  product_id: string;
   style: string;
   size: string;
   price_in_cents: number;
@@ -48,6 +49,7 @@ export const getItemData = async (url: string) => {
 
     itemData.push({
       store_id: storeId,
+      product_id: productId,
       style,
       size,
       price_in_cents: dollarsToCents(price),
