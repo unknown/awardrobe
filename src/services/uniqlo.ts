@@ -15,18 +15,24 @@ type ItemData = {
   stock: number;
 };
 
+let _storeId: number;
 const getStoreId = async () => {
-  const { data } = await supabase.from("stores").select().eq("name", "Uniqlo");
-
-  return data![0].id;
+  if (!_storeId) {
+    const { data } = await supabase
+      .from("stores")
+      .select()
+      .eq("name", "Uniqlo");
+    _storeId = data![0].id;
+  }
+  return _storeId;
 };
 
+//E449618-000
 export const getItemData = async (url: string) => {
   // TODO: handle invalid urls
-  const productId = url.match(/([a-zA-Z0-9]{7})-([0-9]{3})/g)![0];
-  console.log(`Getting data for item ${productId}`);
-
+  const productId = url.match(/([a-zA-Z0-9]{7}-[0-9]{3})/g)![0];
   const priceEndpoint = getPriceEndpoint(productId);
+  console.log(`Getting data for item ${productId}`);
 
   const {
     result: { stocks, prices, l2s },
@@ -34,7 +40,6 @@ export const getItemData = async (url: string) => {
 
   const storeId = await getStoreId();
   const itemData: ItemData[] = [];
-
   Object.keys(stocks).map((key, index) => {
     const style: string = l2s[index].color.displayCode.toString();
     const size: string = l2s[index].size.displayCode.toString();

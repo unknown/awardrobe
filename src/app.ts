@@ -8,21 +8,31 @@ import { supabase } from "./lib/supabase";
 const app: Application = express();
 const PORT: number = 3001;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.get("/", (req: Request, res: Response): void => {
   res.send("Hello world!");
 });
 
 app.get("/uniqlo", async (req: Request, res: Response) => {
-  const itemData = await getItemData(
-    "https://www.uniqlo.com/us/en/products/E457967-000/00?colorDisplayCode=56&sizeDisplayCode=028"
-  );
+  const { productUrl } = req.body;
+
+  console.log(productUrl);
+
+  // TODO: more rigorous request body validation
+  if (!productUrl) {
+    res.status(400).json("Missing product URL");
+  }
+
+  const itemData = await getItemData(productUrl);
 
   const { error } = await supabase.from("prices").insert(itemData);
   if (error) {
     console.error(error);
   }
 
-  res.json(itemData);
+  res.status(200).json(itemData);
 });
 
 app.listen(PORT, () => {

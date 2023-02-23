@@ -1,4 +1,4 @@
 insert into 
-  stores (name)
+  stores (name, url)
 values
-  ('Uniqlo');
+  ('Uniqlo US', 'https://www.uniqlo.com/us/');
