@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { dollarsToCents } from "../utils/currency";
 
 const getPriceEndpoint = (productId: string) => {
-  return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&storeId=101539&httpFailure=true`;
+  return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
 };
 
 type ItemData = {
@@ -28,12 +28,8 @@ const getStoreId = async () => {
   return _storeId;
 };
 
-//E449618-000
-export const getItemData = async (url: string) => {
-  // TODO: handle invalid urls
-  const productId = url.match(/([a-zA-Z0-9]{7}-[0-9]{3})/g)![0];
+export const getItemData = async (productId: string) => {
   const priceEndpoint = getPriceEndpoint(productId);
-  console.log(`Getting data for item ${productId}`);
 
   const {
     result: { stocks, prices, l2s },
