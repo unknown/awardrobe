@@ -19,9 +19,7 @@ def get_product_data(product_id):
     payload = json.dumps({
         "productId": product_id
     })
-    response = requests.request("GET", endpoint,
-                                headers=headers, data=payload)
-    print(f'{response.status_code}: {len(response.json())} entries')
+    requests.request("GET", endpoint, headers=headers, data=payload)
 
 
 def main():
