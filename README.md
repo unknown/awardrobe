@@ -22,4 +22,5 @@ To get a local instance running, please follow these steps.
 1. Set up the client
    1. Navigate to `web/` e.g. `cd web/`
    1. Run `npm install`
+   1. Create a `.env` file if one does not already exist
    1. Run `npm run dev`
