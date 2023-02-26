@@ -2,8 +2,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application, Request, Response } from "express";
-import { getItemData } from "./services/uniqlo";
-import { supabase } from "./lib/supabase";
+import { getItemData } from "@/services/uniqlo";
+import { supabase } from "@/lib/supabase";
 
 const app: Application = express();
 const PORT: number = 3001;

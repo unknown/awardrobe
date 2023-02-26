@@ -2,57 +2,56 @@ import axios from "axios";
 import { supabase } from "../lib/supabase";
 import { dollarsToCents } from "../utils/currency";
 
-const getPriceEndpoint = (productId: string) => {
-  return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-};
-
 type ItemData = {
-  store_id: string;
-  product_id: string;
+  product_id: number;
   style: string;
   size: string;
   price_in_cents: number;
-  in_stock: boolean;
   stock: number;
+  in_stock: boolean;
 };
 
-let _storeId: string;
-const getStoreId = async () => {
-  if (!_storeId) {
-    const { data } = await supabase
-      .from("stores")
-      .select()
-      .eq("name", "Uniqlo US");
-    _storeId = data![0].id;
-  }
-  return _storeId;
-};
+function getPriceEndpoint(productId: string) {
+  return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
+}
 
-export const getItemData = async (productId: string) => {
+// TODO: cache product ids to save on DB reads and error handling
+async function getProductDbId(productId: string) {
+  const { data } = await supabase
+    .from("products")
+    .select()
+    .eq("product_id", productId);
+
+  return data![0].id;
+}
+
+export async function getItemData(productId: string) {
   const priceEndpoint = getPriceEndpoint(productId);
 
   const {
     result: { stocks, prices, l2s },
   } = (await axios.get(priceEndpoint)).data;
 
-  const storeId = await getStoreId();
   const itemData: ItemData[] = [];
-  Object.keys(stocks).map((key, index) => {
-    const style: string = l2s[index].color.displayCode.toString();
-    const size: string = l2s[index].size.displayCode.toString();
-    const stock: number = parseInt(stocks[key].quantity);
-    const price: string = prices[key].base.value.toString();
+  await Promise.all(
+    Object.keys(stocks).map(async (key, index) => {
+      const style: string = l2s[index].color.displayCode.toString();
+      const size: string = l2s[index].size.displayCode.toString();
+      const stock: number = parseInt(stocks[key].quantity);
+      const price: string = prices[key].base.value.toString();
 
-    itemData.push({
-      store_id: storeId,
-      product_id: productId,
-      style,
-      size,
-      price_in_cents: dollarsToCents(price),
-      in_stock: stock > 0,
-      stock,
-    });
-  });
+      const productDbId = await getProductDbId(productId);
+
+      itemData.push({
+        product_id: productDbId,
+        style,
+        size,
+        price_in_cents: dollarsToCents(price),
+        stock,
+        in_stock: stock > 0,
+      });
+    })
+  );
 
   return itemData;
-};
+}
