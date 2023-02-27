@@ -12,7 +12,7 @@ export default async function Home() {
           {data?.map((product) => {
             return (
               <div key={product.id}>
-                <Link href={`/${product.id}`}>{product.name}</Link>
+                <Link href={`/product/${product.id}`}>{product.name}</Link>
               </div>
             );
           })}
