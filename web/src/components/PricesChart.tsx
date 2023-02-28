@@ -81,7 +81,7 @@ export function PricesChart({ pricesData }: PricesChartProps) {
               data={s.data}
               name={s.name}
               key={s.name}
-              type="monotone"
+              type="stepAfter"
               dot={false}
               strokeWidth={1.5}
             />

@@ -73,17 +73,17 @@ export function PricesInfo({ productId }: PricesInfoProps) {
   }, [data]);
 
   return (
-    <>
-      <div
+    <div className="flex flex-col gap-4">
+      <p
         className="text-gray-600"
         title={
           data && data[0] ? new Date(data[0].created_at).toLocaleString() : ""
         }
       >
         {loading ? "Loading... " : lastUpdatedText}
-      </div>
+      </p>
       <PricesForm updatePricesData={updatePricesData} />
       <PricesChart pricesData={data} />
-    </>
+    </div>
   );
 }

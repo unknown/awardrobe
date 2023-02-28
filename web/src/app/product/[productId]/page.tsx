@@ -13,10 +13,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <main className="flex flex-col gap-4 p-4">
-      <div>
-        <h1 className="text-2xl font-bold">{productsData[0].name}</h1>
-      </div>
+    <main className="flex flex-col p-4">
+      <h1 className="text-2xl font-bold">{productsData[0].name}</h1>
       <PricesInfo productId={productsData[0].id} />
     </main>
   );
