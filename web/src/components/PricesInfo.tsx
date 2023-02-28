@@ -34,7 +34,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
       setLoading(false);
       handleUpdatedText(pricesData);
     },
-    []
+    [productId]
   );
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
     return () => {
       isCanceled = true;
     };
-  }, []);
+  }, [productId]);
 
   useEffect(() => {
     if (!data || !data[0]) return;

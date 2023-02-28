@@ -1,4 +1,6 @@
 import { PricesResponse } from "@/lib/supabaseClient";
+import { formatPrice } from "@/lib/utils";
+import React from "react";
 
 import {
   CartesianGrid,
@@ -60,7 +62,7 @@ export function PricesChart({ pricesData }: PricesChartProps) {
   const chartData = mapToChartData(map);
 
   return (
-    <div className="h-[calc(min(680px,75vh))] w-full">
+    <div className="h-[calc(min(680px,60vh))] w-full">
       <ResponsiveContainer height="100%" width="100%">
         <LineChart>
           <CartesianGrid strokeDasharray="3 3" />
@@ -72,19 +74,46 @@ export function PricesChart({ pricesData }: PricesChartProps) {
             domain={["auto", "auto"]}
             allowDuplicatedCategory={false}
           />
-          <YAxis dataKey="stock" type="number" domain={["auto", "auto"]} />
+          <YAxis
+            dataKey="stock"
+            yAxisId="stock"
+            type="number"
+            domain={["auto", "auto"]}
+          />
+          <YAxis
+            dataKey="price"
+            yAxisId="price"
+            orientation="right"
+            type="number"
+            tickFormatter={(cents) => {
+              return formatPrice(cents);
+            }}
+            domain={["auto", "auto"]}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           {chartData.map((s) => (
-            <Line
-              dataKey="stock"
-              data={s.data}
-              name={s.name}
-              key={s.name}
-              type="stepAfter"
-              dot={false}
-              strokeWidth={1.5}
-            />
+            <React.Fragment key={s.name}>
+              <Line
+                dataKey="stock"
+                yAxisId="stock"
+                data={s.data}
+                name={s.name}
+                type="stepAfter"
+                dot={false}
+                strokeWidth={1.5}
+              />
+              <Line
+                dataKey="price"
+                yAxisId="price"
+                data={s.data}
+                name={s.name}
+                type="stepAfter"
+                dot={false}
+                strokeWidth={1.5}
+                stroke="#60cc63"
+              />
+            </React.Fragment>
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -99,12 +128,22 @@ function CustomTooltip({
 }: TooltipProps<number, string>) {
   if (active && payload && payload.length) {
     const date = new Date(label);
+    const renderedStyles = new Set();
+
     return (
       <div className="border border-gray-200 bg-white p-3">
         <p className="label mb-1 font-medium">{date.toLocaleString()}</p>
         <div className="flex flex-col gap-1">
           {payload.map((point, index) => {
-            return <div key={index}>{`${point.name}: ${point.value}`}</div>;
+            if (renderedStyles.has(point.name)) {
+              return null;
+            }
+            renderedStyles.add(point.name);
+            return (
+              <div key={index}>{`${point.name}: ${
+                point.payload.stock
+              } - ${formatPrice(point.payload.price)}`}</div>
+            );
           })}
         </div>
       </div>
