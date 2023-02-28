@@ -15,6 +15,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <main className="flex flex-col p-4">
       <h1 className="text-2xl font-bold">{productsData[0].name}</h1>
+      <a
+        href={`https://www.uniqlo.com/us/en/products/${productsData[0].product_id}/`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-4 text-sky-600"
+      >
+        View item on Uniqlo
+      </a>
       <PricesInfo productId={productsData[0].id} />
     </main>
   );

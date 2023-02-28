@@ -1,9 +1,11 @@
 "use client";
-import { getPrices, PricesResponse } from "@/lib/supabaseClient";
+import { DateRange, getPrices, PricesResponse } from "@/lib/supabaseClient";
 import { formatTimeAgo } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { PricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
+
+const initialDateRange: DateRange = "Day";
 
 interface PricesInfoProps {
   productId: number;
@@ -25,9 +27,9 @@ export function PricesInfo({ productId }: PricesInfoProps) {
   }
 
   const updatePricesData = useCallback(
-    async (style?: string, size?: string) => {
+    async (dateRange: DateRange, style?: string, size?: string) => {
       setLoading(true);
-      const pricesData = await getPrices(productId, style, size);
+      const pricesData = await getPrices(productId, dateRange, style, size);
       setData(pricesData);
       setLoading(false);
       handleUpdatedText(pricesData);
@@ -38,7 +40,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
   useEffect(() => {
     let isCanceled = false;
     const updatePrices = async () => {
-      const pricesData = await getPrices(productId);
+      const pricesData = await getPrices(productId, initialDateRange);
       if (!isCanceled) {
         setData(pricesData);
         setLoading(false);
@@ -82,7 +84,15 @@ export function PricesInfo({ productId }: PricesInfoProps) {
       >
         {loading ? "Loading... " : lastUpdatedText}
       </p>
-      <PricesForm updatePricesData={updatePricesData} />
+      {data && data.length === 1000 ? (
+        <div className="rounded-md bg-gray-200 p-4">
+          Warning: only first 1000 data points are shown
+        </div>
+      ) : null}
+      <PricesForm
+        updatePricesData={updatePricesData}
+        initialDateRange={initialDateRange}
+      />
       <PricesChart pricesData={data} />
     </div>
   );

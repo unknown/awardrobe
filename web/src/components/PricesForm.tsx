@@ -1,17 +1,56 @@
-import { useRef } from "react";
+import { DateRange, DateRanges } from "@/lib/supabaseClient";
+import { cn } from "@/lib/utils";
+import { useRef, useState } from "react";
 
 interface PricesFormProps {
-  updatePricesData(style?: string, size?: string): void;
+  updatePricesData(range: DateRange, style?: string, size?: string): void;
+  initialDateRange: DateRange;
 }
 
-export function PricesForm({ updatePricesData }: PricesFormProps) {
+interface DateControlProps {
+  dateRange: DateRange;
+  onClick(newRange: DateRange): void;
+}
+
+export function DateControl({ dateRange, onClick }: DateControlProps) {
+  return (
+    <div className="inline-flex rounded-md">
+      {DateRanges.map((range, i) => {
+        const selected = dateRange === range;
+        return (
+          <button
+            key={range}
+            className={cn(
+              "border border-gray-200 bg-white py-2 px-4 transition-colors hover:bg-gray-100",
+              selected ? "bg-gray-200 hover:bg-gray-200" : null,
+              i === 0 ? "rounded-l-md" : null,
+              i < DateRanges.length - 1 ? "border-r-0" : null,
+              i === DateRanges.length - 1 ? "rounded-r-md" : null
+            )}
+            onClick={() => {
+              onClick(range);
+            }}
+          >
+            {range}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function PricesForm({
+  updatePricesData,
+  initialDateRange,
+}: PricesFormProps) {
   const styleRef = useRef<HTMLInputElement>(null);
   const sizeRef = useRef<HTMLInputElement>(null);
+  const [dateRange, setDateRange] = useState(initialDateRange);
 
   return (
-    <div className="flex flex-col gap-1">
-      <p className="font-bold">Filters:</p>
-      <form className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-4">
+    <div>
+      <p className="mb-1 font-bold">Filters:</p>
+      <form className="mb-4 flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
         <label>
           Style:{" "}
           <input
@@ -33,12 +72,27 @@ export function PricesForm({ updatePricesData }: PricesFormProps) {
           type="submit"
           onClick={(e) => {
             e.preventDefault();
-            updatePricesData(styleRef.current?.value, sizeRef.current?.value);
+            updatePricesData(
+              dateRange,
+              styleRef.current?.value,
+              sizeRef.current?.value
+            );
           }}
         >
           Apply Filters
         </button>
       </form>
+      <DateControl
+        dateRange={dateRange}
+        onClick={(newRange: DateRange) => {
+          setDateRange(newRange);
+          updatePricesData(
+            newRange,
+            styleRef.current?.value,
+            sizeRef.current?.value
+          );
+        }}
+      />
     </div>
   );
 }

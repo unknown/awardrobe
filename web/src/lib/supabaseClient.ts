@@ -20,17 +20,34 @@ export async function getProducts(productId: string) {
 
 export type ProductsResponse = Awaited<ReturnType<typeof getProducts>>;
 
+export const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+export type DateRange = (typeof DateRanges)[number];
+const dateOffsets = {
+  Day: 24 * 60 * 60 * 1000,
+  Week: 7 * 24 * 60 * 60 * 1000,
+  Month: 31 * 24 * 60 * 60 * 1000,
+};
+
 export async function getPrices(
   productId: number,
+  dateRange: DateRange,
   style?: string,
   size?: string
 ) {
+  let startDate: Date | null = new Date();
+  if (dateRange === "All Time") {
+    startDate = null;
+  } else {
+    startDate.setTime(startDate.getTime() - dateOffsets[dateRange]);
+  }
+
   let query = supabase
     .from("prices")
     .select()
     .eq("product_id", productId)
-    .order("created_at", { ascending: false })
-    .limit(6 * 24);
+    .order("created_at", { ascending: false });
+
+  if (startDate) query = query.gt("created_at", startDate.toISOString());
   if (size) query = query.eq("size", size);
   if (style) query = query.eq("style", style);
 
