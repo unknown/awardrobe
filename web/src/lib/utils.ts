@@ -17,16 +17,21 @@ const TIME_UNITS = [
 ] as const;
 
 export function formatTimeAgo(prev: Date, now: Date = new Date()) {
-  let elapsedInUnits = (now.getTime() - prev.getTime()) / 1000;
-  if (0 < elapsedInUnits && elapsedInUnits < 1) return "Just now";
-
-  for (const unit of TIME_UNITS) {
-    const roundedElapsedInUnits = Math.round(elapsedInUnits);
-    if (Math.abs(roundedElapsedInUnits) < unit.limit) {
-      return timeFormatter.format(roundedElapsedInUnits, unit.unit);
-    }
-    elapsedInUnits /= unit.limit;
+  function rounded(units: number) {
+    return units < 0 ? Math.ceil(units) : Math.floor(units);
   }
 
-  return timeFormatter.format(Math.round(elapsedInUnits), "years");
+  let elapsedInUnits = (now.getTime() - prev.getTime()) / 1000;
+  let roundedElapsed = rounded(elapsedInUnits);
+
+  if (0 < elapsedInUnits && elapsedInUnits < 1) return "Just now";
+  for (const unit of TIME_UNITS) {
+    if (Math.abs(roundedElapsed) < unit.limit) {
+      return timeFormatter.format(roundedElapsed, unit.unit);
+    }
+    elapsedInUnits /= unit.limit;
+    roundedElapsed = rounded(elapsedInUnits);
+  }
+
+  return timeFormatter.format(roundedElapsed, "years");
 }
