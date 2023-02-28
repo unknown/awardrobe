@@ -1,7 +1,7 @@
 "use client";
 import { getPrices, PricesResponse } from "@/lib/supabaseClient";
 import { formatTimeAgo } from "@/lib/utils";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
 
@@ -56,7 +56,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
 
     const createdTime = new Date(data[0].created_at);
     const timeDiff = new Date().getTime() - createdTime.getTime();
-    const timeUntilMinute = 60_000 - (timeDiff % 60_000);
+    const timeUntilWholeMinute = 60_000 - (timeDiff % 60_000);
 
     let intervalId: NodeJS.Timer;
     const timeoutId = setTimeout(() => {
@@ -64,7 +64,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
       intervalId = setInterval(() => {
         handleUpdatedText(data);
       }, 60_000);
-    }, timeUntilMinute);
+    }, timeUntilWholeMinute);
 
     return () => {
       clearTimeout(timeoutId);

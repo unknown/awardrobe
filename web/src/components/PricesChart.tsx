@@ -7,6 +7,7 @@ import {
   LineChart,
   ResponsiveContainer,
   Tooltip,
+  TooltipProps,
   XAxis,
   YAxis,
 } from "recharts";
@@ -69,9 +70,10 @@ export function PricesChart({ pricesData }: PricesChartProps) {
             tickFormatter={(time) => new Date(time).toLocaleString()}
             scale="time"
             domain={["auto", "auto"]}
+            allowDuplicatedCategory={false}
           />
           <YAxis dataKey="stock" type="number" domain={["auto", "auto"]} />
-          <Tooltip />
+          <Tooltip content={<CustomTooltip />} />
           <Legend />
           {chartData.map((s) => (
             <Line
@@ -88,4 +90,26 @@ export function PricesChart({ pricesData }: PricesChartProps) {
       </ResponsiveContainer>
     </div>
   );
+}
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const date = new Date(label);
+    return (
+      <div className="border border-gray-200 bg-white p-3">
+        <p className="label mb-1 font-medium">{date.toLocaleString()}</p>
+        <div className="flex flex-col gap-1">
+          {payload.map((point, index) => {
+            return <div key={index}>{`${point.name}: ${point.value}`}</div>;
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }

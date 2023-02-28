@@ -13,7 +13,7 @@ export function PricesForm({ updatePricesData }: PricesFormProps) {
       <label>
         Style:{" "}
         <input
-          className="rounded-md border border-gray-200 py-2 px-2"
+          className="rounded-md border border-gray-200 p-2"
           placeholder="08"
           ref={styleRef}
         />
@@ -21,7 +21,7 @@ export function PricesForm({ updatePricesData }: PricesFormProps) {
       <label>
         Size:{" "}
         <input
-          className="rounded-md border border-gray-200 py-2 px-2"
+          className="rounded-md border border-gray-200 p-2"
           placeholder="028"
           ref={sizeRef}
         />
