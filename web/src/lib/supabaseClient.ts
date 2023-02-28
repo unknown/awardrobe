@@ -30,7 +30,7 @@ export async function getPrices(
     .select()
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
-    .limit(6 * 12);
+    .limit(6 * 24);
   if (size) query = query.eq("size", size);
   if (style) query = query.eq("style", style);
 

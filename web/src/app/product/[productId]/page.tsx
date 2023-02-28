@@ -1,4 +1,4 @@
-import { PricesList } from "@/components/PricesList";
+import { PricesInfo } from "@/components/PricesInfo";
 import { getProducts } from "@/lib/supabaseClient";
 
 interface ProductPageProps {
@@ -17,7 +17,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div>
         <h1 className="text-2xl font-bold">{productsData[0].name}</h1>
       </div>
-      <PricesList productId={productsData[0].id} />
+      <PricesInfo productId={productsData[0].id} />
     </main>
   );
 }
