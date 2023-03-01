@@ -42,3 +42,10 @@ export function formatPrice(priceInCents: number) {
     currency: "USD",
   });
 }
+
+export function formatDate(date: Date) {
+  return date.toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}

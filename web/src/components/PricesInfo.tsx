@@ -1,6 +1,6 @@
 "use client";
 import { DateRange, getPrices, PricesResponse } from "@/lib/supabaseClient";
-import { formatTimeAgo } from "@/lib/utils";
+import { formatDate, formatTimeAgo } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { PricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
@@ -78,22 +78,25 @@ export function PricesInfo({ productId }: PricesInfoProps) {
     <div className="flex flex-col gap-4">
       <p
         className="text-gray-600"
-        title={
-          data && data[0] ? new Date(data[0].created_at).toLocaleString() : ""
-        }
+        title={data && data[0] ? formatDate(new Date(data[0].created_at)) : ""}
       >
         {loading ? "Loading... " : lastUpdatedText}
       </p>
-      {data && data.length === 1000 ? (
-        <div className="rounded-md bg-gray-200 p-4">
-          Warning: only first 1000 data points are shown
-        </div>
-      ) : null}
       <PricesForm
         updatePricesData={updatePricesData}
         initialDateRange={initialDateRange}
       />
-      <PricesChart pricesData={data} />
+      {!loading ? (
+        <>
+          {data && data.length === 1000 ? (
+            <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
+              There are over 1000 data points, but only the first 1000 data
+              points are graphed
+            </div>
+          ) : null}
+          <PricesChart pricesData={data} />
+        </>
+      ) : null}
     </div>
   );
 }

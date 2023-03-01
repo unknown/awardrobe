@@ -1,10 +1,9 @@
 import { PricesResponse } from "@/lib/supabaseClient";
-import { formatPrice } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 import React from "react";
 
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -28,28 +27,31 @@ function pricesToMap(pricesData: NonNullable<PricesResponse>) {
   const dataMap = new Map<string, ChartUnitData[]>();
   pricesData.forEach((e) => {
     const key = e.style + "-" + e.size;
-    if (!dataMap.get(key)) {
-      dataMap.set(key, []);
-    }
-    dataMap.get(key)!.push({
+    const newData = {
       date: new Date(e.created_at).getTime(),
       stock: e.stock ?? 0,
       price: e.price_in_cents,
-    });
+    };
+    if (!dataMap.get(key)) {
+      dataMap.set(key, []);
+    }
+    dataMap.get(key)!.push(newData);
   });
   return dataMap;
 }
 
 function mapToChartData(map: Map<string, ChartUnitData[]>) {
-  type ChartData = { name: string; data: ChartUnitData[] }[];
-  const data = Array.from(map.keys()).reduce<ChartData>((prev, curr) => {
-    const data = map.get(curr)!.sort().reverse();
-    prev.push({
-      name: curr,
-      data: data,
-    });
-    return prev;
-  }, []);
+  type ChartData = { name: string; data: ChartUnitData[] };
+  const data = Array.from(map.entries())
+    .sort()
+    .reduce<ChartData[]>((prev, curr) => {
+      const [name, data] = curr;
+      prev.push({
+        name,
+        data,
+      });
+      return prev;
+    }, []);
   return data;
 }
 
@@ -69,7 +71,7 @@ export function PricesChart({ pricesData }: PricesChartProps) {
           <XAxis
             dataKey="date"
             type="number"
-            tickFormatter={(time) => new Date(time).toLocaleString()}
+            tickFormatter={(time) => formatDate(new Date(time))}
             scale="time"
             domain={["auto", "auto"]}
             allowDuplicatedCategory={false}
@@ -91,7 +93,6 @@ export function PricesChart({ pricesData }: PricesChartProps) {
             domain={["auto", "auto"]}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
           {chartData.map((s) => (
             <React.Fragment key={s.name}>
               <Line
@@ -132,7 +133,7 @@ function CustomTooltip({
 
     return (
       <div className="border border-gray-200 bg-white p-3">
-        <p className="label mb-1 font-medium">{date.toLocaleString()}</p>
+        <p className="label mb-1 font-medium">{formatDate(date)}</p>
         <div className="flex flex-col gap-1">
           {payload.map((point, index) => {
             if (renderedStyles.has(point.name)) {
