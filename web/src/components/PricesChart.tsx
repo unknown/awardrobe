@@ -57,7 +57,7 @@ function mapToChartData(map: Map<string, ChartUnitData[]>) {
 
 export function PricesChart({ pricesData }: PricesChartProps) {
   if (!pricesData) {
-    return null;
+    return <div className="h-[calc(min(680px,60vh))] w-full" />;
   }
 
   const map = pricesToMap(pricesData);

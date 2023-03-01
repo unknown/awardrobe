@@ -86,17 +86,14 @@ export function PricesInfo({ productId }: PricesInfoProps) {
         updatePricesData={updatePricesData}
         initialDateRange={initialDateRange}
       />
-      {!loading ? (
-        <>
-          {data && data.length === 1000 ? (
-            <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
-              There are over 1000 data points, but only the first 1000 data
-              points are graphed
-            </div>
-          ) : null}
-          <PricesChart pricesData={data} />
-        </>
+
+      {data && data.length === 1000 ? (
+        <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
+          There are over 1000 data points, but only the first 1000 data points
+          are graphed.
+        </div>
       ) : null}
+      <PricesChart pricesData={loading ? null : data} />
     </div>
   );
 }
