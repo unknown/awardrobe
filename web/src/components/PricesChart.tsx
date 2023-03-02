@@ -48,7 +48,7 @@ function mapToChartData(map: Map<string, ChartUnitData[]>) {
       const [name, data] = curr;
       prev.push({
         name,
-        data,
+        data: data.reverse(),
       });
       return prev;
     }, []);

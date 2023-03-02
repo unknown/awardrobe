@@ -90,7 +90,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
       {data && data.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           There are over 1000 data points, but only the first 1000 data points
-          are graphed.
+          are graphed. Try applying some filters!
         </div>
       ) : null}
       <PricesChart pricesData={loading ? null : data} />
