@@ -13,7 +13,7 @@ function getPriceEndpoint(productId: string) {
   return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
 }
 
-export async function getItemData(productId: string) {
+export async function getProductData(productId: string) {
   const priceEndpoint = getPriceEndpoint(productId);
   const itemData: ItemData[] = [];
 

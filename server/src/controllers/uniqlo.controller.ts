@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { supabase } from "../lib/supabase";
-import { getItemData } from "../services/uniqlo";
+import { getProductData } from "../services/uniqlo";
 
 interface RequestBody {
   productUrl: string;
@@ -8,6 +8,7 @@ interface RequestBody {
 }
 
 // TODO: cache product ids to save on DB reads and error handling
+// TODO: only select for Uniqlo products
 async function getDbProductId(productId: string) {
   const { data, error } = await supabase
     .from("products")
@@ -29,7 +30,7 @@ function getProductId(productUrl: string, productId: string) {
   return productId ?? productIdFromUrl;
 }
 
-export async function getData(req: Request, res: Response) {
+export async function fetchAndStoreData(req: Request, res: Response) {
   const body: RequestBody = req.body;
 
   // TODO: more rigorous request body validation
@@ -40,24 +41,34 @@ export async function getData(req: Request, res: Response) {
   }
 
   const productId = getProductId(body.productUrl, body.productId);
-
-  console.log(`Getting data for item ${productId}`);
-  const itemData = await getItemData(productId);
-
   const dbProductId = await getDbProductId(productId);
-  if (dbProductId) {
-    console.log(`Saving data for item ${productId}`);
-    const dbItemData = itemData.map((item) => {
-      return {
-        product_id: dbProductId,
-        ...item,
-      };
+
+  // TODO: extract shape of result to a type
+  if (!dbProductId) {
+    res.status(400).json({
+      status: "ERROR",
+      error: "Product not found in products table",
     });
-    const { error } = await supabase.from("prices").insert(dbItemData);
-    if (error) {
-      console.error(error);
-    }
+    return;
   }
 
-  res.status(200).json(itemData);
+  const itemData = await getProductData(productId);
+  if (itemData.length === 0) {
+    console.warn(`Retrieved no data for ${productId}`);
+  }
+
+  const dbItemData = itemData.map((item) => {
+    return {
+      product_id: dbProductId,
+      ...item,
+    };
+  });
+  const { error } = await supabase.from("prices").insert(dbItemData);
+  if (error) {
+    console.error(error);
+  }
+
+  res.status(200).json({
+    status: "SUCCESS",
+  });
 }
