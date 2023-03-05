@@ -19,7 +19,7 @@ def get_product_data(product_id):
     payload = json.dumps({
         "productId": product_id
     })
-    requests.request("GET", endpoint, headers=headers, data=payload)
+    requests.request("POST", endpoint, headers=headers, data=payload)
 
 
 def main():
