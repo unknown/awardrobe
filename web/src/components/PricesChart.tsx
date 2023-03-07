@@ -1,6 +1,6 @@
 import { PricesResponse } from "@/lib/supabaseClient";
 import { formatDate, formatPrice } from "@/lib/utils";
-import React from "react";
+import { Fragment, memo } from "react";
 
 import {
   CartesianGrid,
@@ -23,43 +23,41 @@ type ChartUnitData = {
   price: number;
 };
 
-function pricesToMap(pricesData: NonNullable<PricesResponse>) {
+function pricesToMap(pricesData: PricesResponse) {
   const dataMap = new Map<string, ChartUnitData[]>();
-  pricesData.forEach((e) => {
+  pricesData?.forEach((e) => {
     const key = e.style + "-" + e.size;
     const newData = {
       date: new Date(e.created_at).getTime(),
       stock: e.stock ?? 0,
       price: e.price_in_cents,
     };
-    if (!dataMap.get(key)) {
-      dataMap.set(key, []);
+    let prices = dataMap.get(key);
+    if (!prices) {
+      prices = [];
+      dataMap.set(key, prices);
     }
-    dataMap.get(key)!.push(newData);
+    prices.push(newData);
   });
   return dataMap;
 }
 
 function mapToChartData(map: Map<string, ChartUnitData[]>) {
-  type ChartData = { name: string; data: ChartUnitData[] };
   const data = Array.from(map.entries())
     .sort()
-    .reduce<ChartData[]>((prev, curr) => {
-      const [name, data] = curr;
-      prev.push({
+    .flatMap((entry) => {
+      const [name, data] = entry;
+      return {
         name,
         data: data.reverse(),
-      });
-      return prev;
-    }, []);
+      };
+    });
   return data;
 }
 
-export function PricesChart({ pricesData }: PricesChartProps) {
-  if (!pricesData) {
-    return <div className="h-[calc(min(680px,60vh))] w-full" />;
-  }
+export const MemoizedPricesChart = memo(PricesChart);
 
+export function PricesChart({ pricesData }: PricesChartProps) {
   const map = pricesToMap(pricesData);
   const chartData = mapToChartData(map);
 
@@ -94,7 +92,7 @@ export function PricesChart({ pricesData }: PricesChartProps) {
           />
           <Tooltip content={<CustomTooltip />} />
           {chartData.map((s) => (
-            <React.Fragment key={s.name}>
+            <Fragment key={s.name}>
               <Line
                 dataKey="stock"
                 yAxisId="stock"
@@ -114,7 +112,7 @@ export function PricesChart({ pricesData }: PricesChartProps) {
                 strokeWidth={1.5}
                 stroke="#60cc63"
               />
-            </React.Fragment>
+            </Fragment>
           ))}
         </LineChart>
       </ResponsiveContainer>

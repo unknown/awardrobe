@@ -85,6 +85,8 @@ export function PricesForm({
       <DateControl
         dateRange={dateRange}
         onClick={(newRange: DateRange) => {
+          if (dateRange === newRange) return;
+
           setDateRange(newRange);
           updatePricesData(
             newRange,

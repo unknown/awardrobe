@@ -7,7 +7,7 @@ import {
 } from "@/lib/supabaseClient";
 import { formatDate, formatPrice, formatTimeAgo } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
-import { PricesChart } from "./PricesChart";
+import { MemoizedPricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
 
 const initialDateRange: DateRange = "Day";
@@ -33,6 +33,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
 
   const updatePricesData = useCallback(
     async (dateRange: DateRange, style?: string, size?: string) => {
+      console.log("clicked");
       setLoading(true);
       const pricesData = await getPrices(
         productData.id,
@@ -103,7 +104,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
         <p className="mt-2 text-2xl">
           {prices && prices.length > 0
             ? formatPrice(Math.min(...prices))
-            : null}
+            : "No price data"}
         </p>
         <p className="text-gray-600" title={updatedTitle}>
           {loading ? "Loading... " : lastUpdatedText}
@@ -120,7 +121,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
           are graphed. Try applying some filters!
         </div>
       ) : null}
-      <PricesChart pricesData={loading ? null : data} />
+      <MemoizedPricesChart pricesData={data} />
     </div>
   );
 }
