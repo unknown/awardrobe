@@ -1,6 +1,11 @@
 "use client";
-import { DateRange, getPrices, PricesResponse } from "@/lib/supabaseClient";
-import { formatDate, formatTimeAgo } from "@/lib/utils";
+import {
+  DateRange,
+  getPrices,
+  PricesResponse,
+  ProductResponse,
+} from "@/lib/supabaseClient";
+import { formatDate, formatPrice, formatTimeAgo } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { PricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
@@ -8,10 +13,10 @@ import { PricesForm } from "./PricesForm";
 const initialDateRange: DateRange = "Day";
 
 interface PricesInfoProps {
-  productId: number;
+  productData: NonNullable<ProductResponse>;
 }
 
-export function PricesInfo({ productId }: PricesInfoProps) {
+export function PricesInfo({ productData }: PricesInfoProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PricesResponse>(null);
   const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
@@ -29,18 +34,23 @@ export function PricesInfo({ productId }: PricesInfoProps) {
   const updatePricesData = useCallback(
     async (dateRange: DateRange, style?: string, size?: string) => {
       setLoading(true);
-      const pricesData = await getPrices(productId, dateRange, style, size);
+      const pricesData = await getPrices(
+        productData.id,
+        dateRange,
+        style,
+        size
+      );
       setData(pricesData);
       setLoading(false);
       handleUpdatedText(pricesData);
     },
-    [productId]
+    [productData]
   );
 
   useEffect(() => {
     let isCanceled = false;
     const updatePrices = async () => {
-      const pricesData = await getPrices(productId, initialDateRange);
+      const pricesData = await getPrices(productData.id, initialDateRange);
       if (!isCanceled) {
         setData(pricesData);
         setLoading(false);
@@ -51,7 +61,7 @@ export function PricesInfo({ productId }: PricesInfoProps) {
     return () => {
       isCanceled = true;
     };
-  }, [productId]);
+  }, [productData]);
 
   useEffect(() => {
     if (!data || !data[0]) return;
@@ -74,14 +84,31 @@ export function PricesInfo({ productId }: PricesInfoProps) {
     };
   }, [data]);
 
+  const updatedTitle =
+    data && data[0] ? formatDate(new Date(data[0].created_at)) : "";
+  const prices = data?.map((d) => d.price_in_cents);
+
   return (
     <div className="flex flex-col gap-4">
-      <p
-        className="text-gray-600"
-        title={data && data[0] ? formatDate(new Date(data[0].created_at)) : ""}
-      >
-        {loading ? "Loading... " : lastUpdatedText}
-      </p>
+      <div className="flex flex-col justify-between">
+        <h1 className="text-3xl font-bold">{productData.name}</h1>
+        <a
+          href={`https://www.uniqlo.com/us/en/products/${productData.product_id}/`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-600"
+        >
+          View item on Uniqlo
+        </a>
+        <p className="mt-2 text-2xl">
+          {prices && prices.length > 0
+            ? formatPrice(Math.min(...prices))
+            : null}
+        </p>
+        <p className="text-gray-600" title={updatedTitle}>
+          {loading ? "Loading... " : lastUpdatedText}
+        </p>
+      </div>
       <PricesForm
         updatePricesData={updatePricesData}
         initialDateRange={initialDateRange}

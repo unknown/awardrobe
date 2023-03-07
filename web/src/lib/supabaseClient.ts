@@ -6,11 +6,12 @@ export const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-export async function getProducts(productId: string) {
+export async function getProduct(productId: string) {
   const { data, error } = await supabase
     .from("products")
     .select()
-    .eq("id", productId);
+    .eq("id", productId)
+    .maybeSingle();
   if (error) {
     console.error("products:", error);
     return null;
@@ -18,7 +19,7 @@ export async function getProducts(productId: string) {
   return data;
 }
 
-export type ProductsResponse = Awaited<ReturnType<typeof getProducts>>;
+export type ProductResponse = Awaited<ReturnType<typeof getProduct>>;
 
 export const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
 export type DateRange = (typeof DateRanges)[number];

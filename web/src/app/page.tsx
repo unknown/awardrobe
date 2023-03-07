@@ -5,15 +5,15 @@ export default async function Home() {
   let { data } = await supabase.from("products").select();
 
   return (
-    <main className="flex flex-col gap-4 p-4">
+    <main className="mx-auto flex max-w-4xl flex-col gap-4 p-4">
       <div>
-        <h1 className="text-2xl font-bold">Price Monitor</h1>
-        <div>
+        <h1 className="mb-2 text-3xl font-bold">Price Monitor</h1>
+        <div className="flex flex-col gap-1">
           {data?.map((product) => {
             return (
-              <div key={product.id}>
-                <Link href={`/product/${product.id}`}>{product.name}</Link>
-              </div>
+              <Link key={product.id} href={`/product/${product.id}`}>
+                {product.name}
+              </Link>
             );
           })}
         </div>
