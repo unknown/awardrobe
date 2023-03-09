@@ -3,16 +3,34 @@ import { supabase } from "../lib/supabase";
 import { getProductData } from "../services/uniqlo";
 
 interface RequestBody {
-  productUrl: string;
-  productId: string;
+  productUrl?: string;
+  productId?: string;
+}
+
+let _storeId: number;
+async function getStoreId() {
+  if (!_storeId) {
+    const { data } = await supabase
+      .from("stores")
+      .select()
+      .eq("name", "Uniqlo US")
+      .single();
+    if (!data) {
+      console.error("Could not find Uniqlo US store");
+      return null;
+    }
+    _storeId = data.id;
+  }
+  return _storeId;
 }
 
 // TODO: cache product ids to save on DB reads and error handling
-// TODO: only select for Uniqlo products
 async function getDbProductId(productId: string) {
+  const storeId = await getStoreId();
   const { data, error } = await supabase
     .from("products")
     .select()
+    .eq("store_id", storeId)
     .eq("product_id", productId)
     .maybeSingle();
 
@@ -23,11 +41,10 @@ async function getDbProductId(productId: string) {
   return data?.id;
 }
 
-function getProductId(productUrl: string, productId: string) {
-  // TODO: handle invalid urls
+function getProductId(productUrl: string) {
   const productIdRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/g;
-  const productIdFromUrl = productUrl && productUrl.match(productIdRegex)![0];
-  return productId ?? productIdFromUrl;
+  const productIdFromUrl = productUrl.match(productIdRegex);
+  return productIdFromUrl ? productIdFromUrl[0] : null;
 }
 
 export async function fetchAndStoreData(req: Request, res: Response) {
@@ -40,7 +57,11 @@ export async function fetchAndStoreData(req: Request, res: Response) {
     res.status(400).json("Product URL or product ID required");
   }
 
-  const productId = getProductId(body.productUrl, body.productId);
+  const productId = body.productId ?? getProductId(body.productUrl!);
+  if (!productId) {
+    res.status(400).json("Could not extract a valid product id");
+    return;
+  }
   const dbProductId = await getDbProductId(productId);
 
   // TODO: extract shape of result to a type
