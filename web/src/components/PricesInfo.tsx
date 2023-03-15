@@ -6,7 +6,7 @@ import {
   PricesResponse,
   ProductResponse,
 } from "@/utils/supabase-queries";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MemoizedPricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
 
@@ -29,23 +29,25 @@ export function PricesInfo({ productData }: PricesInfoProps) {
   const [data, setData] = useState<PricesResponse>([]);
   const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
 
-  // TODO: use abortcontroller
   useEffect(() => {
-    let isCanceled = false;
+    const controller = new AbortController();
+
     const updatePrices = async () => {
-      const pricesData = await getPrices(
-        productData.id,
-        getStartDate(initialDateRange)
-      );
-      if (!isCanceled) {
+      const pricesData = await getPrices(productData.id, {
+        startDate: getStartDate(initialDateRange),
+        abortSignal: controller.signal,
+      });
+      if (!controller.signal.aborted) {
         setData(pricesData);
         setLoading(false);
         handleUpdatedText(pricesData);
       }
     };
+
     updatePrices();
+
     return () => {
-      isCanceled = true;
+      controller.abort();
     };
   }, [productData]);
 
@@ -80,22 +82,21 @@ export function PricesInfo({ productData }: PricesInfoProps) {
     setLastUpdatedText(newText);
   }
 
-  // TODO: remove usecallback (useless)
-  const updatePricesData = useCallback(
-    async (dateRange: DateRange, style?: string, size?: string) => {
-      setLoading(true);
-      const pricesData = await getPrices(
-        productData.id,
-        getStartDate(dateRange),
-        style,
-        size
-      );
-      setData(pricesData);
-      setLoading(false);
-      handleUpdatedText(pricesData);
-    },
-    [productData]
-  );
+  const updatePricesData = async (
+    dateRange: DateRange,
+    style?: string,
+    size?: string
+  ) => {
+    setLoading(true);
+    const pricesData = await getPrices(productData.id, {
+      startDate: getStartDate(dateRange),
+      style,
+      size,
+    });
+    setData(pricesData);
+    setLoading(false);
+    handleUpdatedText(pricesData);
+  };
 
   function getStartDate(dateRange: DateRange) {
     if (dateRange === "All Time") {

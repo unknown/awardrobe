@@ -1,11 +1,17 @@
 import { supabase } from "@/lib/supabase-client";
 
-export async function getProduct(productId: string) {
-  const { data, error } = await supabase
-    .from("products")
-    .select()
-    .eq("id", productId)
-    .maybeSingle();
+export async function getProduct(
+  productId: string,
+  options: {
+    abortSignal?: AbortSignal;
+  } = {}
+) {
+  const { abortSignal } = options;
+
+  let query = supabase.from("products").select().eq("id", productId);
+  if (abortSignal) query.abortSignal(abortSignal);
+
+  const { data, error } = await query.maybeSingle();
   if (error) {
     console.error("products:", error);
     return null;
@@ -17,10 +23,15 @@ export type ProductResponse = Awaited<ReturnType<typeof getProduct>>;
 
 export async function getPrices(
   productId: number,
-  startDate?: Date,
-  style?: string,
-  size?: string
+  options: {
+    startDate?: Date;
+    style?: string;
+    size?: string;
+    abortSignal?: AbortSignal;
+  } = {}
 ) {
+  const { startDate, style, size, abortSignal } = options;
+
   let query = supabase
     .from("prices")
     .select()
@@ -30,6 +41,7 @@ export async function getPrices(
   if (startDate) query = query.gt("created_at", startDate.toISOString());
   if (size) query = query.eq("size", size);
   if (style) query = query.eq("style", style);
+  if (abortSignal) query.abortSignal(abortSignal);
 
   const { data, error } = await query;
   if (error) {
