@@ -1,15 +1,23 @@
 "use client";
+
+import { formatDate, formatPrice, formatTimeAgo } from "@/utils/utils";
 import {
-  DateRange,
   getPrices,
   PricesResponse,
   ProductResponse,
-} from "@/lib/supabaseClient";
-import { formatDate, formatPrice, formatTimeAgo } from "@/lib/utils";
+} from "@/utils/supabase-queries";
 import { useCallback, useEffect, useState } from "react";
 import { MemoizedPricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
 
+export const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+export type DateRange = (typeof DateRanges)[number];
+const dateOffsets: Record<DateRange, number> = {
+  Day: 24 * 60 * 60 * 1000,
+  Week: 7 * 24 * 60 * 60 * 1000,
+  Month: 31 * 24 * 60 * 60 * 1000,
+  "All Time": -1,
+};
 const initialDateRange: DateRange = "Day";
 
 interface PricesInfoProps {
@@ -18,40 +26,17 @@ interface PricesInfoProps {
 
 export function PricesInfo({ productData }: PricesInfoProps) {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<PricesResponse>(null);
+  const [data, setData] = useState<PricesResponse>([]);
   const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
 
-  function handleUpdatedText(updatedData: PricesResponse) {
-    let newText = "Last updated never";
-    if (updatedData && updatedData[0]) {
-      const currentTime = new Date();
-      const createdTime = new Date(updatedData[0].created_at);
-      newText = `Last updated ${formatTimeAgo(currentTime, createdTime)}`;
-    }
-    setLastUpdatedText(newText);
-  }
-
-  const updatePricesData = useCallback(
-    async (dateRange: DateRange, style?: string, size?: string) => {
-      console.log("clicked");
-      setLoading(true);
-      const pricesData = await getPrices(
-        productData.id,
-        dateRange,
-        style,
-        size
-      );
-      setData(pricesData);
-      setLoading(false);
-      handleUpdatedText(pricesData);
-    },
-    [productData]
-  );
-
+  // TODO: use abortcontroller
   useEffect(() => {
     let isCanceled = false;
     const updatePrices = async () => {
-      const pricesData = await getPrices(productData.id, initialDateRange);
+      const pricesData = await getPrices(
+        productData.id,
+        getStartDate(initialDateRange)
+      );
       if (!isCanceled) {
         setData(pricesData);
         setLoading(false);
@@ -85,8 +70,46 @@ export function PricesInfo({ productData }: PricesInfoProps) {
     };
   }, [data]);
 
-  const updatedTitle =
-    data && data[0] ? formatDate(new Date(data[0].created_at)) : "";
+  function handleUpdatedText(updatedData: PricesResponse) {
+    let newText = "Last updated never";
+    if (updatedData && updatedData[0]) {
+      const currentTime = new Date();
+      const createdTime = new Date(updatedData[0].created_at);
+      newText = `Last updated ${formatTimeAgo(currentTime, createdTime)}`;
+    }
+    setLastUpdatedText(newText);
+  }
+
+  // TODO: remove usecallback (useless)
+  const updatePricesData = useCallback(
+    async (dateRange: DateRange, style?: string, size?: string) => {
+      setLoading(true);
+      const pricesData = await getPrices(
+        productData.id,
+        getStartDate(dateRange),
+        style,
+        size
+      );
+      setData(pricesData);
+      setLoading(false);
+      handleUpdatedText(pricesData);
+    },
+    [productData]
+  );
+
+  function getStartDate(dateRange: DateRange) {
+    if (dateRange === "All Time") {
+      return;
+    }
+
+    const startDate = new Date();
+    startDate.setTime(startDate.getTime() - dateOffsets[dateRange]);
+    return startDate;
+  }
+
+  const updatedTitle = data?.at(0)
+    ? formatDate(new Date(data[0].created_at))
+    : "";
   const prices = data?.map((d) => d.price_in_cents);
 
   return (
@@ -114,8 +137,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
         updatePricesData={updatePricesData}
         initialDateRange={initialDateRange}
       />
-
-      {data && data.length === 1000 ? (
+      {data?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           There are over 1000 data points, but only the first 1000 data points
           are graphed. Try applying some filters!

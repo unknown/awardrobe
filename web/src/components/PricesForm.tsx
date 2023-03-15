@@ -1,6 +1,6 @@
-import { DateRange, DateRanges } from "@/lib/supabaseClient";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { useRef, useState } from "react";
+import { DateRange, DateRanges } from "./PricesInfo";
 
 interface PricesFormProps {
   updatePricesData(range: DateRange, style?: string, size?: string): void;

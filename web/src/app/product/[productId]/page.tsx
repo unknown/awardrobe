@@ -1,5 +1,5 @@
 import { PricesInfo } from "@/components/PricesInfo";
-import { getProduct } from "@/lib/supabaseClient";
+import { getProduct } from "@/utils/supabase-queries";
 
 interface ProductPageProps {
   params: { productId: string };

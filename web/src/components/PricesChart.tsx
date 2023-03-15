@@ -1,5 +1,5 @@
-import { PricesResponse } from "@/lib/supabaseClient";
-import { formatDate, formatPrice } from "@/lib/utils";
+import { PricesResponse } from "@/utils/supabase-queries";
+import { formatDate, formatPrice } from "@/utils/utils";
 import { Fragment, memo } from "react";
 
 import {
