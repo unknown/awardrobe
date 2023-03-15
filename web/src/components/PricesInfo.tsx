@@ -1,25 +1,23 @@
 "use client";
 
-import { formatDate, formatPrice, formatTimeAgo } from "@/utils/utils";
+import { cn, formatDate, formatPrice, formatTimeAgo } from "@/utils/utils";
 import {
   getPrices,
   PricesResponse,
   ProductResponse,
 } from "@/utils/supabase-queries";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MemoizedPricesChart } from "./PricesChart";
 import { PricesForm } from "./PricesForm";
 
-export const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
-export type DateRange = (typeof DateRanges)[number];
+const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+type DateRange = (typeof DateRanges)[number];
 const dateOffsets: Record<DateRange, number> = {
   Day: 24 * 60 * 60 * 1000,
   Week: 7 * 24 * 60 * 60 * 1000,
   Month: 31 * 24 * 60 * 60 * 1000,
   "All Time": -1,
 };
-const initialDateRange: DateRange = "Day";
-
 interface PricesInfoProps {
   productData: NonNullable<ProductResponse>;
 }
@@ -29,25 +27,15 @@ export function PricesInfo({ productData }: PricesInfoProps) {
   const [data, setData] = useState<PricesResponse>([]);
   const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
 
+  const styleRef = useRef<HTMLInputElement>(null);
+  const sizeRef = useRef<HTMLInputElement>(null);
+  const [dateRange, setDateRange] = useState<DateRange>("Day");
+
   useEffect(() => {
-    const controller = new AbortController();
-
-    const updatePrices = async () => {
-      const pricesData = await getPrices(productData.id, {
-        startDate: getStartDate(initialDateRange),
-        abortSignal: controller.signal,
-      });
-      if (!controller.signal.aborted) {
-        setData(pricesData);
-        setLoading(false);
-        handleUpdatedText(pricesData);
-      }
-    };
-
-    updatePrices();
-
+    const abortController = new AbortController();
+    updatePricesData({ abortSignal: abortController.signal });
     return () => {
-      controller.abort();
+      abortController.abort();
     };
   }, [productData]);
 
@@ -82,21 +70,31 @@ export function PricesInfo({ productData }: PricesInfoProps) {
     setLastUpdatedText(newText);
   }
 
-  const updatePricesData = async (
-    dateRange: DateRange,
-    style?: string,
-    size?: string
-  ) => {
+  async function updatePricesData(
+    options: {
+      dateRange?: DateRange;
+      abortSignal?: AbortSignal;
+    } = {}
+  ) {
+    const { dateRange: range = dateRange, abortSignal } = options;
+
     setLoading(true);
+
+    const style = styleRef.current?.value;
+    const size = sizeRef.current?.value;
     const pricesData = await getPrices(productData.id, {
-      startDate: getStartDate(dateRange),
+      startDate: getStartDate(range),
       style,
       size,
+      abortSignal,
     });
-    setData(pricesData);
-    setLoading(false);
-    handleUpdatedText(pricesData);
-  };
+
+    if (!abortSignal || !abortSignal.aborted) {
+      setData(pricesData);
+      setLoading(false);
+      handleUpdatedText(pricesData);
+    }
+  }
 
   function getStartDate(dateRange: DateRange) {
     if (dateRange === "All Time") {
@@ -135,9 +133,21 @@ export function PricesInfo({ productData }: PricesInfoProps) {
         </p>
       </div>
       <PricesForm
-        updatePricesData={updatePricesData}
-        initialDateRange={initialDateRange}
-      />
+        onFilter={() => {
+          updatePricesData();
+        }}
+        styleRef={styleRef}
+        sizeRef={sizeRef}
+      >
+        <DateControl
+          dateRange={dateRange}
+          onRangeChange={(range) => {
+            if (dateRange == range) return;
+            setDateRange(range);
+            updatePricesData({ dateRange: range });
+          }}
+        />
+      </PricesForm>
       {data?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           There are over 1000 data points, but only the first 1000 data points
@@ -145,6 +155,41 @@ export function PricesInfo({ productData }: PricesInfoProps) {
         </div>
       ) : null}
       <MemoizedPricesChart pricesData={data} />
+    </div>
+  );
+}
+
+interface DateControlProps {
+  dateRange: DateRange;
+  onRangeChange(newRange: DateRange): void;
+}
+
+export function DateControl({
+  dateRange,
+  onRangeChange: onClick,
+}: DateControlProps) {
+  return (
+    <div className="inline-flex rounded-md">
+      {DateRanges.map((range, i) => {
+        const selected = dateRange === range;
+        return (
+          <button
+            key={range}
+            className={cn(
+              "border border-gray-200 bg-white py-2 px-4 transition-colors hover:bg-gray-100",
+              selected ? "bg-gray-200 hover:bg-gray-200" : null,
+              i === 0 ? "rounded-l-md" : null,
+              i < DateRanges.length - 1 ? "border-r-0" : null,
+              i === DateRanges.length - 1 ? "rounded-r-md" : null
+            )}
+            onClick={() => {
+              onClick(range);
+            }}
+          >
+            {range}
+          </button>
+        );
+      })}
     </div>
   );
 }
