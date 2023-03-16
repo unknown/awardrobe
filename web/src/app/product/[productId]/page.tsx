@@ -1,5 +1,5 @@
-import { PricesInfo } from "@/components/PricesInfo";
 import { getProduct } from "@/utils/supabase-queries";
+import { ProductInfo } from "./components/ProductInfo";
 
 interface ProductPageProps {
   params: { productId: string };
@@ -15,7 +15,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <main className="mx-auto flex max-w-4xl flex-col p-4">
       <div className="flex flex-row items-center justify-between"></div>
-      <PricesInfo productData={productData} />
+      <ProductInfo productData={productData} />
     </main>
   );
 }

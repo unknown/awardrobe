@@ -6,9 +6,9 @@ import {
   PricesResponse,
   ProductResponse,
 } from "@/utils/supabase-queries";
-import { useEffect, useRef, useState } from "react";
-import { MemoizedPricesChart } from "./PricesChart";
-import { PricesForm } from "./PricesForm";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MemoizedProductChart } from "./ProductChart";
+import { FiltersForm } from "./FiltersForm";
 
 const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
 type DateRange = (typeof DateRanges)[number];
@@ -22,7 +22,7 @@ interface PricesInfoProps {
   productData: NonNullable<ProductResponse>;
 }
 
-export function PricesInfo({ productData }: PricesInfoProps) {
+export function ProductInfo({ productData }: PricesInfoProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PricesResponse>([]);
   const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
@@ -31,14 +31,46 @@ export function PricesInfo({ productData }: PricesInfoProps) {
   const sizeRef = useRef<HTMLInputElement>(null);
   const [dateRange, setDateRange] = useState<DateRange>("Day");
 
+  const updatePricesData = useCallback(
+    async function (
+      options: {
+        dateRange?: DateRange;
+        abortSignal?: AbortSignal;
+      } = {}
+    ) {
+      const { dateRange: range = dateRange, abortSignal } = options;
+
+      setLoading(true);
+
+      const style = styleRef.current?.value;
+      const size = sizeRef.current?.value;
+      const pricesData = await getPrices(productData.id, {
+        startDate: getStartDate(range) ?? undefined,
+        style,
+        size,
+        abortSignal,
+      });
+
+      const aborted = abortSignal?.aborted ?? false;
+      if (!aborted) {
+        setData(pricesData);
+        setLoading(false);
+        handleUpdatedText(pricesData);
+      }
+    },
+    [dateRange, productData.id]
+  );
+
+  // load initial prices data
   useEffect(() => {
     const abortController = new AbortController();
     updatePricesData({ abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
-  }, [productData]);
+  }, [updatePricesData]);
 
+  // keep last updated text up-to-date
   useEffect(() => {
     if (!data || !data[0]) return;
 
@@ -62,7 +94,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
 
   function handleUpdatedText(updatedData: PricesResponse) {
     let newText = "Last updated never";
-    if (updatedData && updatedData[0]) {
+    if (updatedData?.at(0)) {
       const currentTime = new Date();
       const createdTime = new Date(updatedData[0].created_at);
       newText = `Last updated ${formatTimeAgo(currentTime, createdTime)}`;
@@ -70,37 +102,10 @@ export function PricesInfo({ productData }: PricesInfoProps) {
     setLastUpdatedText(newText);
   }
 
-  async function updatePricesData(
-    options: {
-      dateRange?: DateRange;
-      abortSignal?: AbortSignal;
-    } = {}
-  ) {
-    const { dateRange: range = dateRange, abortSignal } = options;
-
-    setLoading(true);
-
-    const style = styleRef.current?.value;
-    const size = sizeRef.current?.value;
-    const pricesData = await getPrices(productData.id, {
-      startDate: getStartDate(range),
-      style,
-      size,
-      abortSignal,
-    });
-
-    if (!abortSignal || !abortSignal.aborted) {
-      setData(pricesData);
-      setLoading(false);
-      handleUpdatedText(pricesData);
-    }
-  }
-
   function getStartDate(dateRange: DateRange) {
     if (dateRange === "All Time") {
-      return;
+      return null;
     }
-
     const startDate = new Date();
     startDate.setTime(startDate.getTime() - dateOffsets[dateRange]);
     return startDate;
@@ -132,7 +137,7 @@ export function PricesInfo({ productData }: PricesInfoProps) {
           {loading ? "Loading... " : lastUpdatedText}
         </p>
       </div>
-      <PricesForm
+      <FiltersForm
         onFilter={() => {
           updatePricesData();
         }}
@@ -147,14 +152,14 @@ export function PricesInfo({ productData }: PricesInfoProps) {
             updatePricesData({ dateRange: range });
           }}
         />
-      </PricesForm>
+      </FiltersForm>
       {data?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           There are over 1000 data points, but only the first 1000 data points
           are graphed. Try applying some filters!
         </div>
       ) : null}
-      <MemoizedPricesChart pricesData={data} />
+      <MemoizedProductChart pricesData={data} />
     </div>
   );
 }

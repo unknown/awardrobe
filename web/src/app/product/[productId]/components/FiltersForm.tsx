@@ -6,7 +6,7 @@ interface PricesFormProps {
   sizeRef: RefObject<HTMLInputElement>;
 }
 
-export function PricesForm({
+export function FiltersForm({
   onFilter,
   styleRef,
   sizeRef,

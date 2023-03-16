@@ -55,9 +55,9 @@ function mapToChartData(map: Map<string, ChartUnitData[]>) {
   return data;
 }
 
-export const MemoizedPricesChart = memo(PricesChart);
+export const MemoizedProductChart = memo(ProductChart);
 
-export function PricesChart({ pricesData }: PricesChartProps) {
+export function ProductChart({ pricesData }: PricesChartProps) {
   const map = pricesToMap(pricesData);
   const chartData = mapToChartData(map);
 
