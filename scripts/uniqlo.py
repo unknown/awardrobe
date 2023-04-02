@@ -12,6 +12,7 @@ productIds = [
     "E457264-000",  # U Knitted Short-Sleeve Polo Shirt
     "E457967-000",  # U Wide-Fit Pleated Chino Pants
     "E453056-000",  # Easy Care Stretch Slim-Fit Long-Sleeve Shirt
+    "E457263-000",  # U Knitted Short-Sleeve T-Shirt
 ]
 
 
