@@ -10,7 +10,7 @@ export async function handleHeartbeat({
   if (!dbProductId) {
     return {
       status: "error",
-      error: "Product not found in products table",
+      error: "Product missing from products table",
     };
   }
 
@@ -21,7 +21,10 @@ export async function handleHeartbeat({
 
   const { error } = await supabase.from("prices").insert(itemData);
   if (error) {
-    console.error(error);
+    return {
+      status: "error",
+      error: error.message,
+    };
   }
 
   return {
