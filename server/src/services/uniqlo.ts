@@ -13,7 +13,9 @@ export async function getProductData(productId: string) {
   const itemData: ItemData[] = [];
 
   const response = await fetch(priceEndpoint);
-  const { stocks, prices, l2s } = await response.json();
+  const {
+    result: { stocks, prices, l2s },
+  } = await response.json();
 
   Object.keys(stocks).forEach((key, index) => {
     const style = l2s[index].color.displayCode.toString();
