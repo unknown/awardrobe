@@ -1,14 +1,13 @@
 import { dollarsToCents } from "../../utils/currency";
-import { supabase } from "../../utils/supabase";
-import { ItemData } from "../../utils/types";
+import { getProductId, supabase } from "../../utils/supabase";
+import { PriceData } from "../../utils/types";
 import { HeartbeatRequest, HeartbeatResponse } from "./uniqlo.types";
 
 export async function handleHeartbeat({
   productId,
 }: HeartbeatRequest): Promise<HeartbeatResponse> {
-  const dbProductId = await getProductId(productId);
+  const dbProductId = await getProductId("Uniqlo US", productId);
   if (!dbProductId) {
-    console.error(`Product ${productId} not found in products table`);
     return {
       status: "error",
       error: "Product not found in products table",
@@ -30,44 +29,9 @@ export async function handleHeartbeat({
   };
 }
 
-// TODO: extract this to its own util file?
-let _storeId: number;
-async function getStoreId() {
-  if (!_storeId) {
-    const { data } = await supabase
-      .from("stores")
-      .select()
-      .eq("name", "Uniqlo US")
-      .single();
-    if (!data) {
-      console.error("Could not find Uniqlo US store");
-      return null;
-    }
-    _storeId = data.id;
-  }
-  return _storeId;
-}
-
-// TODO: cache product ids to save on DB reads and error handling
-async function getProductId(productId: string) {
-  const storeId = await getStoreId();
-  const { data, error } = await supabase
-    .from("products")
-    .select()
-    .eq("store_id", storeId)
-    .eq("product_id", productId)
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-  }
-
-  return data?.id;
-}
-
 async function getProductData(productId: string, dbProductId: number) {
   const priceEndpoint = getPriceEndpoint(productId);
-  const itemData: ItemData[] = [];
+  const itemData: PriceData[] = [];
 
   const response = await fetch(priceEndpoint);
   const {

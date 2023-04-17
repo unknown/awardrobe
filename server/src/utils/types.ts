@@ -1,3 +1,3 @@
 import { Database } from "./database.types";
 
-export type ItemData = Database["public"]["Tables"]["prices"]["Insert"];
+export type PriceData = Database["public"]["Tables"]["prices"]["Insert"];
