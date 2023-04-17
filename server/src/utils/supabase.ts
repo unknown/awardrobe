@@ -16,7 +16,6 @@ export async function getProductId(storeName: string, productId: string) {
     return cachedId;
   }
 
-  console.log("Miss");
   const storeId = await getStoreId(storeName);
   const { data } = await supabase
     .from("products")

@@ -11,6 +11,7 @@ uniqloRouter.post(
       res.status(200).json(await handleHeartbeat(req.body));
     } catch (err) {
       console.error(err);
+      res.status(500).json({ status: "error", error: "Internal server error" });
     }
   }
 );
