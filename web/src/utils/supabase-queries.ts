@@ -11,15 +11,8 @@ export async function getProduct(
   let query = supabase.from("products").select().eq("id", productId);
   if (abortSignal) query.abortSignal(abortSignal);
 
-  const { data, error } = await query.maybeSingle();
-  if (error) {
-    console.error("products:", error);
-    return null;
-  }
-  return data;
+  return query.maybeSingle();
 }
-
-export type ProductResponse = Awaited<ReturnType<typeof getProduct>>;
 
 export async function getPrices(
   productId: number,
@@ -43,12 +36,5 @@ export async function getPrices(
   if (style) query = query.eq("style", style);
   if (abortSignal) query.abortSignal(abortSignal);
 
-  const { data, error } = await query;
-  if (error) {
-    console.error("prices:", error);
-    return null;
-  }
-  return data;
+  return query;
 }
-
-export type PricesResponse = Awaited<ReturnType<typeof getPrices>>;

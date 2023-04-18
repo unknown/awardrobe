@@ -1,4 +1,3 @@
-import { PricesResponse } from "@/utils/supabase-queries";
 import { formatDate, formatPrice } from "@/utils/utils";
 import { Fragment, memo } from "react";
 
@@ -12,9 +11,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Prices } from "../hooks/types";
 
 interface PricesChartProps {
-  pricesData: PricesResponse;
+  pricesData: Prices[] | null;
 }
 
 type ChartUnitData = {
@@ -23,7 +23,7 @@ type ChartUnitData = {
   price: number;
 };
 
-function pricesToMap(pricesData: PricesResponse) {
+function pricesToMap(pricesData: Prices[]) {
   const dataMap = new Map<string, ChartUnitData[]>();
   pricesData?.forEach((e) => {
     const key = e.style + "-" + e.size;
@@ -58,7 +58,7 @@ function mapToChartData(map: Map<string, ChartUnitData[]>) {
 export const MemoizedProductChart = memo(ProductChart);
 
 export function ProductChart({ pricesData }: PricesChartProps) {
-  const map = pricesToMap(pricesData);
+  const map = pricesToMap(pricesData ?? []);
   const chartData = mapToChartData(map);
 
   return (

@@ -1,125 +1,50 @@
 "use client";
 
-import { cn, formatDate, formatPrice, formatTimeAgo } from "@/utils/utils";
-import {
-  getPrices,
-  PricesResponse,
-  ProductResponse,
-} from "@/utils/supabase-queries";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { cn, formatPrice } from "@/utils/utils";
+import { useEffect, useRef, useState } from "react";
 import { MemoizedProductChart } from "./ProductChart";
 import { FiltersForm } from "./FiltersForm";
+import { Database } from "@/lib/db-types";
+import { usePrices } from "../hooks/usePrices";
 
-const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
-type DateRange = (typeof DateRanges)[number];
-const dateOffsets: Record<DateRange, number> = {
-  Day: 24 * 60 * 60 * 1000,
-  Week: 7 * 24 * 60 * 60 * 1000,
-  Month: 31 * 24 * 60 * 60 * 1000,
-  "All Time": -1,
-};
+export type Product = Database["public"]["Tables"]["products"]["Row"];
 interface PricesInfoProps {
-  productData: NonNullable<ProductResponse>;
+  productData: Product;
 }
 
+const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+
+export type DateRange = (typeof DateRanges)[number];
+
 export function ProductInfo({ productData }: PricesInfoProps) {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<PricesResponse>([]);
-  const [lastUpdatedText, setLastUpdatedText] = useState("Last updated never");
+  const { data: prices, ...priceUtils } = usePrices(productData.id);
 
   const styleRef = useRef<HTMLInputElement>(null);
   const sizeRef = useRef<HTMLInputElement>(null);
   const [dateRange, setDateRange] = useState<DateRange>("Day");
 
-  const updatePricesData = useCallback(
-    async function (
-      options: {
-        dateRange?: DateRange;
-        abortSignal?: AbortSignal;
-      } = {}
-    ) {
-      const { dateRange: range = dateRange, abortSignal } = options;
-
-      setLoading(true);
-
-      const style = styleRef.current?.value;
-      const size = sizeRef.current?.value;
-      const pricesData = await getPrices(productData.id, {
-        startDate: getStartDate(range) ?? undefined,
-        style,
-        size,
-        abortSignal,
-      });
-
-      const aborted = abortSignal?.aborted ?? false;
-      if (!aborted) {
-        setData(pricesData);
-        setLoading(false);
-        handleUpdatedText(pricesData);
-      }
-    },
-    [dateRange, productData.id]
-  );
+  const loadPrices = async () => {
+    priceUtils.invalidateData();
+    await priceUtils.fetchPricesData({
+      startDate: getStartDate(dateRange),
+      style: styleRef.current?.value,
+      size: sizeRef.current?.value,
+    });
+  };
 
   // load initial prices data
   useEffect(() => {
     const abortController = new AbortController();
-    updatePricesData({ abortSignal: abortController.signal });
+    priceUtils.fetchPricesData({ abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
-  }, [updatePricesData]);
-
-  // keep last updated text up-to-date
-  useEffect(() => {
-    if (!data || !data[0]) return;
-
-    const createdTime = new Date(data[0].created_at);
-    const timeDiff = new Date().getTime() - createdTime.getTime();
-    const timeUntilWholeMinute = 60_000 - (timeDiff % 60_000);
-
-    let intervalId: NodeJS.Timer;
-    const timeoutId = setTimeout(() => {
-      handleUpdatedText(data);
-      intervalId = setInterval(() => {
-        handleUpdatedText(data);
-      }, 60_000);
-    }, timeUntilWholeMinute);
-
-    return () => {
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
-    };
-  }, [data]);
-
-  function handleUpdatedText(updatedData: PricesResponse) {
-    let newText = "Last updated never";
-    if (updatedData?.at(0)) {
-      const currentTime = new Date();
-      const createdTime = new Date(updatedData[0].created_at);
-      newText = `Last updated ${formatTimeAgo(currentTime, createdTime)}`;
-    }
-    setLastUpdatedText(newText);
-  }
-
-  function getStartDate(dateRange: DateRange) {
-    if (dateRange === "All Time") {
-      return null;
-    }
-    const startDate = new Date();
-    startDate.setTime(startDate.getTime() - dateOffsets[dateRange]);
-    return startDate;
-  }
-
-  const updatedTitle = data?.at(0)
-    ? formatDate(new Date(data[0].created_at))
-    : "";
-  const prices = data?.map((d) => d.price_in_cents);
+  }, []);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-col justify-between">
-        <h1 className="text-3xl font-bold">{productData.name}</h1>
+        <h1 className="text-xl">{productData.name}</h1>
         <a
           href={`https://www.uniqlo.com/us/en/products/${productData.product_id}/`}
           target="_blank"
@@ -128,18 +53,19 @@ export function ProductInfo({ productData }: PricesInfoProps) {
         >
           View item on Uniqlo
         </a>
-        <p className="mt-2 text-2xl">
+      </div>
+      <div>
+        <p>Latest Price</p>
+        <p></p>
+        <p className="text-2xl font-medium">
           {prices && prices.length > 0
-            ? formatPrice(Math.min(...prices))
+            ? formatPrice(prices[0].price_in_cents)
             : "No price data"}
-        </p>
-        <p className="text-gray-600" title={updatedTitle}>
-          {loading ? "Loading... " : lastUpdatedText}
         </p>
       </div>
       <FiltersForm
         onFilter={() => {
-          updatePricesData();
+          loadPrices();
         }}
         styleRef={styleRef}
         sizeRef={sizeRef}
@@ -149,17 +75,17 @@ export function ProductInfo({ productData }: PricesInfoProps) {
           onRangeChange={(range) => {
             if (dateRange == range) return;
             setDateRange(range);
-            updatePricesData({ dateRange: range });
+            loadPrices();
           }}
         />
       </FiltersForm>
-      {data?.length === 1000 ? (
+      {prices?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           There are over 1000 data points, but only the first 1000 data points
           are graphed. Try applying some filters!
         </div>
       ) : null}
-      <MemoizedProductChart pricesData={data} />
+      <MemoizedProductChart pricesData={prices} />
     </div>
   );
 }
@@ -197,4 +123,17 @@ export function DateControl({
       })}
     </div>
   );
+}
+
+const dateOffsets: Record<DateRange, number> = {
+  Day: 24 * 60 * 60 * 1000,
+  Week: 7 * 24 * 60 * 60 * 1000,
+  Month: 31 * 24 * 60 * 60 * 1000,
+  "All Time": Infinity,
+};
+
+function getStartDate(dateRange: DateRange) {
+  const startDate = new Date();
+  startDate.setTime(startDate.getTime() - dateOffsets[dateRange]);
+  return startDate;
 }
