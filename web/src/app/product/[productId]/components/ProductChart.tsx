@@ -13,49 +13,15 @@ import {
 } from "recharts";
 import { Prices } from "../hooks/types";
 
-interface PricesChartProps {
+export type PricesChartProps = {
   pricesData: Prices[] | null;
-}
+};
 
 type ChartUnitData = {
   date: number;
   stock: number;
   price: number;
 };
-
-function pricesToMap(pricesData: Prices[]) {
-  const dataMap = new Map<string, ChartUnitData[]>();
-  pricesData?.forEach((e) => {
-    const key = e.style + "-" + e.size;
-    const newData = {
-      date: new Date(e.created_at).getTime(),
-      stock: e.stock ?? 0,
-      price: e.price_in_cents,
-    };
-    let prices = dataMap.get(key);
-    if (!prices) {
-      prices = [];
-      dataMap.set(key, prices);
-    }
-    prices.push(newData);
-  });
-  return dataMap;
-}
-
-function mapToChartData(map: Map<string, ChartUnitData[]>) {
-  const data = Array.from(map.entries())
-    .sort()
-    .flatMap((entry) => {
-      const [name, data] = entry;
-      return {
-        name,
-        data: data.reverse(),
-      };
-    });
-  return data;
-}
-
-export const MemoizedProductChart = memo(ProductChart);
 
 export function ProductChart({ pricesData }: PricesChartProps) {
   const map = pricesToMap(pricesData ?? []);
@@ -74,12 +40,7 @@ export function ProductChart({ pricesData }: PricesChartProps) {
             domain={["auto", "auto"]}
             allowDuplicatedCategory={false}
           />
-          <YAxis
-            dataKey="stock"
-            yAxisId="stock"
-            type="number"
-            domain={["auto", "auto"]}
-          />
+          <YAxis dataKey="stock" yAxisId="stock" type="number" domain={["auto", "auto"]} />
           <YAxis
             dataKey="price"
             yAxisId="price"
@@ -120,11 +81,41 @@ export function ProductChart({ pricesData }: PricesChartProps) {
   );
 }
 
-function CustomTooltip({
-  active,
-  payload,
-  label,
-}: TooltipProps<number, string>) {
+export const MemoizedProductChart = memo(ProductChart);
+
+function pricesToMap(pricesData: Prices[]) {
+  const dataMap = new Map<string, ChartUnitData[]>();
+  pricesData?.forEach((e) => {
+    const key = e.style + "-" + e.size;
+    const newData = {
+      date: new Date(e.created_at).getTime(),
+      stock: e.stock ?? 0,
+      price: e.price_in_cents,
+    };
+    let prices = dataMap.get(key);
+    if (!prices) {
+      prices = [];
+      dataMap.set(key, prices);
+    }
+    prices.push(newData);
+  });
+  return dataMap;
+}
+
+function mapToChartData(map: Map<string, ChartUnitData[]>) {
+  const data = Array.from(map.entries())
+    .sort()
+    .flatMap((entry) => {
+      const [name, data] = entry;
+      return {
+        name,
+        data: data.reverse(),
+      };
+    });
+  return data;
+}
+
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (active && payload && payload.length) {
     const date = new Date(label);
     const renderedStyles = new Set();
@@ -139,9 +130,9 @@ function CustomTooltip({
             }
             renderedStyles.add(point.name);
             return (
-              <div key={index}>{`${point.name}: ${
-                point.payload.stock
-              } - ${formatPrice(point.payload.price)}`}</div>
+              <div key={index}>{`${point.name}: ${point.payload.stock} - ${formatPrice(
+                point.payload.price
+              )}`}</div>
             );
           })}
         </div>

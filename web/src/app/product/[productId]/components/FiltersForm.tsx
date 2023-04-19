@@ -1,49 +1,74 @@
-import { RefObject } from "react";
+import { useRef, useState } from "react";
+import { Button } from "@ui/Button";
+import { ButtonGroup } from "@ui/ButtonGroup";
+import { Input } from "@ui/Input";
 
-interface PricesFormProps {
-  onFilter(): void;
-  styleRef: RefObject<HTMLInputElement>;
-  sizeRef: RefObject<HTMLInputElement>;
-}
+const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+type DateRange = (typeof DateRanges)[number];
 
-export function FiltersForm({
-  onFilter,
-  styleRef,
-  sizeRef,
-  children,
-}: React.PropsWithChildren<PricesFormProps>) {
+export type PricesFormProps = {
+  onFilter: (startDate?: Date, style?: string, size?: string) => void;
+};
+
+export function FiltersForm({ onFilter }: PricesFormProps) {
+  const styleRef = useRef<HTMLInputElement>(null);
+  const sizeRef = useRef<HTMLInputElement>(null);
+  const [dateRange, setDateRange] = useState<DateRange>("Day");
+
+  const filter = (range?: DateRange) => {
+    const style = styleRef.current?.value;
+    const size = sizeRef.current?.value;
+    const startDate = getStartDate(range ?? dateRange);
+
+    onFilter(startDate, style, size);
+  };
+
   return (
-    <div>
-      <p className="mb-1 font-bold">Filters:</p>
-      <form className="mb-4 flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
         <label>
-          Style:{" "}
-          <input
-            className="rounded-md border border-gray-200 p-2"
-            placeholder="08"
-            ref={styleRef}
-          />
+          Style
+          <Input ref={styleRef} onBlur={() => filter()} />
         </label>
         <label>
-          Size:{" "}
-          <input
-            className="rounded-md border border-gray-200 p-2"
-            placeholder="028"
-            ref={sizeRef}
-          />
+          Size
+          <Input ref={sizeRef} onBlur={() => filter()} />
         </label>
-        <button
-          className="rounded-md border border-gray-200 py-2 px-4"
-          type="submit"
-          onClick={(e) => {
-            e.preventDefault();
-            onFilter();
-          }}
-        >
-          Apply Filters
-        </button>
-      </form>
-      {children}
+        <label>
+          Price History
+          <ButtonGroup>
+            {DateRanges.map((range) => {
+              const selected = dateRange === range;
+              return (
+                <Button
+                  key={range}
+                  variant="outline"
+                  onClick={() => {
+                    setDateRange(range);
+                    filter(range);
+                  }}
+                  className={selected ? "bg-gray-200" : ""}
+                >
+                  {range}
+                </Button>
+              );
+            })}
+          </ButtonGroup>
+        </label>
+      </div>
     </div>
   );
+}
+
+const dateOffsets: Record<DateRange, number> = {
+  Day: 24 * 60 * 60 * 1000,
+  Week: 7 * 24 * 60 * 60 * 1000,
+  Month: 31 * 24 * 60 * 60 * 1000,
+  "All Time": Infinity,
+};
+
+function getStartDate(dateRange: DateRange) {
+  const startDate = new Date();
+  startDate.setTime(Math.max(0, startDate.getTime() - dateOffsets[dateRange]));
+  return startDate;
 }
