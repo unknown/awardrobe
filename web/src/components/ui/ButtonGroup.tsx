@@ -1,18 +1,16 @@
 import { cn } from "@/utils/utils";
-import { ComponentPropsWithoutRef, forwardRef } from "react";
+import { HTMLAttributes, forwardRef } from "react";
 
-export type ButtonGroupProps = ComponentPropsWithoutRef<"div">;
+export type ButtonGroupProps = HTMLAttributes<HTMLDivElement>;
 
 export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
   ({ className, ...props }, ref) => {
     return (
       <div
         className={cn(
-          "inline-flex rounded-md",
-          "[&>*]:rounded-none",
-          "[&>*:first-child]:rounded-l-md",
+          "flex rounded-md",
+          "[&>*]:rounded-none [&>*:last-child]:rounded-r-md [&>*:first-child]:rounded-l-md",
           "[&>*:not(&>*:last-child)]:border-r-0",
-          "[&>*:last-child]:rounded-r-md",
           className
         )}
         ref={ref}
