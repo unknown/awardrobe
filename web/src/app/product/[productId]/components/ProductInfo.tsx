@@ -66,7 +66,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
           points.
         </div>
       ) : null}
-      <MemoizedProductChart pricesData={prices} />
+      <MemoizedProductChart prices={prices} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { formatDate, formatPrice } from "@/utils/utils";
-import { Fragment, memo } from "react";
-
+import { Fragment, memo, useEffect } from "react";
+import { Prices } from "../hooks/types";
 import {
   CartesianGrid,
   Line,
@@ -11,10 +11,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Prices } from "../hooks/types";
 
 export type PricesChartProps = {
-  pricesData: Prices[] | null;
+  prices: Prices[] | null;
 };
 
 type ChartUnitData = {
@@ -23,9 +22,23 @@ type ChartUnitData = {
   price: number;
 };
 
-export function ProductChart({ pricesData }: PricesChartProps) {
-  const map = pricesToMap(pricesData ?? []);
-  const chartData = mapToChartData(map);
+export function ProductChart({ prices }: PricesChartProps) {
+  if (prices === null) {
+    return <div>Loading...</div>;
+  }
+
+  const groupedPrices: Record<string, ChartUnitData[]> = {};
+  prices.forEach((price) => {
+    const key = price.style + "-" + price.size;
+    if (groupedPrices[key] === undefined) {
+      groupedPrices[key] = [];
+    }
+    groupedPrices[key].push({
+      date: new Date(price.created_at).getTime(),
+      stock: price.stock ?? 0,
+      price: price.price_in_cents,
+    });
+  });
 
   return (
     <div className="h-[calc(min(680px,60vh))] w-full">
@@ -51,30 +64,34 @@ export function ProductChart({ pricesData }: PricesChartProps) {
             }}
             domain={["auto", "auto"]}
           />
-          <Tooltip content={<CustomTooltip />} />
-          {chartData.map((s) => (
-            <Fragment key={s.name}>
-              <Line
-                dataKey="stock"
-                yAxisId="stock"
-                data={s.data}
-                name={s.name}
-                type="stepAfter"
-                dot={false}
-                strokeWidth={1.5}
-              />
-              <Line
-                dataKey="price"
-                yAxisId="price"
-                data={s.data}
-                name={s.name}
-                type="stepAfter"
-                dot={false}
-                strokeWidth={1.5}
-                stroke="#60cc63"
-              />
-            </Fragment>
-          ))}
+          <Tooltip content={<CustomTooltip />} animationDuration={100} />
+          {Object.keys(groupedPrices).map((key) => {
+            return (
+              <Fragment key={key}>
+                <Line
+                  dataKey="stock"
+                  yAxisId="stock"
+                  data={groupedPrices[key]}
+                  name={key}
+                  type="stepAfter"
+                  dot={false}
+                  strokeWidth={1.5}
+                  isAnimationActive={false}
+                />
+                <Line
+                  dataKey="price"
+                  yAxisId="price"
+                  data={groupedPrices[key]}
+                  name={key}
+                  type="stepAfter"
+                  dot={false}
+                  strokeWidth={1.5}
+                  stroke="#60cc63"
+                  isAnimationActive={false}
+                />
+              </Fragment>
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -82,38 +99,6 @@ export function ProductChart({ pricesData }: PricesChartProps) {
 }
 
 export const MemoizedProductChart = memo(ProductChart);
-
-function pricesToMap(pricesData: Prices[]) {
-  const dataMap = new Map<string, ChartUnitData[]>();
-  pricesData?.forEach((e) => {
-    const key = e.style + "-" + e.size;
-    const newData = {
-      date: new Date(e.created_at).getTime(),
-      stock: e.stock ?? 0,
-      price: e.price_in_cents,
-    };
-    let prices = dataMap.get(key);
-    if (!prices) {
-      prices = [];
-      dataMap.set(key, prices);
-    }
-    prices.push(newData);
-  });
-  return dataMap;
-}
-
-function mapToChartData(map: Map<string, ChartUnitData[]>) {
-  const data = Array.from(map.entries())
-    .sort()
-    .flatMap((entry) => {
-      const [name, data] = entry;
-      return {
-        name,
-        data: data.reverse(),
-      };
-    });
-  return data;
-}
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (active && payload && payload.length) {
@@ -126,7 +111,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
         <div className="flex flex-col gap-1">
           {payload.map((point, index) => {
             if (renderedStyles.has(point.name)) {
-              return null;
+              return;
             }
             renderedStyles.add(point.name);
             return (
