@@ -1,25 +1,23 @@
-import { formatDate, formatPrice } from "@/utils/utils";
-import { Fragment, memo, useEffect } from "react";
+import { formatDate } from "@/utils/utils";
+import { Fragment } from "react";
 import { Prices } from "../hooks/types";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  TooltipProps,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
+import { curveStepAfter } from "@visx/curve";
+import ParentSize from "@visx/responsive/lib/components/ParentSizeModern";
 
 export type PricesChartProps = {
   prices: Prices[] | null;
 };
 
 type ChartUnitData = {
-  date: number;
+  date: string;
   stock: number;
   price: number;
+};
+
+const accessors = {
+  xAccessor: (d: ChartUnitData) => new Date(d.date),
+  yAccessor: (d: ChartUnitData) => d.stock,
 };
 
 export function ProductChart({ prices }: PricesChartProps) {
@@ -34,96 +32,88 @@ export function ProductChart({ prices }: PricesChartProps) {
       groupedPrices[key] = [];
     }
     groupedPrices[key].push({
-      date: new Date(price.created_at).getTime(),
+      date: price.created_at,
       stock: price.stock ?? 0,
       price: price.price_in_cents,
     });
   });
 
+  // ensure even group split and sort data into chronologically
+  const groupKeys = Object.keys(groupedPrices);
+  groupKeys.forEach((key) => {
+    groupedPrices[key] = groupedPrices[key].slice(0, prices.length / groupKeys.length);
+    groupedPrices[key].reverse();
+  });
+
   return (
-    <div className="h-[calc(min(680px,60vh))] w-full">
-      <ResponsiveContainer height="100%" width="100%">
-        <LineChart>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            type="number"
-            tickFormatter={(time) => formatDate(new Date(time))}
-            scale="time"
-            domain={["auto", "auto"]}
-            allowDuplicatedCategory={false}
-          />
-          <YAxis dataKey="stock" yAxisId="stock" type="number" domain={["auto", "auto"]} />
-          <YAxis
-            dataKey="price"
-            yAxisId="price"
-            orientation="right"
-            type="number"
-            tickFormatter={(cents) => {
-              return formatPrice(cents);
-            }}
-            domain={["auto", "auto"]}
-          />
-          <Tooltip content={<CustomTooltip />} animationDuration={100} />
-          {Object.keys(groupedPrices).map((key) => {
-            return (
-              <Fragment key={key}>
-                <Line
-                  dataKey="stock"
-                  yAxisId="stock"
-                  data={groupedPrices[key]}
-                  name={key}
-                  type="stepAfter"
-                  dot={false}
-                  strokeWidth={1.5}
-                  isAnimationActive={false}
-                />
-                <Line
-                  dataKey="price"
-                  yAxisId="price"
-                  data={groupedPrices[key]}
-                  name={key}
-                  type="stepAfter"
-                  dot={false}
-                  strokeWidth={1.5}
-                  stroke="#60cc63"
-                  isAnimationActive={false}
-                />
-              </Fragment>
-            );
-          })}
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="h-[calc(min(680px,50vh))] w-full">
+      <ParentSize>
+        {({ height }) => {
+          return (
+            <XYChart
+              height={height}
+              margin={{ left: 40, top: 40, bottom: 40, right: 40 }}
+              xScale={{ type: "time" }}
+              yScale={{ type: "linear" }}
+            >
+              <AnimatedGrid
+                columns={true}
+                lineStyle={{
+                  stroke: "#a1a1a1",
+                  strokeLinecap: "round",
+                  strokeWidth: 1,
+                }}
+                strokeDasharray="0, 4"
+              />
+
+              <AnimatedAxis hideAxisLine hideTicks orientation="bottom" left={30} numTicks={10} />
+              <AnimatedAxis hideAxisLine hideTicks orientation="left" numTicks={4} />
+
+              {Object.keys(groupedPrices).map((key) => {
+                return (
+                  <Fragment key={key}>
+                    <AnimatedLineSeries
+                      stroke="#008561"
+                      dataKey={key}
+                      data={groupedPrices[key]}
+                      curve={curveStepAfter}
+                      {...accessors}
+                    />
+                  </Fragment>
+                );
+              })}
+
+              <Tooltip<ChartUnitData>
+                showSeriesGlyphs
+                showVerticalCrosshair
+                snapTooltipToDatumX
+                glyphStyle={{
+                  fill: "#008561",
+                  strokeWidth: 0,
+                }}
+                renderTooltip={({ tooltipData }) => {
+                  if (!tooltipData?.nearestDatum?.datum) return;
+                  const date = new Date(tooltipData.nearestDatum.datum.date);
+
+                  return (
+                    <div className="flex flex-col gap-1">
+                      <h2 className="font-medium">{formatDate(date)}</h2>
+                      {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
+                        const [key, value] = lineDataArray;
+                        return (
+                          <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
+                            value.datum
+                          )}`}</div>
+                        );
+                      })}
+                    </div>
+                  );
+                }}
+              />
+            </XYChart>
+          );
+        }}
+      </ParentSize>
     </div>
   );
-}
-
-export const MemoizedProductChart = memo(ProductChart);
-
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
-  if (active && payload && payload.length) {
-    const date = new Date(label);
-    const renderedStyles = new Set();
-
-    return (
-      <div className="border border-gray-200 bg-white p-3">
-        <p className="label mb-1 font-medium">{formatDate(date)}</p>
-        <div className="flex flex-col gap-1">
-          {payload.map((point, index) => {
-            if (renderedStyles.has(point.name)) {
-              return;
-            }
-            renderedStyles.add(point.name);
-            return (
-              <div key={index}>{`${point.name}: ${point.payload.stock} - ${formatPrice(
-                point.payload.price
-              )}`}</div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 }

@@ -2,7 +2,7 @@
 
 import { formatPrice } from "@/utils/utils";
 import { useEffect } from "react";
-import { MemoizedProductChart } from "./ProductChart";
+import { ProductChart } from "./ProductChart";
 import { FiltersForm } from "./FiltersForm";
 import { Database } from "@/lib/db-types";
 import { usePrices } from "../hooks/usePrices";
@@ -66,7 +66,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
           points.
         </div>
       ) : null}
-      <MemoizedProductChart prices={prices} />
+      <ProductChart prices={prices} />
     </div>
   );
 }
