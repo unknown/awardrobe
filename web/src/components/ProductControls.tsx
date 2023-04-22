@@ -7,55 +7,52 @@ const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
 type DateRange = (typeof DateRanges)[number];
 
 export type ProductControlsProps = {
-  onFilter: (startDate?: Date, style?: string, size?: string) => void;
+  onChange: (startDate: Date, style?: string, size?: string) => void;
 };
 
-export function ProductControls({ onFilter }: ProductControlsProps) {
+export function ProductControls({ onChange: consumerOnChange }: ProductControlsProps) {
   const styleRef = useRef<HTMLInputElement>(null);
   const sizeRef = useRef<HTMLInputElement>(null);
   const [dateRange, setDateRange] = useState<DateRange>("Day");
 
-  const filter = (range?: DateRange) => {
+  const onChange = (range?: DateRange) => {
     const style = styleRef.current?.value;
     const size = sizeRef.current?.value;
     const startDate = getStartDate(range ?? dateRange);
-
-    onFilter(startDate, style, size);
+    consumerOnChange(startDate, style, size);
   };
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
-        <label>
+        <label htmlFor="style-input">
           Style
-          <Input ref={styleRef} onBlur={() => filter()} />
+          <Input id="style-input" ref={styleRef} onBlur={() => onChange()} />
         </label>
-        <label>
+        <label htmlFor="size-input">
           Size
-          <Input ref={sizeRef} onBlur={() => filter()} />
-        </label>
-        <label>
-          Price History
-          <ButtonGroup>
-            {DateRanges.map((range) => {
-              const selected = dateRange === range;
-              return (
-                <Button
-                  key={range}
-                  variant="outline"
-                  onClick={() => {
-                    setDateRange(range);
-                    filter(range);
-                  }}
-                  className={selected ? "bg-gray-200" : ""}
-                >
-                  {range}
-                </Button>
-              );
-            })}
-          </ButtonGroup>
+          <Input id="size-input" ref={sizeRef} onBlur={() => onChange()} />
         </label>
       </div>
+      <label htmlFor="range-input">Price History</label>
+      <ButtonGroup id="range-input">
+        {DateRanges.map((range) => {
+          const selected = range === dateRange;
+          return (
+            <Button
+              key={range}
+              variant="outline"
+              onClick={() => {
+                setDateRange(range);
+                onChange(range);
+              }}
+              className={selected ? "bg-slate-200" : ""}
+            >
+              {range}
+            </Button>
+          );
+        })}
+      </ButtonGroup>
     </div>
   );
 }

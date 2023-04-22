@@ -24,7 +24,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
     };
   }, [fetchPricesData]);
 
-  const loadPrices = async (startDate?: Date, style?: string, size?: string) => {
+  const loadPrices = async (startDate: Date, style?: string, size?: string) => {
     invalidateData();
     await fetchPricesData({
       startDate,
@@ -60,7 +60,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
         <p>Latest Price</p>
         <p className="text-2xl font-medium">{getLatestPrice()}</p>
       </div>
-      <ProductControls onFilter={loadPrices} />
+      <ProductControls onChange={loadPrices} />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           Warning: currently limited to showing only the first 1000 data points. Applying filters
