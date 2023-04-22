@@ -13,11 +13,11 @@ export const metadata = {
     "A small-scale tool to help users keep track of the online goods they've been eyeing.",
 };
 
-export default function RootLayout({
-  children,
-}: {
+type RootLayoutProps = {
   children: React.ReactNode;
-}) {
+};
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={inter.variable}>
       <body>{children}</body>

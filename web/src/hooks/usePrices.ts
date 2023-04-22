@@ -1,6 +1,15 @@
 import { getPrices } from "@/utils/supabase-queries";
-import { Prices, PricesOptions } from "./types";
 import { useCallback, useState } from "react";
+import { Database } from "@/lib/db-types";
+
+export type Prices = Database["public"]["Tables"]["prices"]["Row"];
+
+export type PricesOptions = {
+  style?: string;
+  size?: string;
+  startDate?: Date;
+  abortSignal?: AbortSignal;
+};
 
 export function usePrices(productId: number) {
   const [loading, setLoading] = useState(false);

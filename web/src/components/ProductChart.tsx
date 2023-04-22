@@ -1,9 +1,9 @@
 import { formatDate } from "@/utils/utils";
 import { Fragment } from "react";
-import { Prices } from "../hooks/types";
 import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
 import { curveStepAfter } from "@visx/curve";
 import ParentSize from "@visx/responsive/lib/components/ParentSizeModern";
+import { Prices } from "@/hooks/usePrices";
 
 export type PricesChartProps = {
   prices: Prices[] | null;

@@ -1,16 +1,16 @@
 import { useRef, useState } from "react";
-import { Button } from "@ui/Button";
 import { ButtonGroup } from "@ui/ButtonGroup";
 import { Input } from "@ui/Input";
+import { Button } from "@ui/Button";
 
 const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
 type DateRange = (typeof DateRanges)[number];
 
-export type PricesFormProps = {
+export type ProductControlsProps = {
   onFilter: (startDate?: Date, style?: string, size?: string) => void;
 };
 
-export function FiltersForm({ onFilter }: PricesFormProps) {
+export function ProductControls({ onFilter }: ProductControlsProps) {
   const styleRef = useRef<HTMLInputElement>(null);
   const sizeRef = useRef<HTMLInputElement>(null);
   const [dateRange, setDateRange] = useState<DateRange>("Day");
