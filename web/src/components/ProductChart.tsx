@@ -1,8 +1,7 @@
 import { formatDate } from "@/utils/utils";
-import { Fragment } from "react";
 import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
 import { curveStepAfter } from "@visx/curve";
-import ParentSize from "@visx/responsive/lib/components/ParentSizeModern";
+import { ParentSize } from "@visx/responsive";
 import { Prices } from "@/hooks/usePrices";
 
 export type PricesChartProps = {
@@ -46,74 +45,68 @@ export function ProductChart({ prices }: PricesChartProps) {
   });
 
   return (
-    <div className="h-[calc(min(680px,50vh))] w-full">
-      <ParentSize>
-        {({ height }) => {
-          return (
-            <XYChart
-              height={height}
-              margin={{ left: 40, top: 40, bottom: 40, right: 40 }}
-              xScale={{ type: "time" }}
-              yScale={{ type: "linear" }}
-            >
-              <AnimatedGrid
-                columns={true}
-                lineStyle={{
-                  stroke: "#a1a1a1",
-                  strokeLinecap: "round",
-                  strokeWidth: 1,
-                }}
-                strokeDasharray="0, 4"
-              />
+    <ParentSize>
+      {({ height }) => {
+        return (
+          <XYChart
+            height={Math.min(600, height)}
+            xScale={{ type: "time" }}
+            yScale={{ type: "linear" }}
+          >
+            <AnimatedGrid
+              lineStyle={{
+                stroke: "#a1a1a1",
+                strokeLinecap: "round",
+                strokeWidth: 1,
+              }}
+              strokeDasharray="0, 4"
+            />
 
-              <AnimatedAxis hideAxisLine hideTicks orientation="bottom" left={30} numTicks={10} />
-              <AnimatedAxis hideAxisLine hideTicks orientation="left" numTicks={4} />
+            <AnimatedAxis hideAxisLine hideTicks orientation="bottom" />
+            <AnimatedAxis hideAxisLine hideTicks orientation="left" />
 
-              {Object.keys(groupedPrices).map((key) => {
+            {Object.keys(groupedPrices).map((key) => {
+              return (
+                <AnimatedLineSeries
+                  key={key}
+                  dataKey={key}
+                  data={groupedPrices[key]}
+                  stroke="#008561"
+                  curve={curveStepAfter}
+                  {...accessors}
+                />
+              );
+            })}
+
+            <Tooltip<ChartUnitData>
+              showSeriesGlyphs
+              showVerticalCrosshair
+              snapTooltipToDatumX
+              glyphStyle={{
+                fill: "#008561",
+              }}
+              renderTooltip={({ tooltipData }) => {
+                if (!tooltipData?.nearestDatum?.datum) return;
+                const date = new Date(tooltipData.nearestDatum.datum.date);
+
                 return (
-                  <Fragment key={key}>
-                    <AnimatedLineSeries
-                      stroke="#008561"
-                      dataKey={key}
-                      data={groupedPrices[key]}
-                      curve={curveStepAfter}
-                      {...accessors}
-                    />
-                  </Fragment>
+                  <div className="flex flex-col gap-1">
+                    <h2 className="font-medium">{formatDate(date)}</h2>
+                    {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
+                      const [key, value] = lineDataArray;
+                      return (
+                        <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
+                          value.datum
+                        )}`}</div>
+                      );
+                    })}
+                  </div>
                 );
-              })}
-
-              <Tooltip<ChartUnitData>
-                showSeriesGlyphs
-                showVerticalCrosshair
-                snapTooltipToDatumX
-                glyphStyle={{
-                  fill: "#008561",
-                  strokeWidth: 0,
-                }}
-                renderTooltip={({ tooltipData }) => {
-                  if (!tooltipData?.nearestDatum?.datum) return;
-                  const date = new Date(tooltipData.nearestDatum.datum.date);
-
-                  return (
-                    <div className="flex flex-col gap-1">
-                      <h2 className="font-medium">{formatDate(date)}</h2>
-                      {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
-                        const [key, value] = lineDataArray;
-                        return (
-                          <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
-                            value.datum
-                          )}`}</div>
-                        );
-                      })}
-                    </div>
-                  );
-                }}
-              />
-            </XYChart>
-          );
-        }}
-      </ParentSize>
-    </div>
+              }}
+            />
+          </XYChart>
+        );
+      }}
+    </ParentSize>
   );
 }

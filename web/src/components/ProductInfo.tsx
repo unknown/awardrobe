@@ -53,7 +53,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col justify-between">
         <h1 className="text-xl">{productData.name}</h1>
         <a
@@ -76,7 +76,9 @@ export function ProductInfo({ productData }: PricesInfoProps) {
           may decrease the number of data points.
         </div>
       ) : null}
-      <ProductChart prices={prices} />
+      <div className="flex-grow">
+        <ProductChart prices={prices} />
+      </div>
     </div>
   );
 }
