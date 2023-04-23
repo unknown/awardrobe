@@ -1,9 +1,9 @@
 "use client";
 
 import { formatPrice } from "@/utils/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ProductChart } from "./ProductChart";
-import { ProductControls } from "./ProductControls";
+import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { Database } from "@/lib/db-types";
 import { usePrices } from "../hooks/usePrices";
 
@@ -15,16 +15,25 @@ export type PricesInfoProps = {
 
 export function ProductInfo({ productData }: PricesInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productData.id);
+  const [filters, setFilters] = useState<FilterOptions>({
+    dateRange: "Day",
+    style: "",
+    size: "",
+  });
 
   useEffect(() => {
     const abortController = new AbortController();
-    fetchPricesData({ abortSignal: abortController.signal });
+    fetchPricesData({ ...filters, abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
   }, [fetchPricesData]);
 
-  const loadPrices = async (startDate: Date, style?: string, size?: string) => {
+  const onFilterChange = async (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    const { style, size, dateRange } = newFilters;
+    const startDate = getStartDate(dateRange ?? dateRange);
+
     invalidateData();
     await fetchPricesData({
       startDate,
@@ -60,7 +69,7 @@ export function ProductInfo({ productData }: PricesInfoProps) {
         <p>Latest Price</p>
         <p className="text-2xl font-medium">{getLatestPrice()}</p>
       </div>
-      <ProductControls onChange={loadPrices} />
+      <ProductControls filters={filters} onChange={onFilterChange} />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           Warning: currently limited to showing only the first 1000 data points. Applying filters
@@ -70,4 +79,17 @@ export function ProductInfo({ productData }: PricesInfoProps) {
       <ProductChart prices={prices} />
     </div>
   );
+}
+
+const dateOffsets: Record<DateRange, number> = {
+  Day: 24 * 60 * 60 * 1000,
+  Week: 7 * 24 * 60 * 60 * 1000,
+  Month: 31 * 24 * 60 * 60 * 1000,
+  "All Time": Infinity,
+};
+
+function getStartDate(dateRange: DateRange) {
+  const startDate = new Date();
+  startDate.setTime(Math.max(0, startDate.getTime() - dateOffsets[dateRange]));
+  return startDate;
 }
