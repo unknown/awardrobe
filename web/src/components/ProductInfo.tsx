@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPrice } from "@/utils/utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { Database } from "@/lib/db-types";
@@ -13,34 +13,33 @@ export type PricesInfoProps = {
   productData: Product;
 };
 
+const defaultFilters: FilterOptions = {
+  dateRange: "Day",
+  style: "",
+  size: "",
+};
+
 export function ProductInfo({ productData }: PricesInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productData.id);
-  const [filters, setFilters] = useState<FilterOptions>({
-    dateRange: "Day",
-    style: "",
-    size: "",
-  });
+
+  const loadPricesData = useCallback(
+    async (filters: FilterOptions, abortSignal?: AbortSignal) => {
+      invalidateData();
+
+      const { style, size, dateRange } = filters;
+      const startDate = getStartDate(dateRange ?? dateRange);
+      await fetchPricesData(startDate, style, size, abortSignal);
+    },
+    [invalidateData, fetchPricesData]
+  );
 
   useEffect(() => {
     const abortController = new AbortController();
-    fetchPricesData({ ...filters, abortSignal: abortController.signal });
+    loadPricesData(defaultFilters, abortController.signal);
     return () => {
       abortController.abort();
     };
-  }, [fetchPricesData]);
-
-  const onFilterChange = async (newFilters: FilterOptions) => {
-    setFilters(newFilters);
-    const { style, size, dateRange } = newFilters;
-    const startDate = getStartDate(dateRange ?? dateRange);
-
-    invalidateData();
-    await fetchPricesData({
-      startDate,
-      style,
-      size,
-    });
-  };
+  }, [loadPricesData]);
 
   const getLatestPrice = () => {
     if (prices === null || loading) {
@@ -69,7 +68,12 @@ export function ProductInfo({ productData }: PricesInfoProps) {
         <p>Latest Price</p>
         <p className="text-2xl font-medium">{getLatestPrice()}</p>
       </div>
-      <ProductControls filters={filters} onChange={onFilterChange} />
+      <ProductControls
+        defaultFilters={defaultFilters}
+        onChange={async (newFilters) => {
+          await loadPricesData(newFilters);
+        }}
+      />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-orange-400 bg-orange-100 p-4 text-orange-700">
           Warning: currently limited to showing only the first 1000 data points. Applying filters

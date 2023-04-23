@@ -1,9 +1,10 @@
 import { ButtonGroup } from "@ui/ButtonGroup";
 import { Input } from "@ui/Input";
 import { Button } from "@ui/Button";
+import { useCallback, useState } from "react";
 
 export type ProductControlsProps = {
-  filters: FilterOptions;
+  defaultFilters: FilterOptions;
   onChange: (newFilters: FilterOptions) => void;
 };
 
@@ -16,8 +17,14 @@ export type FilterOptions = {
   size: string;
 };
 
-export function ProductControls({ filters, onChange: consumerOnChange }: ProductControlsProps) {
+export function ProductControls({
+  defaultFilters,
+  onChange: consumerOnChange,
+}: ProductControlsProps) {
+  const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
+
   const onChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
     consumerOnChange(newFilters);
   };
 
@@ -28,6 +35,7 @@ export function ProductControls({ filters, onChange: consumerOnChange }: Product
           Style
           <Input
             id="style-input"
+            defaultValue={filters.style}
             onBlur={(event) => {
               const newFilters = { ...filters, style: event.target.value };
               onChange(newFilters);
@@ -38,6 +46,7 @@ export function ProductControls({ filters, onChange: consumerOnChange }: Product
           Size
           <Input
             id="size-input"
+            defaultValue={filters.size}
             onBlur={(event) => {
               const newFilters = { ...filters, size: event.target.value };
               onChange(newFilters);

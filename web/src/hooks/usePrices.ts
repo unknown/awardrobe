@@ -4,29 +4,16 @@ import { Database } from "@/lib/db-types";
 
 export type Prices = Database["public"]["Tables"]["prices"]["Row"];
 
-export type PricesOptions = {
-  style?: string;
-  size?: string;
-  startDate?: Date;
-  abortSignal?: AbortSignal;
-};
-
 export function usePrices(productId: number) {
   const [loading, setLoading] = useState(false);
   const [pricesData, setPricesData] = useState<Prices[] | null>(null);
 
   const fetchPricesData = useCallback(
-    async function (options: PricesOptions = {}) {
-      const { style, size, startDate, abortSignal } = options;
+    async function (startDate: Date, style: string, size: string, abortSignal?: AbortSignal) {
       setLoading(true);
 
       // TODO: handle error
-      const { data, error } = await getPrices(productId, {
-        startDate,
-        style,
-        size,
-        abortSignal,
-      });
+      const { data, error } = await getPrices(productId, startDate, style, size, abortSignal);
 
       const aborted = abortSignal?.aborted ?? false;
       if (!aborted) {
