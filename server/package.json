@@ -2,11 +2,11 @@
   "name": "price-monitor",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/app.js",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\""
+    "start": "node dist/index.js",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",
@@ -19,9 +19,10 @@
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^18.14.0",
-    "concurrently": "^7.6.0",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.4",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^4.9.5"
   }
 }
