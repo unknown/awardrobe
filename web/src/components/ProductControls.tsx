@@ -1,11 +1,11 @@
 import { ButtonGroup } from "@ui/ButtonGroup";
 import { Input } from "@ui/Input";
 import { Button } from "@ui/Button";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 export type ProductControlsProps = {
   defaultFilters: FilterOptions;
-  onChange: (newFilters: FilterOptions) => void;
+  updateFilters: (newFilters: FilterOptions) => void;
 };
 
 const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
@@ -19,13 +19,13 @@ export type FilterOptions = {
 
 export function ProductControls({
   defaultFilters,
-  onChange: consumerOnChange,
+  updateFilters: consumerUpdateFilters,
 }: ProductControlsProps) {
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
 
-  const onChange = (newFilters: FilterOptions) => {
+  const updateFilters = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-    consumerOnChange(newFilters);
+    consumerUpdateFilters(newFilters);
   };
 
   return (
@@ -38,7 +38,7 @@ export function ProductControls({
             defaultValue={filters.style}
             onBlur={(event) => {
               const newFilters = { ...filters, style: event.target.value };
-              onChange(newFilters);
+              updateFilters(newFilters);
             }}
           />
         </label>
@@ -49,14 +49,14 @@ export function ProductControls({
             defaultValue={filters.size}
             onBlur={(event) => {
               const newFilters = { ...filters, size: event.target.value };
-              onChange(newFilters);
+              updateFilters(newFilters);
             }}
           />
         </label>
       </div>
       <label htmlFor="range-input">
         Price History
-        <ButtonGroup id="range-input">
+        <ButtonGroup id="range-input" aria-label="Select a date range">
           {DateRanges.map((range) => {
             const selected = range === filters.dateRange;
             return (
@@ -65,7 +65,7 @@ export function ProductControls({
                 variant="outline"
                 onClick={() => {
                   const newFilters = { ...filters, dateRange: range };
-                  onChange(newFilters);
+                  updateFilters(newFilters);
                 }}
                 className={selected ? "bg-slate-200" : ""}
               >

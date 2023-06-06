@@ -50,7 +50,7 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
       </div>
       <ProductControls
         defaultFilters={defaultFilters}
-        onChange={async (newFilters) => {
+        updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
         }}
       />
