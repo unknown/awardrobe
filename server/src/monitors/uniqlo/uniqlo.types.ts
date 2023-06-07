@@ -18,3 +18,18 @@ type HeartbeatError = {
 };
 
 export type HeartbeatResponse = HeartbeatSuccess | HeartbeatError;
+
+export type AddProductRequest = {
+  productId: string;
+};
+
+type AddProductSuccess = {
+  status: "success";
+};
+
+type AddProductError = {
+  status: "error";
+  error: string;
+};
+
+export type AddProductResponse = AddProductSuccess | AddProductError;

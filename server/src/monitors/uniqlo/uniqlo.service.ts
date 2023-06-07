@@ -1,7 +1,13 @@
 import { dollarsToCents } from "../../utils/currency";
 import { getProductId, getStoreId, supabase } from "../../utils/supabase";
-import { PricesEntry } from "../../utils/types";
-import { HeartbeatRequest, HeartbeatResponse, UniqloType } from "./uniqlo.types";
+import { PricesEntry, ProductsEntry } from "../../utils/types";
+import {
+  AddProductRequest,
+  AddProductResponse,
+  HeartbeatRequest,
+  HeartbeatResponse,
+  UniqloType,
+} from "./uniqlo.types";
 
 export async function handleHeartbeat({ productId }: HeartbeatRequest): Promise<HeartbeatResponse> {
   // TODO: simplify this logic so that storeId only needs to be retrieved once
@@ -39,6 +45,46 @@ export async function handleHeartbeat({ productId }: HeartbeatRequest): Promise<
   }));
 
   const { error } = await supabase.from("prices").insert(entries);
+  if (error) {
+    return {
+      status: "error",
+      error: error.message,
+    };
+  }
+
+  return {
+    status: "success",
+  };
+}
+
+export async function addProduct({ productId }: AddProductRequest): Promise<AddProductResponse> {
+  const storeId = await getStoreId("Uniqlo US");
+  if (!storeId) {
+    return {
+      status: "error",
+      error: "Uniqlo US missing from stores table",
+    };
+  }
+
+  const dbProductId = await getProductId(storeId, productId);
+  if (dbProductId !== null) {
+    return {
+      status: "error",
+      error: "Product already in products table",
+    };
+  }
+
+  const { name, colors, sizes } = await getDetails(productId);
+
+  const entry: ProductsEntry = {
+    product_id: productId,
+    name: name,
+    store_id: storeId,
+    styles: Object.values(colors),
+    sizes: Object.values(sizes),
+  };
+
+  const { error } = await supabase.from("products").insert(entry);
   if (error) {
     return {
       status: "error",
