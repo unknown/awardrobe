@@ -22,6 +22,7 @@
     "baseUrl": ".",
     "paths": {
       "@ui/*": ["src/components/ui/*"],
+      "@icons/*": ["src/components/icons/*"],
       "@/*": ["./src/*"]
     }
   },
