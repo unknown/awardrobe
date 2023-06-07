@@ -72,21 +72,27 @@ export interface Database {
           id: number
           name: string
           product_id: string
+          sizes: string[]
           store_id: number
+          styles: string[]
         }
         Insert: {
           created_at?: string
           id?: number
           name: string
           product_id: string
+          sizes: string[]
           store_id: number
+          styles: string[]
         }
         Update: {
           created_at?: string
           id?: number
           name?: string
           product_id?: string
+          sizes?: string[]
           store_id?: number
+          styles?: string[]
         }
       }
       stores: {
