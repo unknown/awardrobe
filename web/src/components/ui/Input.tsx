@@ -8,7 +8,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         type={type}
-        className={cn("flex rounded-md border border-slate-200 px-3 py-2", className)}
+        className={cn(
+          "border-input placeholder:text-muted-foreground flex rounded-md border px-3 py-2",
+          className
+        )}
         ref={ref}
         {...props}
       />

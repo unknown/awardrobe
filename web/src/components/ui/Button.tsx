@@ -5,9 +5,9 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
 const buttonVariants = cva("inline-flex items-center justify-center rounded-md transition-colors", {
   variants: {
     variant: {
-      primary: "bg-slate-900 text-white hover:bg-slate-800",
-      secondary: "bg-slate-100 hover:bg-slate-200",
-      outline: "border border-slate-200 hover:bg-slate-100",
+      primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      outline: "border border-input hover:bg-accent hover:text-accent-foreground",
     },
     size: {
       sm: "px-2 py-1",

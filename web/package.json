@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^1.2.2",
     "@supabase/supabase-js": "^2.8.0",
     "@types/node": "18.14.1",
     "@types/react": "18.0.28",
