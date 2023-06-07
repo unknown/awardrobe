@@ -14,7 +14,12 @@ const headers = { "Content-Type": "application/json" };
 async function main() {
   const { data, error } = await supabase.from("products").select();
 
-  if (!data || error) {
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (!data) {
     return;
   }
 
