@@ -1,3 +1,9 @@
+export type UniqloType = {
+  code: string;
+  displayCode: string;
+  name: string;
+};
+
 export type HeartbeatRequest = {
   productId: string;
 };

@@ -1,12 +1,19 @@
 import { dollarsToCents } from "../../utils/currency";
-import { getProductId, supabase } from "../../utils/supabase";
-import { PriceData } from "../../utils/types";
-import { HeartbeatRequest, HeartbeatResponse } from "./uniqlo.types";
+import { getProductId, getStoreId, supabase } from "../../utils/supabase";
+import { PricesEntry } from "../../utils/types";
+import { HeartbeatRequest, HeartbeatResponse, UniqloType } from "./uniqlo.types";
 
-export async function handleHeartbeat({
-  productId,
-}: HeartbeatRequest): Promise<HeartbeatResponse> {
-  const dbProductId = await getProductId("Uniqlo US", productId);
+export async function handleHeartbeat({ productId }: HeartbeatRequest): Promise<HeartbeatResponse> {
+  // TODO: simplify this logic so that storeId only needs to be retrieved once
+  const storeId = await getStoreId("Uniqlo US");
+  if (!storeId) {
+    return {
+      status: "error",
+      error: "Uniqlo US missing from stores table",
+    };
+  }
+
+  const dbProductId = await getProductId(storeId, productId);
   if (!dbProductId) {
     return {
       status: "error",
@@ -14,12 +21,24 @@ export async function handleHeartbeat({
     };
   }
 
-  const itemData = await getProductData(productId, dbProductId);
-  if (itemData.length === 0) {
+  const [prices, { colors, sizes }] = await Promise.all([
+    getPrices(productId),
+    getDetails(productId),
+  ]);
+  if (prices.length === 0) {
     console.warn(`Product ${productId} has empty data`);
   }
 
-  const { error } = await supabase.from("prices").insert(itemData);
+  const entries: PricesEntry[] = prices.map(({ color, size, priceInCents, stock }) => ({
+    product_id: dbProductId,
+    style: colors[color],
+    size: sizes[size],
+    price_in_cents: priceInCents,
+    stock,
+    in_stock: stock > 0,
+  }));
+
+  const { error } = await supabase.from("prices").insert(entries);
   if (error) {
     return {
       status: "error",
@@ -32,34 +51,44 @@ export async function handleHeartbeat({
   };
 }
 
-async function getProductData(productId: string, dbProductId: number) {
-  const priceEndpoint = getPriceEndpoint(productId);
-  const itemData: PriceData[] = [];
+async function getPrices(productId: string) {
+  const pricesResponse = await fetchPricesData(productId);
+  const { stocks, prices: pricesObject, l2s } = (await pricesResponse.json()).result;
 
-  const response = await fetch(priceEndpoint);
-  const {
-    result: { stocks, prices, l2s },
-  } = await response.json();
-
+  const prices: { color: string; size: string; priceInCents: number; stock: number }[] = [];
   Object.keys(stocks).forEach((key, index) => {
-    const style = l2s[index].color.displayCode.toString();
-    const size = l2s[index].size.displayCode.toString();
-    const stock = parseInt(stocks[key].quantity);
-    const price = prices[key].base.value.toString();
-
-    itemData.push({
-      product_id: dbProductId,
-      style,
-      size,
-      price_in_cents: dollarsToCents(price),
-      stock,
-      in_stock: stock > 0,
+    prices.push({
+      color: l2s[index].color.displayCode.toString(),
+      size: l2s[index].size.displayCode.toString(),
+      priceInCents: dollarsToCents(pricesObject[key].base.value.toString()),
+      stock: parseInt(stocks[key].quantity),
     });
   });
-
-  return itemData;
+  return prices;
 }
 
-function getPriceEndpoint(productId: string) {
-  return `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
+async function getDetails(productId: string) {
+  const detailsResponse = await fetchDetailsData(productId);
+  const { name, colors, sizes } = (await detailsResponse.json()).result;
+
+  const colorsRecord: Record<string, string> = {};
+  colors.forEach((color: UniqloType) => {
+    colorsRecord[color.displayCode] = color.name;
+  });
+  const sizesRecord: Record<string, string> = {};
+  sizes.forEach((size: UniqloType) => {
+    sizesRecord[size.displayCode] = size.name;
+  });
+
+  return { name, colors: colorsRecord, sizes: sizesRecord };
+}
+
+function fetchPricesData(productId: string) {
+  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
+  return fetch(pricesEndpoint);
+}
+
+function fetchDetailsData(productId: string) {
+  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+  return fetch(detailsEndpoint);
 }

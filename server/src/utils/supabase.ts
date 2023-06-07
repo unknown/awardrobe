@@ -7,21 +7,21 @@ export const supabase = createClient<Database>(
 );
 
 const productIdCache = new Map<string, number>();
+const storeIdCache = new Map<string, number>();
 
-export async function getProductId(storeName: string, productId: string) {
-  const joinedKey = `${storeName}:${productId}`;
+export async function getProductId(storeId: number, externalProductId: string) {
+  const joinedKey = `${storeId}:${externalProductId}`;
 
   const cachedId = productIdCache.get(joinedKey);
   if (cachedId) {
     return cachedId;
   }
 
-  const storeId = await getStoreId(storeName);
   const { data } = await supabase
     .from("products")
     .select()
     .eq("store_id", storeId)
-    .eq("product_id", productId)
+    .eq("product_id", externalProductId)
     .maybeSingle();
 
   if (!data) {
@@ -32,12 +32,18 @@ export async function getProductId(storeName: string, productId: string) {
   return data.id;
 }
 
-async function getStoreId(storeName: string) {
-  const { data } = await supabase
-    .from("stores")
-    .select()
-    .eq("name", storeName)
-    .single();
+export async function getStoreId(storeName: string) {
+  const cachedId = productIdCache.get(storeName);
+  if (cachedId) {
+    return cachedId;
+  }
 
-  return data?.id;
+  const { data } = await supabase.from("stores").select().eq("name", storeName).single();
+
+  if (!data) {
+    return null;
+  }
+
+  storeIdCache.set(storeName, data.id);
+  return data.id;
 }

@@ -4,10 +4,8 @@ from multiprocessing import Pool
 import requests
 import json
 
-endpoint = "http://localhost:3001/uniqlo-us/"
-headers = {
-    "Content-Type": "application/json"
-}
+endpoint = "http://localhost:3001/uniqlo-us/heartbeat"
+headers = {"Content-Type": "application/json"}
 productIds = [
     "E457264-000",  # U Knitted Short-Sleeve Polo Shirt
     "E457967-000",  # U Wide-Fit Pleated Chino Pants
@@ -17,9 +15,7 @@ productIds = [
 
 
 def get_product_data(product_id):
-    payload = json.dumps({
-        "productId": product_id
-    })
+    payload = json.dumps({"productId": product_id})
     requests.request("POST", endpoint, headers=headers, data=payload)
 
 

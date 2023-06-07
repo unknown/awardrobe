@@ -5,7 +5,7 @@ import { handleHeartbeat } from "./uniqlo.service";
 export const uniqloRouter = Router();
 
 uniqloRouter.post(
-  "/",
+  "/heartbeat",
   async (req: Request<HeartbeatRequest>, res: Response<HeartbeatResponse>) => {
     try {
       res.status(200).json(await handleHeartbeat(req.body));
