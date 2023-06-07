@@ -8,18 +8,19 @@ import { usePrices } from "../hooks/usePrices";
 
 export type ProductHistoryProps = {
   productId: number;
+  styles: string[];
+  sizes: string[];
 };
 
-export function ProductHistory({ productId }: ProductHistoryProps) {
+export function ProductHistory({ productId, styles, sizes }: ProductHistoryProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
   const loadPricesData = useCallback(
     async (filters: FilterOptions, abortSignal?: AbortSignal) => {
       invalidateData();
-
-      const { style, size, dateRange } = filters;
-      const startDate = getStartDate(dateRange ?? dateRange);
-      await fetchPricesData(startDate, style, size, abortSignal);
+      const { dateRange, style, size } = filters;
+      const startDate = getStartDate(dateRange);
+      await fetchPricesData(startDate, { style, size, abortSignal });
     },
     [invalidateData, fetchPricesData]
   );
@@ -53,6 +54,8 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
         updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
         }}
+        styles={styles}
+        sizes={sizes}
       />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
@@ -69,8 +72,6 @@ export function ProductHistory({ productId }: ProductHistoryProps) {
 
 const defaultFilters: FilterOptions = {
   dateRange: "Day",
-  style: "",
-  size: "",
 };
 
 const dateOffsets: Record<DateRange, number> = {

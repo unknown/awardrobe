@@ -9,11 +9,16 @@ export function usePrices(productId: number) {
   const [pricesData, setPricesData] = useState<Prices[] | null>(null);
 
   const fetchPricesData = useCallback(
-    async function (startDate: Date, style: string, size: string, abortSignal?: AbortSignal) {
+    async function (
+      startDate: Date,
+      options: { style?: string; size?: string; abortSignal?: AbortSignal } = {}
+    ) {
+      const { style, size, abortSignal } = options;
+
       setLoading(true);
 
       // TODO: handle error
-      const { data, error } = await getPrices(productId, startDate, style, size, abortSignal);
+      const { data, error } = await getPrices(productId, startDate, { style, size, abortSignal });
 
       const aborted = abortSignal?.aborted ?? false;
       if (!aborted) {

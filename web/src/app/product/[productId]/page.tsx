@@ -25,7 +25,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           View item on Uniqlo
         </a>
       </div>
-      <ProductHistory productId={data.id} />
+      <ProductHistory productId={data.id} styles={data.styles} sizes={data.sizes} />
     </div>
   );
 }

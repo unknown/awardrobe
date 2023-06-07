@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase-client";
 
-export async function getProduct(productId: string, abortSignal?: AbortSignal) {
+export async function getProduct(productId: string, options: { abortSignal?: AbortSignal } = {}) {
+  const { abortSignal } = options;
+
   let query = supabase.from("products").select().eq("id", productId);
 
   if (abortSignal) query.abortSignal(abortSignal);
@@ -11,10 +13,14 @@ export async function getProduct(productId: string, abortSignal?: AbortSignal) {
 export async function getPrices(
   productId: number,
   startDate: Date,
-  style: string,
-  size: string,
-  abortSignal?: AbortSignal
+  options: {
+    style?: string;
+    size?: string;
+    abortSignal?: AbortSignal;
+  } = {}
 ) {
+  const { style, size, abortSignal } = options;
+
   let query = supabase
     .from("prices")
     .select()
