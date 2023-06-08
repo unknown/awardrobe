@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "heartbeat": "ts-node -r tsconfig-paths/register --transpile-only heartbeat.ts"
+    "build": "tsc",
+    "heartbeat": "node dist/heartbeat.js"
   },
   "author": "",
   "license": "ISC",

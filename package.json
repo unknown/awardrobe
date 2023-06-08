@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "turbo run build"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "turbo": "^1.10.2"
+  }
+}

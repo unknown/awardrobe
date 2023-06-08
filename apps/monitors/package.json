@@ -1,10 +1,10 @@
 {
-  "name": "price-monitor",
+  "name": "monitors",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon"
   },
