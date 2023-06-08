@@ -1,6 +1,7 @@
-import { dollarsToCents } from "../../utils/currency";
-import { getProductId, getStoreId, supabase } from "../../utils/supabase";
-import { PricesEntry, ProductsEntry } from "../../utils/types";
+import { dollarsToCents } from "@/utils/currency";
+import { toTitleCase } from "@/utils/formatter";
+import { getProductId, getStoreId, supabase } from "@/utils/supabase";
+import { PricesEntry, ProductsEntry } from "@/utils/types";
 import {
   AddProductRequest,
   AddProductResponse,
@@ -119,7 +120,7 @@ async function getDetails(productId: string) {
 
   const colorsRecord: Record<string, string> = {};
   colors.forEach((color: UniqloType) => {
-    colorsRecord[color.displayCode] = color.name;
+    colorsRecord[color.displayCode] = toTitleCase(color.name);
   });
   const sizesRecord: Record<string, string> = {};
   sizes.forEach((size: UniqloType) => {
