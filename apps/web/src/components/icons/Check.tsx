@@ -15,8 +15,8 @@ export const Check = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, 
       <path
         d="M5 12L10 17L20 7"
         stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

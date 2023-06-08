@@ -15,8 +15,8 @@ export const ChevronDown = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((p
       <path
         d="M6 9l6 6 6-6"
         stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       ></path>
     </svg>
   );
