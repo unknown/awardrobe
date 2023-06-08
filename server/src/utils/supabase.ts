@@ -33,7 +33,7 @@ export async function getProductId(storeId: number, externalProductId: string) {
 }
 
 export async function getStoreId(storeName: string) {
-  const cachedId = productIdCache.get(storeName);
+  const cachedId = storeIdCache.get(storeName);
   if (cachedId) {
     return cachedId;
   }
