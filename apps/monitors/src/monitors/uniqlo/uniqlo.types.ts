@@ -5,7 +5,7 @@ export type UniqloType = {
 };
 
 export type HeartbeatRequest = {
-  productId: string;
+  productCode: string;
 };
 
 type HeartbeatSuccess = {
@@ -20,7 +20,7 @@ type HeartbeatError = {
 export type HeartbeatResponse = HeartbeatSuccess | HeartbeatError;
 
 export type AddProductRequest = {
-  productId: string;
+  productCode: string;
 };
 
 type AddProductSuccess = {

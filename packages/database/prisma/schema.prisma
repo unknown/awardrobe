@@ -58,3 +58,49 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Store {
+  id          String    @id @default(cuid())
+  handle      String    @unique
+  name        String
+  externalUrl String
+  products    Product[]
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  productCode String
+  name        String
+  storeId     String
+  prices      Price[]
+  variant     ProductVariant[]
+  store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, productCode])
+  @@index([storeId])
+}
+
+model Price {
+  id           BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  productId    String
+  timestamp    DateTime         @default(now())
+  priceInCents Int
+  stock        Int?
+  inStock      Boolean
+  variants     ProductVariant[]
+  product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id         String  @id @default(cuid())
+  optionType String
+  productId  String
+  prices     Price[]
+  value      String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, optionType, value])
+  @@index([productId])
+}
