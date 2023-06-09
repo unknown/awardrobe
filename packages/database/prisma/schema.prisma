@@ -81,7 +81,7 @@ model Product {
 }
 
 model Price {
-  id           BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  id           String           @id @default(cuid())
   productId    String
   timestamp    DateTime         @default(now())
   priceInCents Int
