@@ -1,28 +1,23 @@
-import { getPrices } from "@/utils/supabase-queries";
+import { Price, ProductVariant } from "database";
 import { useCallback, useState } from "react";
-import { Database } from "@/lib/db-types";
 
-export type Prices = Database["public"]["Tables"]["prices"]["Row"];
+export type PriceWithVariants = Price & {
+  variants: ProductVariant[];
+};
 
-export function usePrices(productId: number) {
+export function usePrices(productId: string) {
   const [loading, setLoading] = useState(false);
-  const [pricesData, setPricesData] = useState<Prices[] | null>(null);
+  const [pricesData, setPricesData] = useState<PriceWithVariants[] | null>(null);
 
   const fetchPricesData = useCallback(
-    async function (
-      startDate: Date,
-      options: { style?: string; size?: string; abortSignal?: AbortSignal } = {}
-    ) {
-      const { style, size, abortSignal } = options;
-
+    async function (startDate: Date, variants: Record<string, string>, abortSignal?: AbortSignal) {
       setLoading(true);
 
-      // TODO: handle error
-      const { data, error } = await getPrices(productId, startDate, { style, size, abortSignal });
+      const prices = await getPrices(productId, startDate, variants, abortSignal);
 
       const aborted = abortSignal?.aborted ?? false;
       if (!aborted) {
-        setPricesData(data);
+        setPricesData(prices);
         setLoading(false);
       }
     },
@@ -39,4 +34,29 @@ export function usePrices(productId: number) {
     fetchPricesData,
     invalidateData,
   };
+}
+
+// TODO: extract variant type?
+async function getPrices(
+  productId: string,
+  startDate: Date,
+  variants: Record<string, string>,
+  abortSignal?: AbortSignal
+) {
+  const response = await fetch("/api/prices", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId,
+      startDate,
+      variants,
+    }),
+    signal: abortSignal,
+  });
+
+  // IMRPOVE THESE HARDCODED TYPES
+  const json = await response.json();
+  return json.prices as PriceWithVariants[];
 }

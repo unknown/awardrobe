@@ -2,10 +2,10 @@ import { formatDate } from "@/utils/utils";
 import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
 import { curveStepAfter } from "@visx/curve";
 import { ParentSize } from "@visx/responsive";
-import { Prices } from "@/hooks/usePrices";
+import { PriceWithVariants } from "@/hooks/usePrices";
 
 export type PricesChartProps = {
-  prices: Prices[] | null;
+  prices: PriceWithVariants[] | null;
 };
 
 type ChartUnitData = {
@@ -26,14 +26,14 @@ export function ProductChart({ prices }: PricesChartProps) {
 
   const groupedPrices: Record<string, ChartUnitData[]> = {};
   prices.forEach((price) => {
-    const key = price.style + "-" + price.size;
+    const key = price.variants.map((variant) => variant.value).join("-");
     if (groupedPrices[key] === undefined) {
       groupedPrices[key] = [];
     }
     groupedPrices[key].push({
-      date: price.created_at,
+      date: price.timestamp.toString(), //TODO: fix this! prisma thinks timestamp is a date, but it's not
       stock: price.stock ?? 0,
-      price: price.price_in_cents,
+      price: price.priceInCents,
     });
   });
 

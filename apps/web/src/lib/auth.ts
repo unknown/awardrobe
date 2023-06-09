@@ -1,10 +1,8 @@
 import { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "database";
 import EmailProvider from "next-auth/providers/email";
 import { NextAuthOptions } from "next-auth";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/utils/prisma";
 
 // TODO: hacky fix; track https://github.com/nextauthjs/next-auth/issues/7727
 export const authOptions: NextAuthOptions = {

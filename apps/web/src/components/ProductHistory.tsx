@@ -7,20 +7,18 @@ import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { usePrices } from "../hooks/usePrices";
 
 export type ProductHistoryProps = {
-  productId: number;
-  styles: string[];
-  sizes: string[];
+  productId: string;
+  variants: Record<string, string[]>;
 };
 
-export function ProductHistory({ productId, styles, sizes }: ProductHistoryProps) {
+export function ProductHistory({ productId, variants }: ProductHistoryProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
   const loadPricesData = useCallback(
     async (filters: FilterOptions, abortSignal?: AbortSignal) => {
       invalidateData();
-      const { dateRange, style, size } = filters;
-      const startDate = getStartDate(dateRange);
-      await fetchPricesData(startDate, { style, size, abortSignal });
+      const startDate = getStartDate(filters.dateRange);
+      await fetchPricesData(startDate, filters.variants, abortSignal);
     },
     [invalidateData, fetchPricesData]
   );
@@ -40,7 +38,7 @@ export function ProductHistory({ productId, styles, sizes }: ProductHistoryProps
     if (prices.length === 0) {
       return "No price data";
     }
-    return formatPrice(prices[0].price_in_cents);
+    return formatPrice(prices[0].priceInCents);
   };
 
   return (
@@ -54,8 +52,7 @@ export function ProductHistory({ productId, styles, sizes }: ProductHistoryProps
         updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
         }}
-        styles={styles}
-        sizes={sizes}
+        variants={variants}
       />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
@@ -72,6 +69,7 @@ export function ProductHistory({ productId, styles, sizes }: ProductHistoryProps
 
 const defaultFilters: FilterOptions = {
   dateRange: "Day",
+  variants: {},
 };
 
 const dateOffsets: Record<DateRange, number> = {
