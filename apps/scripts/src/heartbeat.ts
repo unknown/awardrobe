@@ -1,30 +1,16 @@
 import * as dotenv from "dotenv";
+import prisma from "./utils/database";
 dotenv.config();
-
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!, {
-  auth: { persistSession: false },
-});
 
 // TODO: dynamic endpoints to support other stores
 const endpoint = "http://localhost:3001/uniqlo-us/heartbeat";
 const headers = { "Content-Type": "application/json" };
 
 async function main() {
-  const { data, error } = await supabase.from("products").select();
+  const products = await prisma.product.findMany();
 
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  if (!data) {
-    return;
-  }
-
-  const requests = data.map((product) => {
-    const body = { productId: product.product_id };
+  const requests = products.map((product) => {
+    const body = { productCode: product.productCode };
     return fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
   });
 
