@@ -37,8 +37,11 @@ export async function handleHeartbeat({
     console.warn(`Product ${productCode} has empty data`);
   }
 
+  const timestamp = new Date();
+
   const entries: Prisma.PriceCreateInput[] = prices.map(
     ({ colorDisplayCode, sizeDisplayCode, priceInCents, stock }) => ({
+      timestamp,
       product: {
         connect: { id: product.id },
       },
