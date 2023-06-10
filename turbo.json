@@ -23,6 +23,9 @@
     },
     "db:push": {
       "cache": false
+    },
+    "monitors#start": {
+      "cache": false
     }
   }
 }
