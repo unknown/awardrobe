@@ -1,5 +1,5 @@
-import { dollarsToCents } from "@/utils/currency";
-import { toTitleCase } from "@/utils/formatter";
+import { dollarsToCents } from "../../utils/currency";
+import { toTitleCase } from "../../utils/formatter";
 import {
   AddProductRequest,
   AddProductResponse,
@@ -7,7 +7,7 @@ import {
   HeartbeatResponse,
   UniqloType,
 } from "./uniqlo.types";
-import prisma from "@/utils/database";
+import prisma from "../../utils/database";
 import { Prisma } from "database";
 
 export async function handleHeartbeat({
