@@ -178,7 +178,7 @@ async function getDetails(productId: string) {
 
   const colorsRecord: Record<string, string> = {};
   colors.forEach((color: UniqloType) => {
-    colorsRecord[color.displayCode] = toTitleCase(color.name);
+    colorsRecord[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
   });
   const sizesRecord: Record<string, string> = {};
   sizes.forEach((size: UniqloType) => {
