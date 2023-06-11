@@ -24,7 +24,8 @@
     "db:push": {
       "cache": false
     },
-    "monitors#start": {
+    "start": {
+      "dependsOn": ["build"],
       "cache": false
     }
   }
