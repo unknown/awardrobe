@@ -49,16 +49,30 @@ export async function handleHeartbeat({
       stock,
       inStock: stock > 0,
       variants: {
-        connect: [
+        connectOrCreate: [
           {
-            productId_optionType_value: {
+            where: {
+              productId_optionType_value: {
+                productId: product.id,
+                optionType: "Color",
+                value: colors[colorDisplayCode],
+              },
+            },
+            create: {
               productId: product.id,
               optionType: "Color",
               value: colors[colorDisplayCode],
             },
           },
           {
-            productId_optionType_value: {
+            where: {
+              productId_optionType_value: {
+                productId: product.id,
+                optionType: "Size",
+                value: sizes[sizeDisplayCode],
+              },
+            },
+            create: {
               productId: product.id,
               optionType: "Size",
               value: sizes[sizeDisplayCode],
