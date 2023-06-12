@@ -83,12 +83,7 @@ export function ProductControls({
                   const newFilters = { ...filters, dateRange: range };
                   updateFilters(newFilters);
                 }}
-                className={cn(
-                  "focus-visible:z-50",
-                  isSelected && "bg-slate-200",
-                  rounded,
-                  !isLast && "border-r-0"
-                )}
+                className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
               >
                 {range}
               </Button>
