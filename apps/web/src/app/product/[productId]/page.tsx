@@ -8,7 +8,17 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
-    include: { variant: true },
+    include: {
+      variant: {
+        select: {
+          optionType: true,
+          value: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+    },
   });
 
   if (!product) {
