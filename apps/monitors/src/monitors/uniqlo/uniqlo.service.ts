@@ -29,59 +29,54 @@ export async function handleHeartbeat({
     };
   }
 
-  const [prices, { colors, sizes }] = await Promise.all([
-    getPrices(productCode),
-    getDetails(productCode),
-  ]);
+  const prices = await getPrices(productCode);
   if (prices.length === 0) {
     console.warn(`Product ${productCode} has empty data`);
   }
 
   const timestamp = new Date();
 
-  const entries: Prisma.PriceCreateInput[] = prices.map(
-    ({ colorDisplayCode, sizeDisplayCode, priceInCents, stock }) => ({
-      timestamp,
-      product: {
-        connect: { id: product.id },
-      },
-      priceInCents,
-      stock,
-      inStock: stock > 0,
-      variants: {
-        connectOrCreate: [
-          {
-            where: {
-              productId_optionType_value: {
-                productId: product.id,
-                optionType: "Color",
-                value: colors[colorDisplayCode],
-              },
-            },
-            create: {
+  const entries: Prisma.PriceCreateInput[] = prices.map(({ color, size, priceInCents, stock }) => ({
+    timestamp,
+    product: {
+      connect: { id: product.id },
+    },
+    priceInCents,
+    stock,
+    inStock: stock > 0,
+    variants: {
+      connectOrCreate: [
+        {
+          where: {
+            productId_optionType_value: {
               productId: product.id,
               optionType: "Color",
-              value: colors[colorDisplayCode],
+              value: color,
             },
           },
-          {
-            where: {
-              productId_optionType_value: {
-                productId: product.id,
-                optionType: "Size",
-                value: sizes[sizeDisplayCode],
-              },
-            },
-            create: {
+          create: {
+            productId: product.id,
+            optionType: "Color",
+            value: color,
+          },
+        },
+        {
+          where: {
+            productId_optionType_value: {
               productId: product.id,
               optionType: "Size",
-              value: sizes[sizeDisplayCode],
+              value: size,
             },
           },
-        ],
-      },
-    })
-  );
+          create: {
+            productId: product.id,
+            optionType: "Size",
+            value: size,
+          },
+        },
+      ],
+    },
+  }));
 
   await Promise.all(
     entries.map(async (entry) => {
@@ -112,7 +107,7 @@ export async function addProduct({ productCode }: AddProductRequest): Promise<Ad
     };
   }
 
-  const { name, colors, sizes } = await getDetails(productCode);
+  const { name, colorsRecord, sizesRecord } = await getDetails(productCode);
 
   await prisma.product.create({
     data: {
@@ -122,11 +117,11 @@ export async function addProduct({ productCode }: AddProductRequest): Promise<Ad
       variant: {
         createMany: {
           data: [
-            ...Object.values(colors).map((color) => ({
+            ...Object.values(colorsRecord).map((color) => ({
               optionType: "Color",
               value: color,
             })),
-            ...Object.values(sizes).map((size) => ({
+            ...Object.values(sizesRecord).map((size) => ({
               optionType: "Size",
               value: size,
             })),
@@ -153,39 +148,51 @@ function getProduct(storeId: string, productCode: string) {
 
 async function getPrices(productCode: string) {
   const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-  const pricesResponse = await fetch(pricesEndpoint);
+  const [pricesResponse, { colorsRecord, sizesRecord }] = await Promise.all([
+    fetch(pricesEndpoint),
+    getDetails(productCode),
+  ]);
   const { stocks, prices: pricesObject, l2s } = (await pricesResponse.json()).result;
 
   const prices: {
-    colorDisplayCode: string;
-    sizeDisplayCode: string;
+    color: string;
+    size: string;
     priceInCents: number;
     stock: number;
   }[] = [];
+
   Object.keys(stocks).forEach((key, index) => {
+    const colorDisplayCode = l2s[index].color.displayCode.toString();
+    const sizeDisplayCode = l2s[index].size.displayCode.toString();
+    const price = pricesObject[key].base.value.toString();
+    const stock = parseInt(stocks[key].quantity);
     prices.push({
-      colorDisplayCode: l2s[index].color.displayCode.toString(),
-      sizeDisplayCode: l2s[index].size.displayCode.toString(),
-      priceInCents: dollarsToCents(pricesObject[key].base.value.toString()),
-      stock: parseInt(stocks[key].quantity),
+      color: colorsRecord[colorDisplayCode],
+      size: sizesRecord[sizeDisplayCode],
+      priceInCents: dollarsToCents(price),
+      stock,
     });
   });
+
   return prices;
 }
 
 async function getDetails(productCode: string) {
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
   const detailsResponse = await fetch(detailsEndpoint);
-  const { name, colors, sizes } = (await detailsResponse.json()).result;
+  const { name, colors, sizes }: { name: string; colors: UniqloType[]; sizes: UniqloType[] } = (
+    await detailsResponse.json()
+  ).result;
 
   const colorsRecord: Record<string, string> = {};
-  colors.forEach((color: UniqloType) => {
+  colors.forEach((color) => {
     colorsRecord[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
   });
+
   const sizesRecord: Record<string, string> = {};
-  sizes.forEach((size: UniqloType) => {
+  sizes.forEach((size) => {
     sizesRecord[size.displayCode] = size.name;
   });
 
-  return { name, colors: colorsRecord, sizes: sizesRecord };
+  return { name, colorsRecord, sizesRecord };
 }
