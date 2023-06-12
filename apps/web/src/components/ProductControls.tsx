@@ -1,4 +1,3 @@
-import { ButtonGroup } from "@ui/ButtonGroup";
 import { Button } from "@ui/Button";
 import React, { useState } from "react";
 import {
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
+import { cn } from "@/utils/utils";
 
 export type ProductControlsProps = {
   defaultFilters: FilterOptions;
@@ -69,9 +69,12 @@ export function ProductControls({
       </div>
       <label htmlFor="range-input">
         Price History
-        <ButtonGroup id="range-input" aria-label="Select a date range">
-          {DateRanges.map((range) => {
-            const selected = range === filters.dateRange;
+        <div id="range-input" aria-label="Select a date range">
+          {DateRanges.map((range, index) => {
+            const isSelected = range === filters.dateRange;
+            const [isFirst, isLast] = [index === 0, index === DateRanges.length - 1];
+            const rounded = isFirst ? "rounded-r-none" : isLast ? "rounded-l-none" : "rounded-none";
+
             return (
               <Button
                 key={range}
@@ -80,13 +83,18 @@ export function ProductControls({
                   const newFilters = { ...filters, dateRange: range };
                   updateFilters(newFilters);
                 }}
-                className={selected ? "bg-slate-200" : ""}
+                className={cn(
+                  "focus-visible:z-50",
+                  isSelected && "bg-slate-200",
+                  rounded,
+                  !isLast && "border-r-0"
+                )}
               >
                 {range}
               </Button>
             );
           })}
-        </ButtonGroup>
+        </div>
       </label>
     </div>
   );
