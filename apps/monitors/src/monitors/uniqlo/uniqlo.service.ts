@@ -152,7 +152,8 @@ function getProduct(storeId: string, productCode: string) {
 }
 
 async function getPrices(productCode: string) {
-  const pricesResponse = await fetchPricesData(productCode);
+  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
+  const pricesResponse = await fetch(pricesEndpoint);
   const { stocks, prices: pricesObject, l2s } = (await pricesResponse.json()).result;
 
   const prices: {
@@ -172,8 +173,9 @@ async function getPrices(productCode: string) {
   return prices;
 }
 
-async function getDetails(productId: string) {
-  const detailsResponse = await fetchDetailsData(productId);
+async function getDetails(productCode: string) {
+  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+  const detailsResponse = await fetch(detailsEndpoint);
   const { name, colors, sizes } = (await detailsResponse.json()).result;
 
   const colorsRecord: Record<string, string> = {};
@@ -186,14 +188,4 @@ async function getDetails(productId: string) {
   });
 
   return { name, colors: colorsRecord, sizes: sizesRecord };
-}
-
-function fetchPricesData(productCode: string) {
-  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-  return fetch(pricesEndpoint);
-}
-
-function fetchDetailsData(productCode: string) {
-  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  return fetch(detailsEndpoint);
 }
