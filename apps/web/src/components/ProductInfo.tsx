@@ -31,7 +31,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
     };
   }, [loadPricesData]);
 
-  const getLatestPrice = () => {
+  const getLatestPriceText = () => {
     if (prices === null || loading) {
       return "Loading...";
     }
@@ -45,7 +45,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
     <Fragment>
       <div>
         <p>Latest Price</p>
-        <p className="text-2xl font-medium">{getLatestPrice()}</p>
+        <p className="text-2xl font-medium">{getLatestPriceText()}</p>
       </div>
       <ProductControls
         defaultFilters={defaultFilters}
@@ -60,7 +60,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
             },
             body: JSON.stringify({
               productId,
-              priceInCents: undefined,
+              priceInCents: undefined, // TODO: populate this with user-defined value
               mustBeInStock: false,
               variants,
             }),

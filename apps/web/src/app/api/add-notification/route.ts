@@ -20,6 +20,10 @@ export async function POST(req: Request) {
   const { productId, priceInCents, mustBeInStock, variants }: AddNotificationRequest =
     await req.json();
 
+  if (Object.keys(variants).length === 0) {
+    return NextResponse.json({ status: "error", error: "Missing variants" }, { status: 400 });
+  }
+
   await prisma.productNotification.create({
     data: {
       userId: session.user.id,
