@@ -13,5 +13,11 @@ export const authOptions: NextAuthOptions = {
       from: process.env.EMAIL_FROM,
     }),
   ],
+  callbacks: {
+    async session({ session, user }) {
+      session.user.id = user.id;
+      return Promise.resolve(session);
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
 };

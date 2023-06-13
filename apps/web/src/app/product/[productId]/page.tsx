@@ -1,4 +1,4 @@
-import { ProductHistory } from "@/components/ProductHistory";
+import { ProductInfo } from "@/components/ProductInfo";
 import { prisma } from "@/utils/prisma";
 
 interface ProductPageProps {
@@ -26,10 +26,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const groupedVariants = product.variant.reduce((accum, { optionType, value }) => {
-    if (accum[optionType] === undefined) {
-      accum[optionType] = [];
-    }
-    accum[optionType].push(value);
+    const group = accum[optionType] ?? [];
+    group.push(value);
+    accum[optionType] = group;
     return accum;
   }, {} as Record<string, string[]>);
 
@@ -46,7 +45,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           View item on Uniqlo
         </a>
       </div>
-      <ProductHistory productId={product.id} variants={groupedVariants} />
+      <ProductInfo productId={product.id} variants={groupedVariants} />
     </div>
   );
 }

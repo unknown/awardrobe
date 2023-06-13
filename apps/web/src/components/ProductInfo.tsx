@@ -6,12 +6,12 @@ import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { usePrices } from "../hooks/usePrices";
 
-export type ProductHistoryProps = {
+export type ProductInfoProps = {
   productId: string;
   variants: Record<string, string[]>;
 };
 
-export function ProductHistory({ productId, variants }: ProductHistoryProps) {
+export function ProductInfo({ productId, variants }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
   const loadPricesData = useCallback(
@@ -51,6 +51,23 @@ export function ProductHistory({ productId, variants }: ProductHistoryProps) {
         defaultFilters={defaultFilters}
         updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
+        }}
+        addNotification={async (variants) => {
+          const response = await fetch("/api/add-notification", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productId,
+              priceInCents: undefined,
+              mustBeInStock: false,
+              variants,
+            }),
+          });
+          if (response.status === 200) {
+            console.log("Added notification");
+          }
         }}
         variants={variants}
       />

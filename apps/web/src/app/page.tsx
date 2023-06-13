@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/utils/auth";
 import { LoginButton, LogoutButton } from "@/components/AuthButtons";
 import { prisma } from "@/utils/prisma";
 

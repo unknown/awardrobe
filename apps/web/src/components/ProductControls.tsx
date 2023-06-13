@@ -13,6 +13,7 @@ import { cn } from "@/utils/utils";
 export type ProductControlsProps = {
   defaultFilters: FilterOptions;
   updateFilters: (newFilters: FilterOptions) => void;
+  addNotification: (variants: Record<string, string>) => Promise<void>;
   variants: Record<string, string[]>;
 };
 
@@ -27,6 +28,7 @@ export type FilterOptions = {
 export function ProductControls({
   defaultFilters,
   updateFilters: consumerUpdateFilters,
+  addNotification,
   variants,
 }: ProductControlsProps) {
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
@@ -38,7 +40,13 @@ export function ProductControls({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
+      <form
+        className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          addNotification(filters.variants);
+        }}
+      >
         {Object.entries(variants).map(([optionType, values]) => {
           return (
             <React.Fragment key={optionType}>
@@ -66,7 +74,8 @@ export function ProductControls({
             </React.Fragment>
           );
         })}
-      </div>
+        <Button>Add Notification</Button>
+      </form>
       <label htmlFor="range-input">
         Price History
         <div id="range-input" aria-label="Select a date range">

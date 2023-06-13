@@ -1,13 +1,14 @@
 import { prisma } from "@/utils/prisma";
 import { NextResponse } from "next/server";
 
+type PricesRequest = {
+  productId: string;
+  startDate: string;
+  variants: Record<string, string>;
+};
+
 export async function POST(req: Request) {
-  // TODO: type these better
-  const {
-    productId,
-    startDate,
-    variants,
-  }: { productId: string; startDate: string; variants: Record<string, string> } = await req.json();
+  const { productId, startDate, variants }: PricesRequest = await req.json();
 
   const prices = await prisma.price.findMany({
     where: {
@@ -34,5 +35,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ prices });
+  return NextResponse.json({ status: "success", prices });
 }

@@ -37,11 +37,11 @@ export function ProductChart({ prices }: PricesChartProps) {
     });
   });
 
-  // ensure even group split and sort data into chronologically
+  // ensure equal group lengths and sort data chronologically
   const groupKeys = Object.keys(groupedPrices);
+  const groupSize = prices.length / groupKeys.length;
   groupKeys.forEach((key) => {
-    groupedPrices[key] = groupedPrices[key].slice(0, prices.length / groupKeys.length);
-    groupedPrices[key].reverse();
+    groupedPrices[key] = groupedPrices[key].slice(0, groupSize).reverse();
   });
 
   return (
