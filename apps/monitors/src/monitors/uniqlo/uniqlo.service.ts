@@ -8,7 +8,6 @@ import {
   UniqloType,
 } from "./uniqlo.types";
 import prisma from "../../utils/database";
-import { Prisma } from "database";
 
 export async function handleHeartbeat({
   productCode,
@@ -36,51 +35,116 @@ export async function handleHeartbeat({
 
   const timestamp = new Date();
 
-  const entries: Prisma.PriceCreateInput[] = prices.map(({ color, size, priceInCents, stock }) => ({
-    timestamp,
-    product: {
-      connect: { id: product.id },
-    },
-    priceInCents,
-    stock,
-    inStock: stock > 0,
-    variants: {
-      connectOrCreate: [
-        {
-          where: {
-            productId_optionType_value: {
-              productId: product.id,
-              optionType: "Color",
-              value: color,
-            },
-          },
-          create: {
-            productId: product.id,
-            optionType: "Color",
-            value: color,
-          },
-        },
-        {
-          where: {
-            productId_optionType_value: {
-              productId: product.id,
-              optionType: "Size",
-              value: size,
-            },
-          },
-          create: {
-            productId: product.id,
-            optionType: "Size",
-            value: size,
-          },
-        },
-      ],
-    },
-  }));
-
   await Promise.all(
-    entries.map(async (entry) => {
-      await prisma.price.create({ data: entry });
+    prices.map(async ({ color, size, priceInCents, stock }) => {
+      const createPricePromise = prisma.price.create({
+        data: {
+          timestamp,
+          product: {
+            connect: { id: product.id },
+          },
+          priceInCents,
+          stock,
+          inStock: stock > 0,
+          variants: {
+            connectOrCreate: [
+              {
+                where: {
+                  productId_optionType_value: {
+                    productId: product.id,
+                    optionType: "Color",
+                    value: color,
+                  },
+                },
+                create: {
+                  productId: product.id,
+                  optionType: "Color",
+                  value: color,
+                },
+              },
+              {
+                where: {
+                  productId_optionType_value: {
+                    productId: product.id,
+                    optionType: "Size",
+                    value: size,
+                  },
+                },
+                create: {
+                  productId: product.id,
+                  optionType: "Size",
+                  value: size,
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const oldPrice = await prisma.price.findFirst({
+        where: {
+          productId: product.id,
+          AND: [
+            {
+              variants: {
+                some: {
+                  productId: product.id,
+                  optionType: "Color",
+                  value: color,
+                },
+              },
+            },
+            {
+              variants: {
+                some: {
+                  productId: product.id,
+                  optionType: "Size",
+                  value: size,
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      if (oldPrice && priceInCents < oldPrice.priceInCents) {
+        const notifications = await prisma.productNotification.findMany({
+          where: {
+            priceInCents: {
+              gte: priceInCents,
+            },
+            AND: [
+              {
+                variants: {
+                  some: {
+                    productId: product.id,
+                    optionType: "Color",
+                    value: color,
+                  },
+                },
+              },
+              {
+                variants: {
+                  some: {
+                    productId: product.id,
+                    optionType: "Size",
+                    value: size,
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        await Promise.all([
+          notifications.map(async (notification) => {
+            const user = await prisma.user.findUnique({ where: { id: notification.userId } });
+            console.log(user?.email);
+          }),
+        ]);
+      }
+
+      await createPricePromise;
     })
   );
 
