@@ -88,7 +88,7 @@ model Price {
   priceInCents Int
   stock        Int?
   inStock      Boolean
-  variants     ProductVariant[]
+  variants     ProductVariant[] // TODO: implicit many-to-many
   product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
@@ -98,9 +98,9 @@ model ProductVariant {
   id            String                @id @default(cuid())
   optionType    String
   productId     String
-  prices        Price[]
+  prices        Price[] // TODO: implicit many-to-many
   value         String
-  notifications ProductNotification[]
+  notifications ProductNotification[] // TODO: implicit many-to-many
   product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, optionType, value])
@@ -112,7 +112,7 @@ model ProductNotification {
   userId        String
   priceInCents  Int?
   mustBeInStock Boolean
-  variants      ProductVariant[]
+  variants      ProductVariant[] // TODO: implicit many-to-many
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

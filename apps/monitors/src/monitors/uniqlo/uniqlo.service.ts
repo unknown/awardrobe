@@ -110,9 +110,16 @@ export async function handleHeartbeat({
       if (oldPrice && priceInCents < oldPrice.priceInCents) {
         const notifications = await prisma.productNotification.findMany({
           where: {
-            priceInCents: {
-              gte: priceInCents,
-            },
+            OR: [
+              {
+                priceInCents: null,
+              },
+              {
+                priceInCents: {
+                  gte: priceInCents,
+                },
+              },
+            ],
             AND: [
               {
                 variants: {
@@ -138,8 +145,11 @@ export async function handleHeartbeat({
 
         await Promise.all([
           notifications.map(async (notification) => {
-            const user = await prisma.user.findUnique({ where: { id: notification.userId } });
-            console.log(user?.email);
+            const user = await prisma.user.findUniqueOrThrow({
+              where: { id: notification.userId },
+            });
+
+            console.log(user.email);
           }),
         ]);
       }
