@@ -50,13 +50,20 @@ async function pingProduct(product: Product) {
         },
       });
 
-      const hasPriceChanged = oldPrice && priceInCents !== oldPrice.priceInCents;
-      const hasStockChanged = oldPrice && stock !== oldPrice.stock;
-      if (oldPrice && !hasPriceChanged && !hasStockChanged) {
-        return;
+      if (oldPrice) {
+        const diffTime = timestamp.getTime() - oldPrice.timestamp.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        const isStale = diffDays >= 1;
+        const hasPriceChanged = priceInCents !== oldPrice.priceInCents;
+        const hasStockChanged = stock !== oldPrice.stock;
+
+        if (!isStale && !hasPriceChanged && !hasStockChanged) {
+          return;
+        }
       }
 
-      console.log(`Product ${product.productCode} (${color}-${size}) has changed`);
+      console.log(`Updating ${product.productCode} (${color}-${size})`);
 
       const createPricePromise = prisma.price.create({
         data: {
