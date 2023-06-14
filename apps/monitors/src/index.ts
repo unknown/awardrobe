@@ -1,22 +1,20 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import express, { Application, Request, Response } from "express";
-import { uniqloRouter } from "./monitors/uniqlo/uniqlo.router";
+import cron from "node-cron";
+import { handleHeartbeat } from "./monitors/uniqlo";
 
-const app: Application = express();
-const PORT = process.env.PORT ?? 3001;
+function setupMonitors() {
+  cron.schedule(`*/10 * * * *`, async () => {
+    await handleHeartbeat();
+    console.log("Heartbeat for Uniqlo US finished");
+  });
+}
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+function main() {
+  setupMonitors();
 
-app.get("/", (_: Request, res: Response): void => {
-  res.send("Monitors endpoint");
-});
+  console.log("Started monitoring");
+}
 
-// monitor endpoints
-app.use("/uniqlo-us", uniqloRouter);
-
-app.listen(PORT, () => {
-  console.log(`Running on http://localhost:${PORT}`);
-});
+void main();

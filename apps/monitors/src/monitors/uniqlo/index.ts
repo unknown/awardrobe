@@ -1,36 +1,21 @@
 import { dollarsToCents } from "../../utils/currency";
 import { toTitleCase } from "../../utils/formatter";
-import {
-  AddProductRequest,
-  AddProductResponse,
-  HeartbeatRequest,
-  HeartbeatResponse,
-  UniqloType,
-} from "./uniqlo.types";
+import { Price, UniqloType } from "./types";
 import prisma from "../../utils/database";
+import { Product } from "database";
 
-export async function handleHeartbeat({
-  productCode,
-}: HeartbeatRequest): Promise<HeartbeatResponse> {
-  const store = await getStore();
-  if (!store) {
-    return {
-      status: "error",
-      error: "Uniqlo US missing from stores table",
-    };
-  }
+export async function handleHeartbeat() {
+  const products = await prisma.product.findMany();
+  const promises = products.map((product) => {
+    pingProduct(product);
+  });
+  await Promise.all(promises);
+}
 
-  const product = await getProduct(store.id, productCode);
-  if (!product) {
-    return {
-      status: "error",
-      error: "Product missing from products table",
-    };
-  }
-
-  const prices = await getPrices(productCode);
+async function pingProduct(product: Product) {
+  const prices = await getProductPrices(product.productCode);
   if (prices.length === 0) {
-    console.warn(`Product ${productCode} has empty data`);
+    console.warn(`Product ${product.productCode} has empty data`);
   }
 
   const timestamp = new Date();
@@ -157,116 +142,42 @@ export async function handleHeartbeat({
       await createPricePromise;
     })
   );
-
-  return {
-    status: "success",
-  };
 }
 
-export async function addProduct({ productCode }: AddProductRequest): Promise<AddProductResponse> {
-  // TODO: remove get store? -> only one SQL query?
-  const store = await getStore();
-  if (!store) {
-    return {
-      status: "error",
-      error: "Uniqlo US missing from stores table",
-    };
-  }
-
-  const product = await getProduct(store.id, productCode);
-  if (product !== null) {
-    return {
-      status: "error",
-      error: "Product already in products table",
-    };
-  }
-
-  const { name, colorsRecord, sizesRecord } = await getDetails(productCode);
-
-  await prisma.product.create({
-    data: {
-      productCode,
-      name,
-      storeId: store.id,
-      variant: {
-        createMany: {
-          data: [
-            ...Object.values(colorsRecord).map((color) => ({
-              optionType: "Color",
-              value: color,
-            })),
-            ...Object.values(sizesRecord).map((size) => ({
-              optionType: "Size",
-              value: size,
-            })),
-          ],
-        },
-      },
-    },
-  });
-
-  return {
-    status: "success",
-  };
-}
-
-function getStore() {
-  return prisma.store.findUnique({ where: { handle: "uniqlo-us" } });
-}
-
-function getProduct(storeId: string, productCode: string) {
-  return prisma.product.findUnique({
-    where: { storeId_productCode: { storeId, productCode } },
-  });
-}
-
-async function getPrices(productCode: string) {
+async function getProductPrices(productCode: string) {
   const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-  const [pricesResponse, { colorsRecord, sizesRecord }] = await Promise.all([
-    fetch(pricesEndpoint),
-    getDetails(productCode),
+  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+
+  const [pricesData, detailsData] = await Promise.all([
+    (await fetch(pricesEndpoint)).json(),
+    (await fetch(detailsEndpoint)).json(),
   ]);
-  const { stocks, prices: pricesObject, l2s } = (await pricesResponse.json()).result;
 
-  const prices: {
-    color: string;
-    size: string;
-    priceInCents: number;
-    stock: number;
-  }[] = [];
+  const { stocks, prices: pricesObject, l2s } = pricesData.result;
+  const { colors, sizes }: { colors: UniqloType[]; sizes: UniqloType[] } = detailsData.result;
 
-  Object.keys(stocks).forEach((key, index) => {
+  // used to map display codes to human-readable names (e.g. "08" -> "08 Dark Gray")
+  const colorsRecord = colors.reduce((colors, color) => {
+    colors[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
+    return colors;
+  }, {} as Record<string, string>);
+  const sizesRecord = sizes.reduce((sizes, size) => {
+    sizes[size.displayCode] = size.name;
+    return sizes;
+  }, {} as Record<string, string>);
+
+  const prices: Price[] = Object.keys(stocks).map((key, index) => {
     const colorDisplayCode = l2s[index].color.displayCode.toString();
     const sizeDisplayCode = l2s[index].size.displayCode.toString();
     const price = pricesObject[key].base.value.toString();
     const stock = parseInt(stocks[key].quantity);
-    prices.push({
+    return {
       color: colorsRecord[colorDisplayCode],
       size: sizesRecord[sizeDisplayCode],
       priceInCents: dollarsToCents(price),
       stock,
-    });
+    };
   });
 
   return prices;
-}
-
-async function getDetails(productCode: string) {
-  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const detailsResponse = await fetch(detailsEndpoint);
-  const { name, colors, sizes }: { name: string; colors: UniqloType[]; sizes: UniqloType[] } = (
-    await detailsResponse.json()
-  ).result;
-
-  const colorsRecord: Record<string, string> = {};
-  colors.forEach((color) => {
-    colorsRecord[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
-  });
-
-  const sizesRecord: Record<string, string> = {};
-  sizes.forEach((size) => {
-    sizesRecord[size.displayCode] = size.name;
-  });
-
-  return { name, colorsRecord, sizesRecord };
 }
