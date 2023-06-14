@@ -104,6 +104,7 @@ model ProductVariant {
   product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, optionType, value])
+  @@index([productId, optionType, value])
   @@index([productId])
 }
 
