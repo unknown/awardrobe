@@ -7,9 +7,7 @@ import { Price, UniqloType } from "./types";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
-  const promises = products.map((product) => {
-    pingProduct(product);
-  });
+  const promises = products.map((product) => pingProduct(product));
   await Promise.all(promises);
 }
 
@@ -47,6 +45,9 @@ async function pingProduct(product: Product) {
             },
           ],
         },
+        orderBy: {
+          timestamp: "desc",
+        },
       });
 
       const hasPriceChanged = oldPrice && priceInCents !== oldPrice.priceInCents;
@@ -54,6 +55,8 @@ async function pingProduct(product: Product) {
       if (oldPrice && !hasPriceChanged && !hasStockChanged) {
         return;
       }
+
+      console.log(`Product ${product.productCode} (${color}-${size}) has changed`);
 
       const createPricePromise = prisma.price.create({
         data: {
