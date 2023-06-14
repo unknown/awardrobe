@@ -14,6 +14,15 @@ export type ProductInfoProps = {
 export function ProductInfo({ productId, variants }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
+  const defaultVariants = Object.entries(variants).reduce((variants, [name, values]) => {
+    variants[name] = values[0];
+    return variants;
+  }, {} as Record<string, string>);
+  const defaultFilters: FilterOptions = {
+    dateRange: "Day",
+    variants: defaultVariants,
+  };
+
   const loadPricesData = useCallback(
     async (filters: FilterOptions, abortSignal?: AbortSignal) => {
       invalidateData();
@@ -83,11 +92,6 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
     </Fragment>
   );
 }
-
-const defaultFilters: FilterOptions = {
-  dateRange: "Day",
-  variants: {},
-};
 
 const dateOffsets: Record<DateRange, number> = {
   Day: 24 * 60 * 60 * 1000,
