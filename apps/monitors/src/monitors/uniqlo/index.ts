@@ -23,6 +23,38 @@ async function pingProduct(product: Product) {
 
   await Promise.all(
     prices.map(async ({ color, size, priceInCents, stock }) => {
+      const oldPrice = await prisma.price.findFirst({
+        where: {
+          productId: product.id,
+          AND: [
+            {
+              variants: {
+                some: {
+                  productId: product.id,
+                  optionType: "Color",
+                  value: color,
+                },
+              },
+            },
+            {
+              variants: {
+                some: {
+                  productId: product.id,
+                  optionType: "Size",
+                  value: size,
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      const hasPriceChanged = oldPrice && priceInCents !== oldPrice.priceInCents;
+      const hasStockChanged = oldPrice && stock !== oldPrice.stock;
+      if (oldPrice && !hasPriceChanged && !hasStockChanged) {
+        return;
+      }
+
       const createPricePromise = prisma.price.create({
         data: {
           timestamp,
@@ -67,33 +99,10 @@ async function pingProduct(product: Product) {
         },
       });
 
-      const oldPrice = await prisma.price.findFirst({
-        where: {
-          productId: product.id,
-          AND: [
-            {
-              variants: {
-                some: {
-                  productId: product.id,
-                  optionType: "Color",
-                  value: color,
-                },
-              },
-            },
-            {
-              variants: {
-                some: {
-                  productId: product.id,
-                  optionType: "Size",
-                  value: size,
-                },
-              },
-            },
-          ],
-        },
-      });
-
-      if (oldPrice && priceInCents < oldPrice.priceInCents) {
+      const hasPriceDropped = !oldPrice || priceInCents < oldPrice.priceInCents;
+      const isBackInStock = !oldPrice || (stock > 0 && oldPrice.stock === 0);
+      if (hasPriceDropped || isBackInStock) {
+        // TODO: check mustBeInStock
         const notifications = await prisma.productNotification.findMany({
           where: {
             OR: [

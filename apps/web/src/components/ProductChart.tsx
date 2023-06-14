@@ -32,17 +32,22 @@ export function ProductChart({ prices }: PricesChartProps) {
       groupedPrices[key] = [];
     }
     groupedPrices[key].push({
-      date: price.timestamp.toString(), //TODO: fix this! prisma thinks timestamp is a date, but it's not
+      date: price.timestamp.toString(),
       stock: price.stock ?? 0,
       price: price.priceInCents,
     });
   });
 
-  // ensure equal group lengths and sort data chronologically
+  // ensure equal group lengths, sort data chronologically, and add a data point for "now"
   const groupKeys = Object.keys(groupedPrices);
   const groupSize = prices.length / groupKeys.length;
+  const currentDate = new Date();
   groupKeys.forEach((key) => {
     groupedPrices[key] = groupedPrices[key].slice(0, groupSize).reverse();
+
+    const lastPrice = { ...groupedPrices[key].slice(-1)[0] };
+    lastPrice.date = currentDate.toString();
+    groupedPrices[key].push(lastPrice);
   });
 
   return (
