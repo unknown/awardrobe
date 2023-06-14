@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPrice } from "@/utils/utils";
-import { Fragment, useCallback, useEffect } from "react";
+import { Fragment, useCallback, useEffect, useRef } from "react";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { usePrices } from "../hooks/usePrices";
@@ -14,14 +14,13 @@ export type ProductInfoProps = {
 export function ProductInfo({ productId, variants }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
-  const defaultVariants = Object.entries(variants).reduce((variants, [name, values]) => {
-    variants[name] = values[0];
-    return variants;
-  }, {} as Record<string, string>);
-  const defaultFilters: FilterOptions = {
+  const defaultFilters = useRef<FilterOptions>({
     dateRange: "Day",
-    variants: defaultVariants,
-  };
+    variants: Object.entries(variants).reduce((variants, [name, values]) => {
+      variants[name] = values[0];
+      return variants;
+    }, {} as Record<string, string>),
+  });
 
   const loadPricesData = useCallback(
     async (filters: FilterOptions, abortSignal?: AbortSignal) => {
@@ -34,7 +33,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
 
   useEffect(() => {
     const abortController = new AbortController();
-    loadPricesData(defaultFilters, abortController.signal);
+    loadPricesData(defaultFilters.current, abortController.signal);
     return () => {
       abortController.abort();
     };
@@ -43,11 +42,11 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
   const getLatestPriceText = () => {
     if (prices === null || loading) {
       return "Loading...";
-    }
-    if (prices.length === 0) {
+    } else if (prices.length === 0) {
       return "No price data";
+    } else {
+      return formatPrice(prices[0].priceInCents);
     }
-    return formatPrice(prices[0].priceInCents);
   };
 
   return (
@@ -57,7 +56,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
         <p className="text-2xl font-medium">{getLatestPriceText()}</p>
       </div>
       <ProductControls
-        defaultFilters={defaultFilters}
+        defaultFilters={defaultFilters.current}
         updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
         }}
