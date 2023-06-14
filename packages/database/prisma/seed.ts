@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -12,21 +13,31 @@ async function main() {
     },
   });
 
-  await Promise.all([
-    addProduct(uniqlo.id, "E457264-000"),
-    addProduct(uniqlo.id, "E457967-000"),
-    addProduct(uniqlo.id, "E453056-000"),
-    addProduct(uniqlo.id, "E457263-000"),
-    addProduct(uniqlo.id, "E457212-000"),
-    addProduct(uniqlo.id, "E455498-000"),
-  ]);
+  const productCodes = [
+    "E457264-000",
+    "E457967-000",
+    "E453056-000",
+    "E457263-000",
+    "E457212-000",
+    "E455498-000",
+  ];
+  for (const productCode of productCodes) {
+    await addProduct(uniqlo.id, productCode);
+  }
 }
 
 async function addProduct(storeId: string, productCode: string) {
   const { name, colors, sizes } = await getDetails(productCode);
 
-  await prisma.product.create({
-    data: {
+  await prisma.product.upsert({
+    where: {
+      storeId_productCode: {
+        storeId,
+        productCode,
+      },
+    },
+    update: {},
+    create: {
       productCode,
       name,
       storeId,
