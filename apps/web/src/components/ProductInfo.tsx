@@ -17,7 +17,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
   const defaultFilters = useRef<FilterOptions>({
-    dateRange: "Day",
+    dateRange: "7d",
     variants: Object.entries(variants).reduce((variants, [name, values]) => {
       variants[name] = values[0];
       return variants;
@@ -95,10 +95,12 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
 }
 
 const dateOffsets: Record<DateRange, number> = {
-  Day: 24 * 60 * 60 * 1000,
-  Week: 7 * 24 * 60 * 60 * 1000,
-  Month: 31 * 24 * 60 * 60 * 1000,
-  "All Time": Infinity,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "1m": 30 * 24 * 60 * 60 * 1000,
+  "3m": 90 * 24 * 60 * 60 * 1000,
+  "6m": 180 * 24 * 60 * 60 * 1000,
+  "1y": 365 * 24 * 60 * 60 * 1000,
+  All: Infinity,
 };
 
 function getStartDate(dateRange: DateRange) {

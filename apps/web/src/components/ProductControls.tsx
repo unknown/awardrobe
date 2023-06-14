@@ -19,7 +19,7 @@ export type ProductControlsProps = {
   variants: Record<string, string[]>;
 };
 
-const DateRanges = ["Day", "Week", "Month", "All Time"] as const;
+const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
 
 export type FilterOptions = {
