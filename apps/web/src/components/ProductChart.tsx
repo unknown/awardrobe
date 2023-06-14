@@ -87,7 +87,6 @@ export function ProductChart({ prices }: PricesChartProps) {
             <Tooltip<ChartUnitData>
               showSeriesGlyphs
               showVerticalCrosshair
-              snapTooltipToDatumX
               glyphStyle={{
                 fill: "#008561",
               }}
