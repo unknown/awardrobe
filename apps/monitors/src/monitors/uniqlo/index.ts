@@ -1,8 +1,9 @@
+import { Product } from "database";
+
 import { dollarsToCents } from "../../utils/currency";
+import prisma from "../../utils/database";
 import { toTitleCase } from "../../utils/formatter";
 import { Price, UniqloType } from "./types";
-import prisma from "../../utils/database";
-import { Product } from "database";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();

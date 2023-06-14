@@ -1,10 +1,12 @@
 "use client";
 
-import { formatPrice } from "@/utils/utils";
 import { Fragment, useCallback, useEffect, useRef } from "react";
+
+import { formatPrice } from "@/utils/utils";
+
+import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
-import { usePrices } from "../hooks/usePrices";
 
 export type ProductInfoProps = {
   productId: string;

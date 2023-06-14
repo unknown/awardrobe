@@ -1,5 +1,6 @@
-import { Button } from "@ui/Button";
 import React, { useState } from "react";
+
+import { Button } from "@ui/Button";
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
+
 import { cn } from "@/utils/utils";
 
 export type ProductControlsProps = {

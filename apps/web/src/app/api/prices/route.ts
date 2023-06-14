@@ -1,5 +1,6 @@
-import { prisma } from "@/utils/prisma";
 import { NextResponse } from "next/server";
+
+import { prisma } from "@/utils/prisma";
 
 type PricesRequest = {
   productId: string;

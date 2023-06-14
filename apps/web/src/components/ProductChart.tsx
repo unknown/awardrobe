@@ -1,8 +1,9 @@
-import { formatDate } from "@/utils/utils";
-import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
 import { curveStepAfter } from "@visx/curve";
 import { ParentSize } from "@visx/responsive";
+import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
+
 import { PriceWithVariants } from "@/hooks/usePrices";
+import { formatDate } from "@/utils/utils";
 
 export type PricesChartProps = {
   prices: PriceWithVariants[] | null;

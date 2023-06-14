@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/utils/auth";
+import Link from "next/link";
+
 import { LoginButton, LogoutButton } from "@/components/AuthButtons";
+import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
 export default async function Home() {
