@@ -50,6 +50,7 @@ async function pingProduct(product: Product) {
         },
       });
 
+      const productName = `${product.productCode} (${color}-${size})`;
       if (oldPrice) {
         const diffTime = timestamp.getTime() - oldPrice.timestamp.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -61,9 +62,16 @@ async function pingProduct(product: Product) {
         if (!isStale && !hasPriceChanged && !hasStockChanged) {
           return;
         }
-      }
 
-      console.log(`Updating ${product.productCode} (${color}-${size})`);
+        const reasons = [
+          isStale && "price is stale",
+          hasPriceChanged && `price changed from ${oldPrice.priceInCents} to ${priceInCents}`,
+          hasStockChanged && `stock changed from ${oldPrice.stock} to ${stock}`,
+        ].filter((reason) => reason !== false);
+        console.log(`Adding new price for ${productName}. Reason(s): ${reasons.join("& ")}`);
+      } else {
+        console.log(`Creating first price for ${productName}`);
+      }
 
       const createPricePromise = prisma.price.create({
         data: {
