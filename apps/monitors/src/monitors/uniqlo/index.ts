@@ -118,11 +118,11 @@ async function pingProduct(product: Product) {
       });
 
       const hasPriceDropped = !oldPrice || priceInCents < oldPrice.priceInCents;
-      const isBackInStock = !oldPrice || (stock > 0 && oldPrice.stock === 0);
-      if (hasPriceDropped || isBackInStock) {
-        // TODO: check mustBeInStock
+      const hasRestocked = !oldPrice || (stock > 0 && oldPrice.stock === 0);
+      if (hasPriceDropped || hasRestocked) {
         const notifications = await prisma.productNotification.findMany({
           where: {
+            mustBeInStock: hasRestocked ? undefined : false,
             OR: [
               {
                 priceInCents: null,
