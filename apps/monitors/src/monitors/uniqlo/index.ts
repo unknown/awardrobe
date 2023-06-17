@@ -17,7 +17,7 @@ async function pingProduct(product: Product) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
-  const timestamp = new Date();
+  const currentTime = new Date();
 
   await Promise.all(
     prices.map(async ({ color, size, priceInCents, stock }) => {
@@ -52,7 +52,7 @@ async function pingProduct(product: Product) {
 
       const productName = `${product.productCode} (${color}-${size})`;
       if (oldPrice) {
-        const diffTime = timestamp.getTime() - oldPrice.timestamp.getTime();
+        const diffTime = currentTime.getTime() - oldPrice.timestamp.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         const isStale = diffDays >= 1;
@@ -62,20 +62,11 @@ async function pingProduct(product: Product) {
         if (!isStale && !hasPriceChanged && !hasStockChanged) {
           return;
         }
-
-        const reasons = [
-          isStale && "price is stale",
-          hasPriceChanged && `price changed from ${oldPrice.priceInCents} to ${priceInCents}`,
-          hasStockChanged && `stock changed from ${oldPrice.stock} to ${stock}`,
-        ].filter((reason) => reason !== false);
-        console.log(`Adding new price for ${productName}. Reason(s): ${reasons.join("& ")}`);
-      } else {
-        console.log(`Creating first price for ${productName}`);
       }
 
       const createPricePromise = prisma.price.create({
         data: {
-          timestamp,
+          timestamp: currentTime,
           product: {
             connect: { id: product.id },
           },
@@ -181,6 +172,7 @@ async function getProductPrices(productCode: string) {
     (await fetch(detailsEndpoint)).json(),
   ]);
 
+  // TODO: type these result objects with zod?
   const { stocks, prices: pricesObject, l2s } = pricesData.result;
   const { colors, sizes }: { colors: UniqloType[]; sizes: UniqloType[] } = detailsData.result;
 
@@ -195,10 +187,11 @@ async function getProductPrices(productCode: string) {
   }, {} as Record<string, string>);
 
   const prices: Price[] = Object.keys(stocks).map((key, index) => {
-    const colorDisplayCode = l2s[index].color.displayCode.toString();
-    const sizeDisplayCode = l2s[index].size.displayCode.toString();
-    const price = pricesObject[key].base.value.toString();
+    const colorDisplayCode: string = l2s[index].color.displayCode.toString();
+    const sizeDisplayCode: string = l2s[index].size.displayCode.toString();
+    const price: string = pricesObject[key].base.value.toString();
     const stock = parseInt(stocks[key].quantity);
+
     return {
       color: colorsRecord[colorDisplayCode],
       size: sizesRecord[sizeDisplayCode],
