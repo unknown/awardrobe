@@ -4,7 +4,7 @@ export type UniqloType = {
   name: string;
 };
 
-export type Price = {
+export type ProductDetails = {
   color: string;
   size: string;
   priceInCents: number;

@@ -8,29 +8,26 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
-    include: {
-      variant: {
-        select: {
-          optionType: true,
-          value: true,
-        },
-        orderBy: {
-          id: "asc",
-        },
-      },
-    },
   });
 
   if (!product) {
     return "Product not found";
   }
 
-  const groupedVariants = product.variant.reduce((accum, { optionType, value }) => {
-    const group = accum[optionType] ?? [];
-    group.push(value);
-    accum[optionType] = group;
-    return accum;
-  }, {} as Record<string, string[]>);
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      productId: product.id,
+    },
+  });
+
+  const { styles, sizes } = variants.reduce(
+    (prev, variant) => {
+      prev.styles.add(variant.style);
+      prev.sizes.add(variant.size);
+      return prev;
+    },
+    { styles: new Set(), sizes: new Set() } as { styles: Set<string>; sizes: Set<string> }
+  );
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -45,7 +42,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           View item on Uniqlo
         </a>
       </div>
-      <ProductInfo productId={product.id} variants={groupedVariants} />
+      <ProductInfo productId={product.id} styles={Array.from(styles)} sizes={Array.from(sizes)} />
     </div>
   );
 }

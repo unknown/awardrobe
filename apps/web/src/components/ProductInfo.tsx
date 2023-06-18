@@ -10,25 +10,24 @@ import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   productId: string;
-  variants: Record<string, string[]>;
+  styles: string[];
+  sizes: string[];
 };
 
-export function ProductInfo({ productId, variants }: ProductInfoProps) {
+export function ProductInfo({ productId, styles, sizes }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
 
   const defaultFilters = useRef<FilterOptions>({
     dateRange: "7d",
-    variants: Object.entries(variants).reduce((variants, [name, values]) => {
-      variants[name] = values[0];
-      return variants;
-    }, {} as Record<string, string>),
+    style: styles[0],
+    size: sizes[0],
   });
 
   const loadPricesData = useCallback(
-    async (filters: FilterOptions, abortSignal?: AbortSignal) => {
+    async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
       invalidateData();
-      const startDate = getStartDate(filters.dateRange);
-      await fetchPricesData(startDate, filters.variants, abortSignal);
+      const startDate = getStartDate(dateRange);
+      await fetchPricesData(startDate, style, size, abortSignal);
     },
     [invalidateData, fetchPricesData]
   );
@@ -62,7 +61,7 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
         updateFilters={async (newFilters) => {
           await loadPricesData(newFilters);
         }}
-        addNotification={async (variants) => {
+        addNotification={async (style, size) => {
           const response = await fetch("/api/add-notification", {
             method: "POST",
             headers: {
@@ -72,14 +71,16 @@ export function ProductInfo({ productId, variants }: ProductInfoProps) {
               productId,
               priceInCents: undefined, // TODO: populate this with user-defined value
               mustBeInStock: false,
-              variants,
+              style,
+              size,
             }),
           });
           if (response.status === 200) {
             console.log("Added notification");
           }
         }}
-        variants={variants}
+        styles={styles}
+        sizes={sizes}
       />
       {prices?.length === 1000 ? (
         <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">

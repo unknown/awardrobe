@@ -27,7 +27,7 @@ async function main() {
 }
 
 async function addProduct(storeId: string, productCode: string) {
-  const { name, colors, sizes } = await getDetails(productCode);
+  const { name, details } = await getProductDetails(productCode);
 
   await prisma.product.upsert({
     where: {
@@ -41,18 +41,12 @@ async function addProduct(storeId: string, productCode: string) {
       productCode,
       name,
       storeId,
-      variant: {
+      variants: {
         createMany: {
-          data: [
-            ...Object.values(colors).map((color) => ({
-              optionType: "Color",
-              value: color,
-            })),
-            ...Object.values(sizes).map((size) => ({
-              optionType: "Size",
-              value: size,
-            })),
-          ],
+          data: details.map(({ color, size }) => ({
+            style: color,
+            size,
+          })),
         },
       },
     },
@@ -65,21 +59,43 @@ type UniqloType = {
   name: string;
 };
 
-async function getDetails(productCode: string) {
+// TODO: sync with monitors code?
+async function getProductDetails(productCode: string) {
+  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const detailsResponse = await fetch(detailsEndpoint);
-  const { name, colors, sizes } = (await detailsResponse.json()).result;
 
-  const colorsRecord: Record<string, string> = {};
-  colors.forEach((color: UniqloType) => {
-    colorsRecord[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
-  });
-  const sizesRecord: Record<string, string> = {};
-  sizes.forEach((size: UniqloType) => {
-    sizesRecord[size.displayCode] = size.name;
+  const [pricesData, detailsData] = await Promise.all([
+    (await fetch(pricesEndpoint)).json(),
+    (await fetch(detailsEndpoint)).json(),
+  ]);
+
+  // TODO: type these result objects with zod?
+  const { l2s }: { l2s: { color: UniqloType; size: UniqloType }[] } = pricesData.result;
+
+  const { name, colors, sizes }: { name: string; colors: UniqloType[]; sizes: UniqloType[] } =
+    detailsData.result;
+
+  // used to map display codes to human-readable names (e.g. "08" -> "08 Dark Gray")
+  const colorsRecord = colors.reduce((colors, color) => {
+    colors[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
+    return colors;
+  }, {} as Record<string, string>);
+  const sizesRecord = sizes.reduce((sizes, size) => {
+    sizes[size.displayCode] = size.name;
+    return sizes;
+  }, {} as Record<string, string>);
+
+  const details: { color: string; size: string }[] = l2s.map(({ color, size }) => {
+    const colorDisplayCode: string = color.displayCode.toString();
+    const sizeDisplayCode: string = size.displayCode.toString();
+
+    return {
+      color: colorsRecord[colorDisplayCode],
+      size: sizesRecord[sizeDisplayCode],
+    };
   });
 
-  return { name, colors: colorsRecord, sizes: sizesRecord };
+  return { name, details };
 }
 
 function toTitleCase(text: string) {

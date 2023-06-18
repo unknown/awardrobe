@@ -3,7 +3,7 @@ import { Product } from "database";
 import { dollarsToCents } from "../../utils/currency";
 import prisma from "../../utils/database";
 import { toTitleCase } from "../../utils/formatter";
-import { Price, UniqloType } from "./types";
+import { ProductDetails, UniqloType } from "./types";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
@@ -12,158 +12,182 @@ export async function handleHeartbeat() {
 }
 
 async function pingProduct(product: Product) {
-  const prices = await getProductPrices(product.productCode);
-  if (prices.length === 0) {
+  const details = await getProductDetails(product.productCode);
+  if (details.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
   const currentTime = new Date();
 
   await Promise.all(
-    prices.map(async ({ color, size, priceInCents, stock }) => {
-      const oldPrice = await prisma.price.findFirst({
-        where: {
-          productId: product.id,
-          AND: [
-            {
-              variants: {
-                some: {
-                  productId: product.id,
-                  optionType: "Color",
-                  value: color,
-                },
-              },
-            },
-            {
-              variants: {
-                some: {
-                  productId: product.id,
-                  optionType: "Size",
-                  value: size,
-                },
-              },
-            },
-          ],
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-      });
-
-      const productName = `${product.productCode} (${color}-${size})`;
-      if (oldPrice) {
-        const diffTime = currentTime.getTime() - oldPrice.timestamp.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        const isStale = diffDays >= 1;
-        const hasPriceChanged = priceInCents !== oldPrice.priceInCents;
-        const hasStockChanged = stock !== oldPrice.stock;
-
-        if (!isStale && !hasPriceChanged && !hasStockChanged) {
-          return;
-        }
-      }
-
-      const createPricePromise = prisma.price.create({
-        data: {
-          timestamp: currentTime,
-          product: {
-            connect: { id: product.id },
-          },
-          priceInCents,
-          stock,
-          inStock: stock > 0,
-          variants: {
-            connectOrCreate: [
-              {
-                where: {
-                  productId_optionType_value: {
-                    productId: product.id,
-                    optionType: "Color",
-                    value: color,
-                  },
-                },
-                create: {
-                  productId: product.id,
-                  optionType: "Color",
-                  value: color,
-                },
-              },
-              {
-                where: {
-                  productId_optionType_value: {
-                    productId: product.id,
-                    optionType: "Size",
-                    value: size,
-                  },
-                },
-                create: {
-                  productId: product.id,
-                  optionType: "Size",
-                  value: size,
-                },
-              },
-            ],
-          },
-        },
-      });
-
-      const hasPriceDropped = !oldPrice || priceInCents < oldPrice.priceInCents;
-      const hasRestocked = !oldPrice || (stock > 0 && oldPrice.stock === 0);
-      if (hasPriceDropped || hasRestocked) {
-        const notifications = await prisma.productNotification.findMany({
-          where: {
-            mustBeInStock: hasRestocked ? undefined : false,
-            OR: [
-              {
-                priceInCents: null,
-              },
-              {
-                priceInCents: {
-                  gte: priceInCents,
-                },
-              },
-            ],
-            AND: [
-              {
-                variants: {
-                  some: {
-                    productId: product.id,
-                    optionType: "Color",
-                    value: color,
-                  },
-                },
-              },
-              {
-                variants: {
-                  some: {
-                    productId: product.id,
-                    optionType: "Size",
-                    value: size,
-                  },
-                },
-              },
-            ],
-          },
-        });
-
-        await Promise.all([
-          notifications.map(async (notification) => {
-            const user = await prisma.user.findUniqueOrThrow({
-              where: { id: notification.userId },
-            });
-
-            console.log(user.email);
-          }),
-        ]);
-      }
-
-      await createPricePromise;
+    details.map(async (price) => {
+      await Promise.all([
+        updatePrices(product, currentTime, price),
+        updateStock(product, currentTime, price),
+      ]);
     })
   );
 }
 
-async function getProductPrices(productCode: string) {
+async function updatePrices(
+  product: Product,
+  currentTime: Date,
+  { color, size, priceInCents, stock }: ProductDetails
+) {
+  const oldPrice = await prisma.price.findFirst({
+    where: {
+      productVariant: {
+        productId: product.id,
+        style: color,
+        size,
+      },
+    },
+    orderBy: {
+      timestamp: "desc",
+    },
+  });
+
+  const diffTime = oldPrice ? currentTime.getTime() - oldPrice.timestamp.getTime() : 0;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
+
+  // to avoid the prices table blowing up in size, prices are sometimes skipped from being inserted into the table
+  const isStale = diffDays >= 1;
+  const hasPriceChanged = diffPrice !== 0;
+  if (oldPrice && !isStale && !hasPriceChanged) {
+    return;
+  }
+
+  await prisma.price.create({
+    data: {
+      timestamp: currentTime,
+      productVariant: {
+        connect: {
+          productId_style_size: {
+            productId: product.id,
+            style: color,
+            size,
+          },
+        },
+      },
+      priceInCents,
+    },
+  });
+
+  const hasPriceDropped = diffPrice < 0;
+  if (hasPriceDropped) {
+    const notifications = await prisma.productNotification.findMany({
+      where: {
+        mustBeInStock: stock > 0 ? undefined : false,
+        OR: [
+          {
+            priceInCents: null,
+          },
+          {
+            priceInCents: {
+              gte: priceInCents,
+            },
+          },
+        ],
+        productVariant: {
+          style: color,
+          size,
+        },
+      },
+    });
+
+    await Promise.all(
+      notifications.map(async (notification) => {
+        const user = await prisma.user.findUniqueOrThrow({
+          where: { id: notification.userId },
+        });
+
+        console.log(user.email);
+      })
+    );
+  }
+}
+
+async function updateStock(
+  product: Product,
+  currentTime: Date,
+  { color, size, priceInCents, stock }: ProductDetails
+) {
+  const oldStock = await prisma.stock.findFirst({
+    where: {
+      productVariant: {
+        productId: product.id,
+        style: color,
+        size,
+      },
+    },
+    orderBy: {
+      timestamp: "desc",
+    },
+  });
+
+  const diffTime = oldStock ? currentTime.getTime() - oldStock.timestamp.getTime() : 0;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const diffStock = oldStock?.stock ? stock - oldStock.stock : 0;
+
+  // to avoid the stock table blowing up in size, stocks are sometimes skipped from being inserted into the table
+  const isStale = diffDays >= 1;
+  const hasStockChanged = diffStock !== 0;
+  if (oldStock && !isStale && !hasStockChanged) {
+    return;
+  }
+
+  await prisma.stock.create({
+    data: {
+      timestamp: currentTime,
+      productVariant: {
+        connect: {
+          productId_style_size: {
+            productId: product.id,
+            style: color,
+            size,
+          },
+        },
+      },
+      inStock: stock > 0,
+      stock,
+    },
+  });
+
+  const hasRestocked = oldStock?.stock === 0 && diffStock > 0;
+  if (hasRestocked) {
+    const notifications = await prisma.productNotification.findMany({
+      where: {
+        OR: [
+          {
+            priceInCents: null,
+          },
+          {
+            priceInCents: {
+              gte: priceInCents,
+            },
+          },
+        ],
+        productVariant: {
+          style: color,
+          size,
+        },
+      },
+    });
+
+    await Promise.all(
+      notifications.map(async (notification) => {
+        const user = await prisma.user.findUniqueOrThrow({
+          where: { id: notification.userId },
+        });
+
+        console.log(user.email);
+      })
+    );
+  }
+}
+
+async function getProductDetails(productCode: string) {
   const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
 
@@ -186,7 +210,7 @@ async function getProductPrices(productCode: string) {
     return sizes;
   }, {} as Record<string, string>);
 
-  const prices: Price[] = Object.keys(stocks).map((key, index) => {
+  const details: ProductDetails[] = Object.keys(stocks).map((key, index) => {
     const colorDisplayCode: string = l2s[index].color.displayCode.toString();
     const sizeDisplayCode: string = l2s[index].size.displayCode.toString();
     const price: string = pricesObject[key].base.value.toString();
@@ -200,5 +224,5 @@ async function getProductPrices(productCode: string) {
     };
   });
 
-  return prices;
+  return details;
 }

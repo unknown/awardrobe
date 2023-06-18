@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { Fragment, useState } from "react";
 
 import { Button } from "@ui/Button";
 import {
@@ -15,8 +15,9 @@ import { cn } from "@/utils/utils";
 export type ProductControlsProps = {
   defaultFilters: FilterOptions;
   updateFilters: (newFilters: FilterOptions) => void;
-  addNotification: (variants: Record<string, string>) => Promise<void>;
-  variants: Record<string, string[]>;
+  addNotification: (style: string, size: string) => Promise<void>;
+  styles: string[];
+  sizes: string[];
 };
 
 const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
@@ -24,14 +25,16 @@ export type DateRange = (typeof DateRanges)[number];
 
 export type FilterOptions = {
   dateRange: DateRange;
-  variants: Record<string, string>;
+  style: string;
+  size: string;
 };
 
 export function ProductControls({
   defaultFilters,
   updateFilters: consumerUpdateFilters,
   addNotification,
-  variants,
+  styles,
+  sizes,
 }: ProductControlsProps) {
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
 
@@ -46,36 +49,53 @@ export function ProductControls({
         className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          addNotification(filters.variants);
+          addNotification(filters.style, filters.size);
         }}
       >
-        {Object.entries(variants).map(([optionType, values]) => {
-          return (
-            <React.Fragment key={optionType}>
-              <label htmlFor={`${optionType}-input`}>{optionType}</label>
-              <Select
-                onValueChange={(value) => {
-                  const newVariants = { ...filters.variants, [optionType]: value };
-                  updateFilters({ ...filters, variants: newVariants });
-                }}
-                defaultValue={defaultFilters.variants[optionType]}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder={`Select a ${optionType.toLowerCase()}...`} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {values.map((value) => (
-                      <SelectItem value={value} key={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </React.Fragment>
-          );
-        })}
+        <Fragment>
+          <label htmlFor={`style-input`}>Style</label>
+          <Select
+            onValueChange={(style) => {
+              updateFilters({ ...filters, style });
+            }}
+            defaultValue={defaultFilters.style}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={`Select a style...`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {styles.map((style) => (
+                  <SelectItem value={style} key={style}>
+                    {style}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Fragment>
+        <Fragment>
+          <label htmlFor={`size-input`}>Color</label>
+          <Select
+            onValueChange={(size) => {
+              updateFilters({ ...filters, size });
+            }}
+            defaultValue={defaultFilters.size}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={`Select a size...`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {sizes.map((size) => (
+                  <SelectItem value={size} key={size}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Fragment>
         <Button>Add Notification</Button>
       </form>
       <label htmlFor="range-input">

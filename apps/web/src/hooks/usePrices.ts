@@ -1,19 +1,19 @@
 import { Price, ProductVariant } from "database";
 import { useCallback, useState } from "react";
 
-export type PriceWithVariants = Price & {
-  variants: ProductVariant[];
+export type PriceWithVariant = Price & {
+  productVariant: ProductVariant;
 };
 
 export function usePrices(productId: string) {
   const [loading, setLoading] = useState(false);
-  const [pricesData, setPricesData] = useState<PriceWithVariants[] | null>(null);
+  const [pricesData, setPricesData] = useState<PriceWithVariant[] | null>(null);
 
   const fetchPricesData = useCallback(
-    async function (startDate: Date, variants: Record<string, string>, abortSignal?: AbortSignal) {
+    async function (startDate: Date, style: string, size: string, abortSignal?: AbortSignal) {
       setLoading(true);
 
-      const prices = await getPrices(productId, startDate, variants, abortSignal);
+      const prices = await getPrices(productId, startDate, style, size, abortSignal);
 
       const aborted = abortSignal?.aborted ?? false;
       if (!aborted) {
@@ -40,7 +40,8 @@ export function usePrices(productId: string) {
 async function getPrices(
   productId: string,
   startDate: Date,
-  variants: Record<string, string>,
+  style: string,
+  size: string,
   abortSignal?: AbortSignal
 ) {
   const response = await fetch("/api/prices", {
@@ -51,12 +52,13 @@ async function getPrices(
     body: JSON.stringify({
       productId,
       startDate,
-      variants,
+      style,
+      size,
     }),
     signal: abortSignal,
   });
 
   // IMRPOVE THESE HARDCODED TYPES
   const json = await response.json();
-  return json.prices as PriceWithVariants[];
+  return json.prices as PriceWithVariant[];
 }

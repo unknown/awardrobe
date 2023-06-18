@@ -2,22 +2,21 @@ import { curveStepAfter } from "@visx/curve";
 import { ParentSize } from "@visx/responsive";
 import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
 
-import { PriceWithVariants } from "@/hooks/usePrices";
+import { PriceWithVariant } from "@/hooks/usePrices";
 import { formatDate } from "@/utils/utils";
 
 export type PricesChartProps = {
-  prices: PriceWithVariants[] | null;
+  prices: PriceWithVariant[] | null;
 };
 
 type ChartUnitData = {
   date: string;
-  stock: number;
   price: number;
 };
 
 const accessors = {
   xAccessor: (d: ChartUnitData) => new Date(d.date),
-  yAccessor: (d: ChartUnitData) => d.stock,
+  yAccessor: (d: ChartUnitData) => d.price,
 };
 
 export function ProductChart({ prices }: PricesChartProps) {
@@ -27,13 +26,12 @@ export function ProductChart({ prices }: PricesChartProps) {
 
   const groupedPrices: Record<string, ChartUnitData[]> = {};
   prices.forEach((price) => {
-    const key = price.variants.map((variant) => variant.value).join("-");
+    const key = `${price.productVariant.style}-${price.productVariant.size}`;
     if (groupedPrices[key] === undefined) {
       groupedPrices[key] = [];
     }
     groupedPrices[key].push({
       date: price.timestamp.toString(),
-      stock: price.stock ?? 0,
       price: price.priceInCents,
     });
   });

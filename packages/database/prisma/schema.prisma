@@ -73,8 +73,7 @@ model Product {
   productCode String
   name        String
   storeId     String
-  prices      Price[]
-  variant     ProductVariant[]
+  variants    ProductVariant[]
   store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, productCode])
@@ -82,39 +81,49 @@ model Product {
 }
 
 model Price {
-  id           String           @id @default(cuid())
-  productId    String
-  timestamp    DateTime         @default(now())
-  priceInCents Int
-  stock        Int?
-  inStock      Boolean
-  variants     ProductVariant[] // TODO: implicit many-to-many
-  product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  productVariantId String
+  timestamp        DateTime       @default(now())
+  priceInCents     Int
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
-  @@index([productId])
+  @@index([productVariantId])
+}
+
+model Stock {
+  id               String         @id @default(cuid())
+  productVariantId String
+  timestamp        DateTime       @default(now())
+  stock            Int?
+  inStock          Boolean
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@index([productVariantId])
 }
 
 model ProductVariant {
   id            String                @id @default(cuid())
-  optionType    String
   productId     String
-  prices        Price[] // TODO: implicit many-to-many
-  value         String
-  notifications ProductNotification[] // TODO: implicit many-to-many
+  style         String
+  size          String
+  prices        Price[]
+  stocks        Stock[]
+  notifications ProductNotification[]
   product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, optionType, value])
-  @@index([productId, optionType, value])
+  @@unique([productId, style, size])
   @@index([productId])
 }
 
 model ProductNotification {
-  id            String           @id @default(cuid())
-  userId        String
-  priceInCents  Int?
-  mustBeInStock Boolean
-  variants      ProductVariant[] // TODO: implicit many-to-many
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  userId           String
+  productVariantId String
+  priceInCents     Int?
+  mustBeInStock    Boolean
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([productVariantId])
 }

@@ -8,7 +8,8 @@ type AddNotificationRequest = {
   productId: string;
   priceInCents?: number;
   mustBeInStock: boolean;
-  variants: Record<string, string>;
+  style: string;
+  size: string;
 };
 
 export async function POST(req: Request) {
@@ -18,26 +19,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: "error", error: "Unauthenticated" }, { status: 401 });
   }
 
-  const { productId, priceInCents, mustBeInStock, variants }: AddNotificationRequest =
+  const { productId, priceInCents, mustBeInStock, style, size }: AddNotificationRequest =
     await req.json();
-
-  if (Object.keys(variants).length === 0) {
-    return NextResponse.json({ status: "error", error: "Missing variants" }, { status: 400 });
-  }
 
   await prisma.productNotification.create({
     data: {
-      userId: session.user.id,
-      priceInCents,
-      mustBeInStock,
-      variants: {
-        connect: Object.entries(variants).map(([optionType, value]) => ({
-          productId_optionType_value: {
-            productId,
-            optionType,
-            value,
+      productVariant: {
+        connect: {
+          productId_style_size: {
+            productId: productId,
+            style,
+            size,
           },
-        })),
+        },
+      },
+      mustBeInStock,
+      priceInCents,
+      user: {
+        connect: {
+          id: session.user.id,
+        },
       },
     },
   });
