@@ -29,20 +29,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
     { styles: new Set(), sizes: new Set() } as { styles: Set<string>; sizes: Set<string> }
   );
 
-  return (
-    <div className="flex h-full flex-col gap-4">
-      <div>
-        <h1 className="text-xl">{product.name}</h1>
-        <a
-          href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sky-600"
-        >
-          View item on Uniqlo
-        </a>
-      </div>
-      <ProductInfo productId={product.id} styles={Array.from(styles)} sizes={Array.from(sizes)} />
-    </div>
-  );
+  return <ProductInfo product={product} styles={Array.from(styles)} sizes={Array.from(sizes)} />;
 }

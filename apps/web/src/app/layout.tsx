@@ -1,6 +1,10 @@
+import { getServerSession } from "next-auth";
 import { Inter } from "next/font/google";
 
+import { LoginButton, LogoutButton } from "@/components/AuthButtons";
+import { NavBar } from "@/components/NavBar";
 import "@/styles/globals.css";
+import { authOptions } from "@/utils/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,10 +21,22 @@ type RootLayoutProps = {
   children: React.ReactNode;
 };
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="en" className={inter.variable}>
-      <body>{children}</body>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <div className="flex min-h-screen flex-col">
+          <header className="container">
+            <div className="flex items-center justify-between py-4">
+              <NavBar />
+              {session ? <LogoutButton /> : <LoginButton />}
+            </div>
+          </header>
+          <main className="flex-1">{children}</main>
+        </div>
+      </body>
     </html>
   );
 }

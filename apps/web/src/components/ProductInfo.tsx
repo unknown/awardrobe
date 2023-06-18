@@ -1,5 +1,6 @@
 "use client";
 
+import { Product } from "database";
 import { Fragment, useCallback, useEffect, useRef } from "react";
 
 import { formatPrice } from "@/utils/utils";
@@ -9,13 +10,13 @@ import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
-  productId: string;
+  product: Product;
   styles: string[];
   sizes: string[];
 };
 
-export function ProductInfo({ productId, styles, sizes }: ProductInfoProps) {
-  const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(productId);
+export function ProductInfo({ product, styles, sizes }: ProductInfoProps) {
+  const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(product.id);
 
   const defaultFilters = useRef<FilterOptions>({
     dateRange: "7d",
@@ -52,45 +53,58 @@ export function ProductInfo({ productId, styles, sizes }: ProductInfoProps) {
 
   return (
     <Fragment>
-      <div>
-        <p>Latest Price</p>
-        <p className="text-2xl font-medium">{getLatestPriceText()}</p>
-      </div>
-      <ProductControls
-        defaultFilters={defaultFilters.current}
-        updateFilters={async (newFilters) => {
-          await loadPricesData(newFilters);
-        }}
-        addNotification={async (style, size) => {
-          const response = await fetch("/api/add-notification", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              productId,
-              priceInCents: undefined, // TODO: populate this with user-defined value
-              mustBeInStock: false,
-              style,
-              size,
-            }),
-          });
-          if (response.status === 200) {
-            console.log("Added notification");
-          }
-        }}
-        styles={styles}
-        sizes={sizes}
-      />
-      {prices?.length === 1000 ? (
-        <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
-          Limited to showing only the first 1000 data points. Try applying filters to decrease the
-          number of data points.
+      <section className="container space-y-2 pb-4">
+        <h1 className="text-xl">{product.name}</h1>
+        <a
+          href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-600"
+        >
+          View item on Uniqlo
+        </a>
+        <div>
+          <p>Latest Price</p>
+          <p className="text-2xl font-medium">{getLatestPriceText()}</p>
         </div>
-      ) : null}
-      <div className="flex-grow">
+      </section>
+      <section className="container py-4">
+        <ProductControls
+          defaultFilters={defaultFilters.current}
+          updateFilters={async (newFilters) => {
+            await loadPricesData(newFilters);
+          }}
+          addNotification={async (style, size) => {
+            const response = await fetch("/api/add-notification", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                productId: product.id,
+                priceInCents: undefined, // TODO: populate this with user-defined value
+                mustBeInStock: false,
+                style,
+                size,
+              }),
+            });
+            if (response.status === 200) {
+              console.log("Added notification");
+            }
+          }}
+          styles={styles}
+          sizes={sizes}
+        />
+        {prices?.length === 1000 ? (
+          <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
+            Limited to showing only the first 1000 data points. Try applying filters to decrease the
+            number of data points.
+          </div>
+        ) : null}
+      </section>
+      <section className="container py-4 h-[50rem]">
         <ProductChart prices={prices} />
-      </div>
+      </section>
     </Fragment>
   );
 }

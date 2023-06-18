@@ -1,29 +1,22 @@
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 
-import { LoginButton, LogoutButton } from "@/components/AuthButtons";
-import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
   const products = await prisma.product.findMany();
 
   return (
-    <main className="mx-auto flex h-screen max-w-4xl flex-col p-4">
-      {session ? <LogoutButton /> : <LoginButton />}
-      <div>
-        <h1 className="mb-2 text-3xl font-bold">Price Monitor</h1>
-        <div className="flex flex-col gap-1">
-          {products.map((product) => {
-            return (
-              <Link key={product.id} href={`/product/${product.id}`}>
-                {product.name}
-              </Link>
-            );
-          })}
-        </div>
+    <section className="container space-y-2">
+      <h1 className="text-xl font-bold">Products</h1>
+      <div className="flex flex-col gap-1">
+        {products.map((product) => {
+          return (
+            <Link key={product.id} href={`/product/${product.id}`}>
+              {product.name}
+            </Link>
+          );
+        })}
       </div>
-    </main>
+    </section>
   );
 }
