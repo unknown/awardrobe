@@ -1,8 +1,8 @@
 "use client";
 
-import { Product } from "database";
-import { Fragment, useCallback, useEffect, useRef } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
 
+import { ProductWithVariants } from "@/app/product/[productId]/page";
 import { formatPrice } from "@/utils/utils";
 
 import { usePrices } from "../hooks/usePrices";
@@ -10,13 +10,24 @@ import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
-  product: Product;
-  styles: string[];
-  sizes: string[];
+  product: ProductWithVariants;
 };
 
-export function ProductInfo({ product, styles, sizes }: ProductInfoProps) {
+export function ProductInfo({ product }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(product.id);
+
+  const { styles, sizes } = useMemo<{ styles: string[]; sizes: string[] }>(() => {
+    const stylesSet = new Set<string>();
+    const sizesSet = new Set<string>();
+    product.variants.forEach((variant) => {
+      stylesSet.add(variant.style);
+      sizesSet.add(variant.size);
+    });
+    return {
+      styles: Array.from(stylesSet),
+      sizes: Array.from(sizesSet),
+    };
+  }, [product]);
 
   const defaultFilters = useRef<FilterOptions>({
     dateRange: "7d",

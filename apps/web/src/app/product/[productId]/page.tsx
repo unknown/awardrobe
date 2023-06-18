@@ -1,33 +1,27 @@
+import { Product, ProductVariant } from "database";
+
 import { ProductInfo } from "@/components/ProductInfo";
 import { prisma } from "@/utils/prisma";
 
-interface ProductPageProps {
+export type ProductWithVariants = Product & {
+  variants: ProductVariant[];
+};
+
+type ProductPageProps = {
   params: { productId: string };
-}
+};
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
+    include: {
+      variants: true,
+    },
   });
 
   if (!product) {
     return "Product not found";
   }
 
-  const variants = await prisma.productVariant.findMany({
-    where: {
-      productId: product.id,
-    },
-  });
-
-  const { styles, sizes } = variants.reduce(
-    (prev, variant) => {
-      prev.styles.add(variant.style);
-      prev.sizes.add(variant.size);
-      return prev;
-    },
-    { styles: new Set(), sizes: new Set() } as { styles: Set<string>; sizes: Set<string> }
-  );
-
-  return <ProductInfo product={product} styles={Array.from(styles)} sizes={Array.from(sizes)} />;
+  return <ProductInfo product={product} />;
 }
