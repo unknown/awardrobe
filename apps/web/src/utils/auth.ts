@@ -8,6 +8,9 @@ import { prisma } from "@/utils/prisma";
 // TODO: hacky fix; track https://github.com/nextauthjs/next-auth/issues/7727
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
+  pages: {
+    signIn: "/login",
+  },
   providers: [
     EmailProvider({
       server: process.env.EMAIL_SERVER,

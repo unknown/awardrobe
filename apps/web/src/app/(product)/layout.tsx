@@ -1,6 +1,8 @@
 import { getServerSession } from "next-auth";
+import Link from "next/link";
 
-import { LoginButton, LogoutButton } from "@/components/AuthButtons";
+import { Button } from "@ui/Button";
+
 import { NavBar } from "@/components/NavBar";
 import { authOptions } from "@/utils/auth";
 
@@ -16,10 +18,18 @@ export default async function ProductLayout({ children }: ProductLayout) {
       <header className="container">
         <div className="flex items-center justify-between py-4">
           <NavBar />
-          {session ? <LogoutButton /> : <LoginButton />}
+          {session ? session.user.id : <LoginButton />}
         </div>
       </header>
       <main className="flex-1">{children}</main>
     </div>
   );
 }
+
+const LoginButton = () => {
+  return (
+    <Link href="/login">
+      <Button>Login</Button>
+    </Link>
+  );
+};
