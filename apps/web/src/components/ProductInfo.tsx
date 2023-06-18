@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
 
-import { ProductWithVariants } from "@/app/product/[productId]/page";
+import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { formatPrice } from "@/utils/utils";
 
 import { usePrices } from "../hooks/usePrices";
