@@ -1,10 +1,19 @@
+import { getServerSession } from "next-auth/next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Button } from "@ui/Button";
 
 import { LoginForm } from "@/components/LoginForm";
+import { authOptions } from "@/utils/auth";
 
 export default async function Home() {
+  const session = await getServerSession(authOptions);
+
+  if (session) {
+    redirect("/");
+  }
+
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <Link href="/" className="absolute left-4 top-4 md:left-8 md:top-8">
