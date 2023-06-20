@@ -1,4 +1,4 @@
-import { PrismaClient } from "database";
+import { PrismaClient } from "prisma-types";
 
 const globalForPrisma = global as unknown as {
   prisma: PrismaClient | undefined;

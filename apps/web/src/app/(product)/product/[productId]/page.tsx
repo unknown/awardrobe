@@ -1,4 +1,4 @@
-import { Product, ProductVariant } from "database";
+import { Product, ProductVariant } from "prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
 import { prisma } from "@/utils/prisma";

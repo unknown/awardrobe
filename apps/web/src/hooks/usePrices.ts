@@ -1,4 +1,4 @@
-import { Price, ProductVariant } from "database";
+import { Price, ProductVariant } from "prisma-types";
 import { useCallback, useState } from "react";
 
 export type PriceWithVariant = Price & {

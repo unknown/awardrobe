@@ -1,4 +1,4 @@
-import { PrismaClient } from "database";
+import { PrismaClient } from "prisma-types";
 
 const prisma = new PrismaClient();
 

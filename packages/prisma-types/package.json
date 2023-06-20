@@ -1,5 +1,5 @@
 {
-  "name": "database",
+  "name": "prisma-types",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",
@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push --skip-generate"
+    "db:push": "prisma db push --skip-generate",
+    "dev": "prisma studio --browser none"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

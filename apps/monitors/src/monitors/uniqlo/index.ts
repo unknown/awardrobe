@@ -1,4 +1,4 @@
-import { Product } from "database";
+import { Product } from "prisma-types";
 
 import { dollarsToCents } from "../../utils/currency";
 import prisma from "../../utils/database";
