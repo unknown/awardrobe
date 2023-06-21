@@ -10,7 +10,7 @@ import { authOptions } from "@/utils/auth";
 export default async function Home() {
   const session = await getServerSession(authOptions);
 
-  if (session) {
+  if (session?.user.id) {
     redirect("/");
   }
 
@@ -22,7 +22,7 @@ export default async function Home() {
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2">
           <h1 className="text-2xl font-semibold">Log In</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Enter your email to sign in to your account
           </p>
           <LoginForm />
