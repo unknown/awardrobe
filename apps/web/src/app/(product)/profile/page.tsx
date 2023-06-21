@@ -29,7 +29,7 @@ export default async function Home() {
       <h1 className="text-xl font-bold">Notifications</h1>
       <div className="flex flex-col gap-1">
         {notifications.map((notification) => (
-          <div>
+          <div key={notification.id}>
             <h2 className="text-lg font-medium">{notification.productVariant.product.name}</h2>
             {notification.productVariant.style} {notification.productVariant.size}
           </div>
