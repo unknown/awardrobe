@@ -124,6 +124,7 @@ model ProductNotification {
   user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, productVariantId])
   @@index([userId])
   @@index([productVariantId])
 }
