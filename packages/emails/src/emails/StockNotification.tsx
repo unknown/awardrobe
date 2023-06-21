@@ -20,11 +20,11 @@ export type StockNotificationEmailProps = {
   priceInCents: number;
 };
 
-export const StockNotificationEmail = ({
+export default function StockNotificationEmail({
   productName = "Product Name",
   productUrl = "https://example.com",
   priceInCents = 9999,
-}: StockNotificationEmailProps) => {
+}: StockNotificationEmailProps) {
   const previewText = `${productName} has restocked`;
 
   return (
@@ -32,21 +32,21 @@ export const StockNotificationEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="rounded my-[40px] mx-auto p-[20px] w-[465px]">
+        <Body className="mx-auto my-auto bg-white font-sans">
+          <Container className="mx-auto my-10 w-[465px] rounded p-6">
             <Section className="text-center">
               <Heading className="text-2xl font-medium">Back in stock!</Heading>
               <Text>An item you are tracking has been restocked.</Text>
             </Section>
             <Section className="border border-solid border-[#eaeaea] p-8">
-              <Heading className="text-lg font-normal mt-0">{productName}</Heading>
-              <Text className="text-xl font-medium my-0">{formatPrice(priceInCents)}</Text>
+              <Heading className="mt-0 text-lg font-normal">{productName}</Heading>
+              <Text className="my-0 text-xl font-medium">{formatPrice(priceInCents)}</Text>
             </Section>
-            <Section className="text-center mt-6">
+            <Section className="mt-6 text-center">
               <Button
                 pX={20}
                 pY={12}
-                className="bg-[#000000] rounded text-white text-xs font-semibold no-underline text-center"
+                className="rounded bg-[#000000] text-center text-xs font-semibold text-white no-underline"
                 href={productUrl}
               >
                 View details
@@ -57,6 +57,4 @@ export const StockNotificationEmail = ({
       </Tailwind>
     </Html>
   );
-};
-
-export default StockNotificationEmail;
+}

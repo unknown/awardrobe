@@ -1,4 +1,4 @@
-import { render } from "@react-email/components";
+import { render } from "@react-email/render";
 
 import StockNotificationEmail, { StockNotificationEmailProps } from "./emails/StockNotification";
 
