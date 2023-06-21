@@ -8,7 +8,8 @@
     "build": "tsc",
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate",
-    "dev": "prisma studio --browser none"
+    "dev": "prisma studio --browser none",
+    "clean": "rm -rf .turbo node_modules dist"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

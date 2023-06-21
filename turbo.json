@@ -18,6 +18,9 @@
       "cache": false,
       "persistent": true
     },
+    "clean": {
+      "cache": false
+    },
     "db:generate": {
       "cache": false
     },
