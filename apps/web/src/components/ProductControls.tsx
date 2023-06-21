@@ -56,48 +56,56 @@ export function ProductControls({
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <form className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
-        <label htmlFor="style-input">Style</label>
-        <Select
-          onValueChange={(style) => {
-            updateFilters({ ...filters, style });
-          }}
-          value={filters.style}
-        >
-          <SelectTrigger className="w-[180px]" id="style-input">
-            <SelectValue placeholder="Select a style..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {styles.map((style) => (
-                <SelectItem value={style} key={style}>
-                  {style}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <label htmlFor="size-input">Color</label>
-        <Select
-          onValueChange={(size) => {
-            updateFilters({ ...filters, size });
-          }}
-          value={filters.size}
-        >
-          <SelectTrigger className="w-[180px]" id="size-input">
-            <SelectValue placeholder="Select a size..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {sizes.map((size) => (
-                <SelectItem value={size} key={size}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+    <div className="space-y-2">
+      <section className="flex flex-col items-start gap-2 md:flex-row md:items-end md:gap-2">
+        <fieldset>
+          <label htmlFor="style-input" className="text-primary text-sm font-medium">
+            Style
+          </label>
+          <Select
+            onValueChange={(style) => {
+              updateFilters({ ...filters, style });
+            }}
+            value={filters.style}
+          >
+            <SelectTrigger className="w-[180px]" id="style-input">
+              <SelectValue placeholder="Select a style..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {styles.map((style) => (
+                  <SelectItem value={style} key={style}>
+                    {style}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </fieldset>
+        <fieldset>
+          <label htmlFor="size-input" className="text-primary text-sm font-medium">
+            Color
+          </label>
+          <Select
+            onValueChange={(size) => {
+              updateFilters({ ...filters, size });
+            }}
+            value={filters.size}
+          >
+            <SelectTrigger className="w-[180px]" id="size-input">
+              <SelectValue placeholder="Select a size..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {sizes.map((size) => (
+                  <SelectItem value={size} key={size}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </fieldset>
         <AddNotificationDialog
           options={notificationOptions}
           setOptions={(newOptions) => setNotificationOptions(newOptions)}
@@ -105,9 +113,11 @@ export function ProductControls({
           sizes={sizes}
           styles={styles}
         />
-      </form>
+      </section>
       <div>
-        <label htmlFor="range-input">Price History</label>
+        <label htmlFor="range-input" className="text-primary text-sm font-medium">
+          Price History
+        </label>
         <div id="range-input" aria-label="Select a date range">
           {DateRanges.map((range, index) => {
             const isSelected = range === filters.dateRange;

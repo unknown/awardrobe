@@ -72,7 +72,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
   return (
     <Fragment>
-      <section className="container space-y-2 pb-4">
+      <section className="container space-y-2">
         <h1 className="text-xl">{product.name}</h1>
         <a
           href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
@@ -83,7 +83,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           View item on Uniqlo
         </a>
         <div>
-          <p>Latest Price</p>
+          <p className="text-sm font-medium">Latest Price</p>
           <p className="text-2xl font-medium">{getLatestPriceText()}</p>
         </div>
       </section>
@@ -96,8 +96,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           }}
           createNotification={async (notificationOptions) => {
             const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-
-            const response = await fetch("/api/add-notification", {
+            await fetch("/api/add-notification", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -110,9 +109,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 mustBeInStock,
               }),
             });
-            if (response.status === 200) {
-              console.log("Added notification");
-            }
           }}
           styles={styles}
           sizes={sizes}
