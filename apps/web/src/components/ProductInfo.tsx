@@ -35,8 +35,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
     size: sizes[0],
   });
 
-  const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
-
   const loadPricesData = useCallback(
     async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
       invalidateData();
@@ -83,27 +81,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
       </section>
       <section className="container py-4">
         <ProductControls
-          filters={filters}
-          updateFilters={async (newFilters) => {
-            setFilters(newFilters);
+          productId={product.id}
+          defaultFilters={defaultFilters.current}
+          onFiltersUpdate={async (newFilters) => {
             await loadPricesData(newFilters);
-          }}
-          createNotification={async (notificationOptions) => {
-            // TODO: make this more type-safe
-            const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-            const response = await fetch("/api/add-notification", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                productId: product.id,
-                style,
-                size,
-                priceInCents,
-                mustBeInStock,
-              }),
-            });
           }}
           styles={styles}
           sizes={sizes}

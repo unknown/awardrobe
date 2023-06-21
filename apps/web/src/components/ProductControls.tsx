@@ -21,9 +21,9 @@ export type FilterOptions = {
 };
 
 export type ProductControlsProps = {
-  filters: FilterOptions;
-  updateFilters: (newFilters: FilterOptions) => void;
-  createNotification: (options: NotificationOptions) => Promise<void>;
+  productId: string;
+  defaultFilters: FilterOptions;
+  onFiltersUpdate: (newFilters: FilterOptions) => void;
   styles: string[];
   sizes: string[];
 };
@@ -32,25 +32,17 @@ const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
 
 export function ProductControls({
-  filters,
-  updateFilters: consumerUpdateFilters,
-  createNotification,
+  productId,
+  defaultFilters,
+  onFiltersUpdate,
   styles,
   sizes,
 }: ProductControlsProps) {
-  const [notificationOptions, setNotificationOptions] = useState<NotificationOptions>({
-    style: filters.style,
-    size: filters.size,
-    mustBeInStock: false,
-  });
+  const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
 
   const updateFilters = (newFilters: FilterOptions) => {
-    consumerUpdateFilters(newFilters);
-    setNotificationOptions({
-      ...notificationOptions,
-      style: newFilters.style,
-      size: newFilters.size,
-    });
+    setFilters(newFilters);
+    onFiltersUpdate(newFilters);
   };
 
   return (
@@ -105,9 +97,8 @@ export function ProductControls({
           </Select>
         </fieldset>
         <AddNotificationDialog
-          options={notificationOptions}
-          setOptions={(newOptions) => setNotificationOptions(newOptions)}
-          createNotification={() => createNotification(notificationOptions)}
+          productId={productId}
+          filters={filters}
           sizes={sizes}
           styles={styles}
         />

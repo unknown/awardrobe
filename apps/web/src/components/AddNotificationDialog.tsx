@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@ui/Select";
 import { useState } from "react";
+import { FilterOptions } from "./ProductControls";
 
 export type NotificationOptions = {
   style: string;
@@ -23,22 +24,33 @@ export type NotificationOptions = {
 };
 
 export type AddNotificationDialogProps = {
-  options: NotificationOptions;
-  setOptions: (newOptions: NotificationOptions) => void;
-  createNotification: () => Promise<void>;
+  productId: string;
+  filters: FilterOptions;
   styles: string[];
   sizes: string[];
 };
 
 export default function AddNotificationDialog({
-  options,
-  setOptions,
-  createNotification,
+  productId,
+  filters,
   styles,
   sizes,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [options, setOptions] = useState<NotificationOptions>({
+    style: filters.style,
+    size: filters.size,
+    mustBeInStock: false,
+  });
+
+  if (filters.style !== options.style) {
+    setOptions((options) => ({ ...options, style: filters.style }));
+  }
+  if (filters.size !== options.size) {
+    setOptions((options) => ({ ...options, size: filters.size }));
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -65,7 +77,7 @@ export default function AddNotificationDialog({
               event.preventDefault();
               setIsLoading(true);
 
-              await createNotification();
+              await createNotification(productId, options);
 
               setIsLoading(false);
               setOpen(false);
@@ -151,4 +163,23 @@ export default function AddNotificationDialog({
       </Dialog.Portal>
     </Dialog.Root>
   );
+}
+
+async function createNotification(productId: string, notificationOptions: NotificationOptions) {
+  // TODO: make this more type-safe
+  const { style, size, priceInCents, mustBeInStock } = notificationOptions;
+  const response = await fetch("/api/add-notification", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId,
+      style,
+      size,
+      priceInCents,
+      mustBeInStock,
+    }),
+  });
+  return response.json();
 }
