@@ -1,9 +1,10 @@
-import { Product } from "prisma-types";
-
 import { dollarsToCents } from "../../utils/currency";
 import prisma from "../../utils/database";
+import emailTransporter from "../../utils/emailer";
 import { toTitleCase } from "../../utils/formatter";
 import { ProductDetails, UniqloType } from "./types";
+import { renderStockNotification } from "emails";
+import { Product } from "prisma-types";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
@@ -181,7 +182,21 @@ async function updateStock(
           where: { id: notification.userId },
         });
 
-        console.log(user.email);
+        if (!user.email) return;
+
+        const emailHtml = renderStockNotification({
+          productName: product.name,
+          priceInCents: priceInCents,
+          productUrl: "undefined",
+        });
+
+        const options = {
+          to: user.email,
+          subject: "Item Restock",
+          html: emailHtml,
+        };
+
+        emailTransporter.sendMail(options);
       })
     );
   }

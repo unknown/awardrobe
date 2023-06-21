@@ -1,7 +1,6 @@
+import { handleHeartbeat } from "./monitors/uniqlo";
 import * as dotenv from "dotenv";
 import cron from "node-cron";
-
-import { handleHeartbeat } from "./monitors/uniqlo";
 
 dotenv.config();
 
