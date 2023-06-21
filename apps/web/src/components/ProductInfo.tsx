@@ -7,16 +7,10 @@ import { formatPrice } from "@/utils/utils";
 
 import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
-import { DateRange, ProductControls } from "./ProductControls";
+import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
-};
-
-export type FilterOptions = {
-  dateRange: DateRange;
-  style: string;
-  size: string;
 };
 
 export function ProductInfo({ product }: ProductInfoProps) {

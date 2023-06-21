@@ -14,7 +14,13 @@ import {
   SelectValue,
 } from "@ui/Select";
 import { useState } from "react";
-import { NotificationOptions } from "./ProductControls";
+
+export type NotificationOptions = {
+  style: string;
+  size: string;
+  mustBeInStock: boolean;
+  priceInCents?: number;
+};
 
 export type AddNotificationDialogProps = {
   options: NotificationOptions;

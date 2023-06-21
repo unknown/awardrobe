@@ -11,15 +11,13 @@ import {
 } from "@ui/Select";
 
 import { cn } from "@/utils/utils";
-import AddNotificationDialog from "./AddNotificationDialog";
-import { FilterOptions } from "./ProductInfo";
+import AddNotificationDialog, { NotificationOptions } from "./AddNotificationDialog";
 import { useState } from "react";
 
-export type NotificationOptions = {
+export type FilterOptions = {
+  dateRange: DateRange;
   style: string;
   size: string;
-  mustBeInStock: boolean;
-  priceInCents?: number;
 };
 
 export type ProductControlsProps = {
