@@ -85,7 +85,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           updateFilters={async (newFilters) => {
             await loadPricesData(newFilters);
           }}
-          addNotification={async (style, size) => {
+          addNotification={async (style, size, mustBeInStock, priceInCents) => {
             const response = await fetch("/api/add-notification", {
               method: "POST",
               headers: {
@@ -93,10 +93,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
               },
               body: JSON.stringify({
                 productId: product.id,
-                priceInCents: undefined, // TODO: populate this with user-defined value
-                mustBeInStock: false,
                 style,
                 size,
+                priceInCents,
+                mustBeInStock,
               }),
             });
             if (response.status === 200) {
@@ -113,7 +113,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         ) : null}
       </section>
-      <section className="container py-4 h-[50rem]">
+      <section className="container h-[50rem] py-4">
         <ProductChart prices={prices} />
       </section>
     </Fragment>

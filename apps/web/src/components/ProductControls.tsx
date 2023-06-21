@@ -13,11 +13,17 @@ import {
 } from "@ui/Select";
 
 import { cn } from "@/utils/utils";
+import AddNotificationDialog from "./AddNotificationDialog";
 
 export type ProductControlsProps = {
   defaultFilters: FilterOptions;
   updateFilters: (newFilters: FilterOptions) => void;
-  addNotification: (style: string, size: string) => Promise<void>;
+  addNotification: (
+    style: string,
+    size: string,
+    mustBeInStock: boolean,
+    priceInCents?: number
+  ) => Promise<void>;
   styles: string[];
   sizes: string[];
 };
@@ -47,58 +53,53 @@ export function ProductControls({
 
   return (
     <div className="flex flex-col gap-2">
-      <form
-        className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          addNotification(filters.style, filters.size);
-        }}
-      >
-        <Fragment>
-          <label htmlFor={`style-input`}>Style</label>
-          <Select
-            onValueChange={(style) => {
-              updateFilters({ ...filters, style });
-            }}
-            defaultValue={defaultFilters.style}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={`Select a style...`} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {styles.map((style) => (
-                  <SelectItem value={style} key={style}>
-                    {style}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Fragment>
-        <Fragment>
-          <label htmlFor={`size-input`}>Color</label>
-          <Select
-            onValueChange={(size) => {
-              updateFilters({ ...filters, size });
-            }}
-            defaultValue={defaultFilters.size}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={`Select a size...`} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {sizes.map((size) => (
-                  <SelectItem value={size} key={size}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Fragment>
-        <Button>Add Notification</Button>
+      <form className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
+        <label htmlFor={`style-input`}>Style</label>
+        <Select
+          onValueChange={(style) => {
+            updateFilters({ ...filters, style });
+          }}
+          defaultValue={defaultFilters.style}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={`Select a style...`} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {styles.map((style) => (
+                <SelectItem value={style} key={style}>
+                  {style}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <label htmlFor={`size-input`}>Color</label>
+        <Select
+          onValueChange={(size) => {
+            updateFilters({ ...filters, size });
+          }}
+          defaultValue={defaultFilters.size}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={`Select a size...`} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {sizes.map((size) => (
+                <SelectItem value={size} key={size}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <AddNotificationDialog
+          defaultOptions={{ style: filters.style, size: filters.size, mustBeInStock: false }}
+          addNotification={addNotification}
+          sizes={sizes}
+          styles={styles}
+        />
       </form>
       <label htmlFor="range-input">
         Price History
