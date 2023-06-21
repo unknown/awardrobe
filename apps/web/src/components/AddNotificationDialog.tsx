@@ -32,6 +32,7 @@ export default function AddNotificationDialog({
   sizes,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -56,9 +57,11 @@ export default function AddNotificationDialog({
             onSubmit={async (event) => {
               // TODO: add loading state and handle errors
               event.preventDefault();
+              setIsLoading(true);
 
               await createNotification();
 
+              setIsLoading(false);
               setOpen(false);
             }}
           >
@@ -68,6 +71,7 @@ export default function AddNotificationDialog({
                 setOptions({ ...options, style });
               }}
               defaultValue={options.style}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder={`Select a style...`} />
@@ -88,6 +92,7 @@ export default function AddNotificationDialog({
                 setOptions({ ...options, size });
               }}
               defaultValue={options.size}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder={`Select a size...`} />
@@ -112,6 +117,7 @@ export default function AddNotificationDialog({
                     mustBeInStock: checked === true ? true : false,
                   })
                 }
+                disabled={isLoading}
               />
               <label
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -121,7 +127,9 @@ export default function AddNotificationDialog({
               </label>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button type="submit">Create notification</Button>
+              <Button type="submit" disabled={isLoading}>
+                Create notification
+              </Button>
             </div>
           </form>
           <Dialog.Close asChild>

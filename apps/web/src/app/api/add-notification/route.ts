@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
+import { Prisma } from "prisma-types";
 
 type AddNotificationRequest = {
   productId: string;
@@ -22,26 +23,38 @@ export async function POST(req: Request) {
   const { productId, priceInCents, mustBeInStock, style, size }: AddNotificationRequest =
     await req.json();
 
-  await prisma.productNotification.create({
-    data: {
-      productVariant: {
-        connect: {
-          productId_style_size: {
-            productId: productId,
-            style,
-            size,
+  try {
+    await prisma.productNotification.create({
+      data: {
+        productVariant: {
+          connect: {
+            productId_style_size: {
+              productId: productId,
+              style,
+              size,
+            },
+          },
+        },
+        mustBeInStock,
+        priceInCents,
+        user: {
+          connect: {
+            id: session.user.id,
           },
         },
       },
-      mustBeInStock,
-      priceInCents,
-      user: {
-        connect: {
-          id: session.user.id,
-        },
-      },
-    },
-  });
+    });
 
-  return NextResponse.json({ status: "success" });
+    return NextResponse.json({ status: "success" });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === "P2002") {
+        return NextResponse.json(
+          { status: "error", error: "Notificaton for this product already exists" },
+          { status: 400 }
+        );
+      }
+    }
+    return NextResponse.json({ status: "error", error: "Internal server error" }, { status: 500 });
+  }
 }

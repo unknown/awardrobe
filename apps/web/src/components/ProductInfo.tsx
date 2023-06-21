@@ -95,8 +95,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
             await loadPricesData(newFilters);
           }}
           createNotification={async (notificationOptions) => {
+            // TODO: make this more type-safe
             const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-            await fetch("/api/add-notification", {
+            const response = await fetch("/api/add-notification", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
