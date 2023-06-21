@@ -14,34 +14,24 @@ import {
   SelectValue,
 } from "@ui/Select";
 import { useState } from "react";
-
-export type NotificationOptions = {
-  style: string;
-  size: string;
-  priceInCents?: number;
-  mustBeInStock: boolean;
-};
+import { NotificationOptions } from "./ProductControls";
 
 export type AddNotificationDialogProps = {
-  defaultOptions: NotificationOptions;
-  addNotification: (
-    style: string,
-    size: string,
-    mustBeInStock: boolean,
-    priceInCents?: number
-  ) => Promise<void>;
+  options: NotificationOptions;
+  setOptions: (newOptions: NotificationOptions) => void;
+  createNotification: () => Promise<void>;
   styles: string[];
   sizes: string[];
 };
 
 export default function AddNotificationDialog({
-  defaultOptions,
-  addNotification,
+  options,
+  setOptions,
+  createNotification,
   styles,
   sizes,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<NotificationOptions>(defaultOptions);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -67,21 +57,15 @@ export default function AddNotificationDialog({
               // TODO: add loading state and handle errors
               event.preventDefault();
 
-              console.log(options);
+              await createNotification();
 
-              await addNotification(
-                options.style,
-                options.size,
-                options.mustBeInStock,
-                options.priceInCents
-              );
               setOpen(false);
             }}
           >
             <label className="text-primary text-xs font-medium">Style</label>
             <Select
               onValueChange={(style) => {
-                setOptions((options) => ({ ...options, style }));
+                setOptions({ ...options, style });
               }}
               defaultValue={options.style}
             >
@@ -101,7 +85,7 @@ export default function AddNotificationDialog({
             <label className="text-primary text-xs font-medium">Size</label>
             <Select
               onValueChange={(size) => {
-                setOptions((options) => ({ ...options, size }));
+                setOptions({ ...options, size });
               }}
               defaultValue={options.size}
             >
@@ -123,10 +107,10 @@ export default function AddNotificationDialog({
                 id="stock"
                 defaultChecked={options.mustBeInStock}
                 onCheckedChange={(checked) =>
-                  setOptions((options) => ({
+                  setOptions({
                     ...options,
                     mustBeInStock: checked === true ? true : false,
-                  }))
+                  })
                 }
               />
               <label

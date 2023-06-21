@@ -1,7 +1,5 @@
 "use client";
 
-import { Fragment, useState } from "react";
-
 import { Button } from "@ui/Button";
 import {
   Select,
@@ -14,16 +12,20 @@ import {
 
 import { cn } from "@/utils/utils";
 import AddNotificationDialog from "./AddNotificationDialog";
+import { FilterOptions } from "./ProductInfo";
+import { useState } from "react";
+
+export type NotificationOptions = {
+  style: string;
+  size: string;
+  mustBeInStock: boolean;
+  priceInCents?: number;
+};
 
 export type ProductControlsProps = {
-  defaultFilters: FilterOptions;
+  filters: FilterOptions;
   updateFilters: (newFilters: FilterOptions) => void;
-  addNotification: (
-    style: string,
-    size: string,
-    mustBeInStock: boolean,
-    priceInCents?: number
-  ) => Promise<void>;
+  createNotification: (options: NotificationOptions) => Promise<void>;
   styles: string[];
   sizes: string[];
 };
@@ -31,38 +33,40 @@ export type ProductControlsProps = {
 const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
 
-export type FilterOptions = {
-  dateRange: DateRange;
-  style: string;
-  size: string;
-};
-
 export function ProductControls({
-  defaultFilters,
+  filters,
   updateFilters: consumerUpdateFilters,
-  addNotification,
+  createNotification,
   styles,
   sizes,
 }: ProductControlsProps) {
-  const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
+  const [notificationOptions, setNotificationOptions] = useState<NotificationOptions>({
+    style: filters.style,
+    size: filters.size,
+    mustBeInStock: false,
+  });
 
   const updateFilters = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
     consumerUpdateFilters(newFilters);
+    setNotificationOptions({
+      ...notificationOptions,
+      style: newFilters.style,
+      size: newFilters.size,
+    });
   };
 
   return (
     <div className="flex flex-col gap-2">
       <form className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-2">
-        <label htmlFor={`style-input`}>Style</label>
+        <label htmlFor="style-input">Style</label>
         <Select
           onValueChange={(style) => {
             updateFilters({ ...filters, style });
           }}
-          defaultValue={defaultFilters.style}
+          value={filters.style}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={`Select a style...`} />
+          <SelectTrigger className="w-[180px]" id="style-input">
+            <SelectValue placeholder="Select a style..." />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -74,15 +78,15 @@ export function ProductControls({
             </SelectGroup>
           </SelectContent>
         </Select>
-        <label htmlFor={`size-input`}>Color</label>
+        <label htmlFor="size-input">Color</label>
         <Select
           onValueChange={(size) => {
             updateFilters({ ...filters, size });
           }}
-          defaultValue={defaultFilters.size}
+          value={filters.size}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={`Select a size...`} />
+          <SelectTrigger className="w-[180px]" id="size-input">
+            <SelectValue placeholder="Select a size..." />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -95,14 +99,15 @@ export function ProductControls({
           </SelectContent>
         </Select>
         <AddNotificationDialog
-          defaultOptions={{ style: filters.style, size: filters.size, mustBeInStock: false }}
-          addNotification={addNotification}
+          options={notificationOptions}
+          setOptions={(newOptions) => setNotificationOptions(newOptions)}
+          createNotification={() => createNotification(notificationOptions)}
           sizes={sizes}
           styles={styles}
         />
       </form>
-      <label htmlFor="range-input">
-        Price History
+      <div>
+        <label htmlFor="range-input">Price History</label>
         <div id="range-input" aria-label="Select a date range">
           {DateRanges.map((range, index) => {
             const isSelected = range === filters.dateRange;
@@ -114,8 +119,7 @@ export function ProductControls({
                 key={range}
                 variant="outline"
                 onClick={() => {
-                  const newFilters = { ...filters, dateRange: range };
-                  updateFilters(newFilters);
+                  updateFilters({ ...filters, dateRange: range });
                 }}
                 className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
               >
@@ -124,7 +128,7 @@ export function ProductControls({
             );
           })}
         </div>
-      </label>
+      </div>
     </div>
   );
 }

@@ -1,16 +1,22 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { formatPrice } from "@/utils/utils";
 
 import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
-import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
+import { DateRange, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
+};
+
+export type FilterOptions = {
+  dateRange: DateRange;
+  style: string;
+  size: string;
 };
 
 export function ProductInfo({ product }: ProductInfoProps) {
@@ -34,6 +40,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
     style: styles[0],
     size: sizes[0],
   });
+
+  const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
 
   const loadPricesData = useCallback(
     async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
@@ -81,11 +89,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
       </section>
       <section className="container py-4">
         <ProductControls
-          defaultFilters={defaultFilters.current}
+          filters={filters}
           updateFilters={async (newFilters) => {
+            setFilters(newFilters);
             await loadPricesData(newFilters);
           }}
-          addNotification={async (style, size, mustBeInStock, priceInCents) => {
+          createNotification={async (notificationOptions) => {
+            const { style, size, priceInCents, mustBeInStock } = notificationOptions;
+
             const response = await fetch("/api/add-notification", {
               method: "POST",
               headers: {
