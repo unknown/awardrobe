@@ -11,8 +11,7 @@ import {
 } from "@ui/Select";
 
 import { cn } from "@/utils/utils";
-import AddNotificationDialog, { NotificationOptions } from "./AddNotificationDialog";
-import { useState } from "react";
+import { ReactElement } from "react";
 
 export type FilterOptions = {
   dateRange: DateRange;
@@ -21,28 +20,25 @@ export type FilterOptions = {
 };
 
 export type ProductControlsProps = {
-  productId: string;
-  defaultFilters: FilterOptions;
+  filters: FilterOptions;
   onFiltersUpdate: (newFilters: FilterOptions) => void;
   styles: string[];
   sizes: string[];
+  notificationsComponent: ReactElement;
 };
 
 const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
 
 export function ProductControls({
-  productId,
-  defaultFilters,
-  onFiltersUpdate,
+  filters,
+  onFiltersUpdate: consumerOnFiltersUpdate,
   styles,
   sizes,
+  notificationsComponent,
 }: ProductControlsProps) {
-  const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
-
-  const updateFilters = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
-    onFiltersUpdate(newFilters);
+  const onFiltersUpdate = (newFilters: FilterOptions) => {
+    consumerOnFiltersUpdate(newFilters);
   };
 
   return (
@@ -54,7 +50,7 @@ export function ProductControls({
           </label>
           <Select
             onValueChange={(style) => {
-              updateFilters({ ...filters, style });
+              onFiltersUpdate({ ...filters, style });
             }}
             value={filters.style}
           >
@@ -78,7 +74,7 @@ export function ProductControls({
           </label>
           <Select
             onValueChange={(size) => {
-              updateFilters({ ...filters, size });
+              onFiltersUpdate({ ...filters, size });
             }}
             value={filters.size}
           >
@@ -96,12 +92,7 @@ export function ProductControls({
             </SelectContent>
           </Select>
         </fieldset>
-        <AddNotificationDialog
-          productId={productId}
-          filters={filters}
-          sizes={sizes}
-          styles={styles}
-        />
+        {notificationsComponent}
       </section>
       <div>
         <label htmlFor="range-input" className="text-primary text-sm font-medium">
@@ -118,7 +109,7 @@ export function ProductControls({
                 key={range}
                 variant="outline"
                 onClick={() => {
-                  updateFilters({ ...filters, dateRange: range });
+                  onFiltersUpdate({ ...filters, dateRange: range });
                 }}
                 className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
               >

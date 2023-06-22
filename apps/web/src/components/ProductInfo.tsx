@@ -8,6 +8,7 @@ import { formatPrice } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
+import AddNotificationDialog from "./AddNotificationDialog";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
@@ -34,6 +35,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
     style: styles[0],
     size: sizes[0],
   });
+
+  const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
 
   const loadPricesData = useCallback(
     async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
@@ -81,13 +84,22 @@ export function ProductInfo({ product }: ProductInfoProps) {
       </section>
       <section className="container py-4">
         <ProductControls
-          productId={product.id}
-          defaultFilters={defaultFilters.current}
+          filters={filters}
           onFiltersUpdate={async (newFilters) => {
+            setFilters(newFilters);
             await loadPricesData(newFilters);
           }}
           styles={styles}
           sizes={sizes}
+          notificationsComponent={
+            <AddNotificationDialog
+              productId={product.id}
+              filters={filters}
+              sizes={sizes}
+              styles={styles}
+              priceInCents={prices ? prices[0].priceInCents : undefined}
+            />
+          }
         />
         {prices?.length === 1000 ? (
           <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">

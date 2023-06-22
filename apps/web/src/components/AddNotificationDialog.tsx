@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FilterOptions } from "./ProductControls";
+import { Input } from "@ui/Input";
 
 export type NotificationOptions = {
   style: string;
@@ -28,6 +29,7 @@ export type AddNotificationDialogProps = {
   filters: FilterOptions;
   styles: string[];
   sizes: string[];
+  priceInCents?: number;
 };
 
 export default function AddNotificationDialog({
@@ -35,7 +37,10 @@ export default function AddNotificationDialog({
   filters,
   styles,
   sizes,
+  priceInCents,
 }: AddNotificationDialogProps) {
+  const oldFilters = useRef(filters);
+  const oldPriceInCents = useRef(priceInCents);
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,11 +50,15 @@ export default function AddNotificationDialog({
     mustBeInStock: false,
   });
 
-  if (filters.style !== options.style) {
-    setOptions((options) => ({ ...options, style: filters.style }));
+  if (filters !== oldFilters.current) {
+    const { style, size } = filters;
+    setOptions((options) => ({ ...options, style, size }));
+    oldFilters.current = filters;
   }
-  if (filters.size !== options.size) {
-    setOptions((options) => ({ ...options, size: filters.size }));
+
+  if (priceInCents !== undefined && priceInCents !== oldPriceInCents.current) {
+    setOptions((options) => ({ ...options, priceInCents }));
+    oldPriceInCents.current = priceInCents;
   }
 
   return (
@@ -69,7 +78,7 @@ export default function AddNotificationDialog({
         >
           <Dialog.Title className="text-primary text-sm font-medium">Add Notification</Dialog.Title>
           <Dialog.Description className="text-muted-foreground my-2 text-sm">
-            Create an alert for price drops and restocks.
+            Create an alert to be notified when the price drops or is restocked.
           </Dialog.Description>
           <form
             onSubmit={async (event) => {
@@ -86,9 +95,9 @@ export default function AddNotificationDialog({
             <label className="text-primary text-xs font-medium">Style</label>
             <Select
               onValueChange={(style) => {
-                setOptions({ ...options, style });
+                setOptions((options) => ({ ...options, style }));
               }}
-              defaultValue={options.style}
+              value={options.style}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -107,9 +116,9 @@ export default function AddNotificationDialog({
             <label className="text-primary text-xs font-medium">Size</label>
             <Select
               onValueChange={(size) => {
-                setOptions({ ...options, size });
+                setOptions((options) => ({ ...options, size }));
               }}
-              defaultValue={options.size}
+              value={options.size}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -125,10 +134,24 @@ export default function AddNotificationDialog({
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <label className="text-primary text-xs font-medium" htmlFor="price">
+              Price Threshold (In Cents)
+            </label>
+            <Input
+              id="price"
+              value={options.priceInCents}
+              onChange={(event) => {
+                const value = Math.max(0, parseInt(event.target.value.slice(-8)));
+                setOptions((options) => ({
+                  ...options,
+                  priceInCents: isNaN(value) ? priceInCents : value,
+                }));
+              }}
+            />
             <div className="flex items-center space-x-2 py-2">
               <Checkbox
                 id="stock"
-                defaultChecked={options.mustBeInStock}
+                checked={options.mustBeInStock}
                 onCheckedChange={(checked) =>
                   setOptions({
                     ...options,
