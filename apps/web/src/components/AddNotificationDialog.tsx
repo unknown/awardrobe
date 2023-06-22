@@ -139,13 +139,21 @@ export default function AddNotificationDialog({
             </label>
             <Input
               id="price"
-              value={options.priceInCents}
+              value={options.priceInCents ?? ""}
               onChange={(event) => {
-                const value = Math.max(0, parseInt(event.target.value.slice(-8)));
+                const value = Math.max(1, parseInt(event.target.value.slice(-8)));
                 setOptions((options) => ({
                   ...options,
-                  priceInCents: isNaN(value) ? priceInCents : value,
+                  priceInCents: isNaN(value) ? undefined : value,
                 }));
+              }}
+              onBlur={(event) => {
+                if (event.target.value === "") {
+                  setOptions((options) => ({
+                    ...options,
+                    priceInCents,
+                  }));
+                }
               }}
             />
             <div className="flex items-center space-x-2 py-2">
