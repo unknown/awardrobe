@@ -24,8 +24,13 @@ export async function POST(req: Request) {
     await req.json();
 
   try {
-    await prisma.productNotification.create({
+    const notification = await prisma.productNotification.create({
       data: {
+        product: {
+          connect: {
+            id: productId,
+          },
+        },
         productVariant: {
           connect: {
             productId_style_size: {
@@ -45,7 +50,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ status: "success" });
+    return NextResponse.json({ status: "success", notification });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {

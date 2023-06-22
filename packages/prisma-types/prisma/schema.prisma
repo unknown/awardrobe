@@ -69,34 +69,38 @@ model Store {
 }
 
 model Product {
-  id          String           @id @default(cuid())
-  productCode String
-  name        String
-  storeId     String
-  variants    ProductVariant[]
-  store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id            String                @id @default(cuid())
+  productCode   String
+  name          String
+  storeId       String
+  variants      ProductVariant[]
+  notifications ProductNotification[]
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, productCode])
   @@index([storeId])
 }
 
 model Price {
-  id               String         @id @default(cuid())
+  id               String   @id @default(cuid())
   productVariantId String
-  timestamp        DateTime       @default(now())
+  timestamp        DateTime @default(now())
   priceInCents     Int
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@index([productVariantId])
 }
 
 model Stock {
-  id               String         @id @default(cuid())
+  id               String   @id @default(cuid())
   productVariantId String
-  timestamp        DateTime       @default(now())
+  timestamp        DateTime @default(now())
   stock            Int?
   inStock          Boolean
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@index([productVariantId])
 }
@@ -109,22 +113,27 @@ model ProductVariant {
   prices        Price[]
   stocks        Stock[]
   notifications ProductNotification[]
-  product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, style, size])
   @@index([productId])
 }
 
 model ProductNotification {
-  id               String         @id @default(cuid())
+  id               String  @id @default(cuid())
   userId           String
+  productId        String
   productVariantId String
   priceInCents     Int?
   mustBeInStock    Boolean
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productVariantId])
   @@index([userId])
+  @@index([productId])
   @@index([productVariantId])
 }

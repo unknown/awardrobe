@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Input } from "@ui/Input";
 import { Bell } from "@icons/Bell";
 
@@ -25,43 +25,35 @@ export type NotificationOptions = {
 };
 
 export type AddNotificationDialogProps = {
-  productId: string;
-  options: NotificationOptions;
+  defaultOptions: NotificationOptions;
+  onNotificationUpdate: (options: NotificationOptions) => Promise<boolean>;
   styles: string[];
   sizes: string[];
   disabled?: boolean;
 };
 
-/**
- * AddNotificationDialog is an uncontrolled component, but controlled in the sense that any changes to the `options` prop will propagate to the internal options state
- */
 export default function AddNotificationDialog({
-  productId,
+  defaultOptions,
+  onNotificationUpdate: consumerOnFiltersUpdate,
   styles,
   sizes,
-  options: consumerOptions,
+  disabled,
 }: AddNotificationDialogProps) {
-  const oldConsumerOptions = useRef(consumerOptions);
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [options, setOptions] = useState<NotificationOptions>(consumerOptions);
-
-  Object.keys(consumerOptions).forEach((key) => {
-    const typedKey = key as keyof NotificationOptions;
-    const oldValue = oldConsumerOptions.current[typedKey];
-    const newValue = consumerOptions[typedKey];
-    if (oldValue !== newValue) {
-      console.log(typedKey, oldValue, newValue);
-      setOptions((options) => ({ ...options, [typedKey]: newValue }));
-    }
-  });
-  oldConsumerOptions.current = consumerOptions;
+  const [options, setOptions] = useState<NotificationOptions>(defaultOptions);
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(open) => {
+        setOpen(open);
+        setOptions(defaultOptions);
+      }}
+    >
       <Dialog.Trigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" disabled={disabled}>
           <Bell className="mr-2" />
           Add notification
         </Button>
@@ -86,10 +78,12 @@ export default function AddNotificationDialog({
               event.preventDefault();
               setIsLoading(true);
 
-              await createNotification(productId, options);
+              const shouldClose = await consumerOnFiltersUpdate(options);
 
               setIsLoading(false);
-              setOpen(false);
+              if (shouldClose) {
+                setOpen(false);
+              }
             }}
           >
             <label className="text-primary text-xs font-medium">Style</label>
@@ -151,7 +145,7 @@ export default function AddNotificationDialog({
                 if (event.target.value === "") {
                   setOptions((options) => ({
                     ...options,
-                    priceInCents: consumerOptions.priceInCents,
+                    priceInCents: defaultOptions.priceInCents,
                   }));
                 }
               }}
@@ -194,23 +188,4 @@ export default function AddNotificationDialog({
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
-
-async function createNotification(productId: string, notificationOptions: NotificationOptions) {
-  // TODO: make this more type-safe
-  const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-  const response = await fetch("/api/add-notification", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productId,
-      style,
-      size,
-      priceInCents,
-      mustBeInStock,
-    }),
-  });
-  return response.json();
 }

@@ -28,10 +28,10 @@ export default async function Home() {
     <section className="container space-y-2">
       <h1 className="text-xl font-bold">Notifications</h1>
       <div className="flex flex-col gap-1">
-        {notifications.map((notification) => (
-          <div key={notification.id}>
-            <h2 className="text-lg font-medium">{notification.productVariant.product.name}</h2>
-            {notification.productVariant.style} {notification.productVariant.size}
+        {notifications.map(({ id, productVariant }) => (
+          <div key={id}>
+            <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
+            {productVariant.style} {productVariant.size}
           </div>
         ))}
       </div>

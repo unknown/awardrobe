@@ -24,7 +24,7 @@ export type ProductControlsProps = {
   onFiltersUpdate: (newFilters: FilterOptions) => void;
   styles: string[];
   sizes: string[];
-  notificationsComponent: ReactElement;
+  renderNotificationsComponent: (style: string, size: string) => ReactElement;
 };
 
 const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
@@ -35,7 +35,7 @@ export function ProductControls({
   onFiltersUpdate: consumerOnFiltersUpdate,
   styles,
   sizes,
-  notificationsComponent,
+  renderNotificationsComponent,
 }: ProductControlsProps) {
   const onFiltersUpdate = (newFilters: FilterOptions) => {
     consumerOnFiltersUpdate(newFilters);
@@ -92,7 +92,7 @@ export function ProductControls({
             </SelectContent>
           </Select>
         </fieldset>
-        {notificationsComponent}
+        {renderNotificationsComponent(filters.style, filters.size)}
       </section>
       <div>
         <label htmlFor="range-input" className="text-primary text-sm font-medium">

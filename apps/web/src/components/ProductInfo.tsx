@@ -8,13 +8,15 @@ import { formatPrice } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
-import AddNotificationDialog from "./AddNotificationDialog";
+import AddNotificationDialog, { NotificationOptions } from "./AddNotificationDialog";
+import { ProductNotification } from "prisma-types";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
+  defaultNotifications: ProductNotification[];
 };
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product, defaultNotifications }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(product.id);
 
   const { styles, sizes } = useMemo<{ styles: string[]; sizes: string[] }>(() => {
@@ -37,6 +39,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   });
 
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
+  const [notifications, setNotifications] = useState<ProductNotification[]>(defaultNotifications);
 
   const loadPricesData = useCallback(
     async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
@@ -65,6 +68,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
   };
 
+  // TODO: handle invalid product controls state when `prices` is invalidated
+
   return (
     <Fragment>
       <section className="container space-y-2">
@@ -91,19 +96,45 @@ export function ProductInfo({ product }: ProductInfoProps) {
           }}
           styles={styles}
           sizes={sizes}
-          notificationsComponent={
-            <AddNotificationDialog
-              productId={product.id}
-              options={{
-                mustBeInStock: false,
-                priceInCents: prices ? prices[0].priceInCents : undefined,
-                style: filters.style,
-                size: filters.size,
-              }}
-              sizes={sizes}
-              styles={styles}
-            />
-          }
+          renderNotificationsComponent={(style, size) => {
+            const variant = product.variants.find((variant) => {
+              return variant.style === style && variant.size === size;
+            });
+            const notification = notifications.find((notification) => {
+              return notification.productVariantId === variant?.id;
+            });
+
+            return (
+              <AddNotificationDialog
+                defaultOptions={{
+                  mustBeInStock: false,
+                  priceInCents: prices ? prices[0].priceInCents : undefined,
+                  style: filters.style,
+                  size: filters.size,
+                }}
+                onNotificationUpdate={async (options) => {
+                  const response = await createNotification(product.id, options);
+                  const {
+                    status,
+                    notification,
+                  }: { status: string; notification?: ProductNotification } = response;
+
+                  if (status === "error") {
+                    return false;
+                  }
+
+                  if (notification) {
+                    setNotifications((notifications) => [...notifications, notification]);
+                  }
+
+                  return true;
+                }}
+                sizes={sizes}
+                styles={styles}
+                disabled={notification !== undefined}
+              />
+            );
+          }}
         />
         {prices?.length === 1000 ? (
           <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
@@ -132,4 +163,23 @@ function getStartDate(dateRange: DateRange) {
   const startDate = new Date();
   startDate.setTime(Math.max(0, startDate.getTime() - dateOffsets[dateRange]));
   return startDate;
+}
+
+async function createNotification(productId: string, notificationOptions: NotificationOptions) {
+  // TODO: make this more type-safe
+  const { style, size, priceInCents, mustBeInStock } = notificationOptions;
+  const response = await fetch("/api/add-notification", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId,
+      style,
+      size,
+      priceInCents,
+      mustBeInStock,
+    }),
+  });
+  return response.json();
 }
