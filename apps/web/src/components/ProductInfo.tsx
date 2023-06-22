@@ -8,8 +8,9 @@ import { formatPrice } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
-import AddNotificationDialog, { NotificationOptions } from "./AddNotificationDialog";
+import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
 import { ProductNotification } from "prisma-types";
+import { Button } from "@ui/Button";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
@@ -69,7 +70,6 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
   };
 
   // TODO: handle invalid product controls state when `prices` is invalidated
-
   return (
     <Fragment>
       <section className="container space-y-2">
@@ -103,35 +103,48 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
             const notification = notifications.find((notification) => {
               return notification.productVariantId === variant?.id;
             });
+            const hasExistingNotification = notification !== undefined;
 
+            if (hasExistingNotification) {
+              return (
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    await deleteNotification(notification.id);
+                    setNotifications((notifications) =>
+                      [...notifications].filter((n) => n !== notification)
+                    );
+                  }}
+                >
+                  Delete notification
+                </Button>
+              );
+            }
             return (
               <AddNotificationDialog
                 defaultOptions={{
                   mustBeInStock: false,
-                  priceInCents: prices ? prices[0].priceInCents : undefined,
+                  priceInCents: prices && prices.length > 0 ? prices[0].priceInCents : undefined,
                   style: filters.style,
                   size: filters.size,
                 }}
                 onNotificationUpdate={async (options) => {
-                  const response = await createNotification(product.id, options);
                   const {
                     status,
                     notification,
-                  }: { status: string; notification?: ProductNotification } = response;
-
+                  }: { status: string; notification?: ProductNotification } =
+                    await createNotification(product.id, options);
                   if (status === "error") {
                     return false;
                   }
-
                   if (notification) {
                     setNotifications((notifications) => [...notifications, notification]);
                   }
-
                   return true;
                 }}
                 sizes={sizes}
                 styles={styles}
-                disabled={notification !== undefined}
+                disabled={hasExistingNotification}
               />
             );
           }}
@@ -165,10 +178,10 @@ function getStartDate(dateRange: DateRange) {
   return startDate;
 }
 
+// TODO: make these more type-safe
 async function createNotification(productId: string, notificationOptions: NotificationOptions) {
-  // TODO: make this more type-safe
   const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-  const response = await fetch("/api/add-notification", {
+  const response = await fetch("/api/notifications/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -179,6 +192,19 @@ async function createNotification(productId: string, notificationOptions: Notifi
       size,
       priceInCents,
       mustBeInStock,
+    }),
+  });
+  return response.json();
+}
+
+async function deleteNotification(notificationId: string) {
+  const response = await fetch("/api/notifications/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      notificationId,
     }),
   });
   return response.json();

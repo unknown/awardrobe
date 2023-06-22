@@ -32,7 +32,7 @@ export type AddNotificationDialogProps = {
   disabled?: boolean;
 };
 
-export default function AddNotificationDialog({
+export function AddNotificationDialog({
   defaultOptions,
   onNotificationUpdate: consumerOnFiltersUpdate,
   styles,

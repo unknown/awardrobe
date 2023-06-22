@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
+import Link from "next/link";
+import { Button } from "@ui/Button";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -25,13 +27,18 @@ export default async function Home() {
   });
 
   return (
-    <section className="container space-y-2">
+    <section className="container space-y-4">
       <h1 className="text-xl font-bold">Notifications</h1>
-      <div className="flex flex-col gap-1">
-        {notifications.map(({ id, productVariant }) => (
-          <div key={id}>
+      <div className="space-y-6">
+        {notifications.map(({ id, productId, productVariant }) => (
+          <div key={id} className="space-y-2">
             <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
-            {productVariant.style} {productVariant.size}
+            <Link href={`/product/${productId}`} className="text-sky-600">
+              View product details
+            </Link>
+            <p>
+              Style: {productVariant.style}, Size: {productVariant.size}
+            </p>
           </div>
         ))}
       </div>
