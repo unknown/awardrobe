@@ -70,7 +70,7 @@ export function ProductControls({
         </fieldset>
         <fieldset>
           <label htmlFor="size-input" className="text-primary text-sm font-medium">
-            Color
+            Size
           </label>
           <Select
             onValueChange={(size) => {

@@ -68,7 +68,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   return (
     <Fragment>
       <section className="container space-y-2">
-        <h1 className="text-xl">{product.name}</h1>
+        <h1 className="text-2xl font-medium">{product.name}</h1>
         <a
           href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
           target="_blank"
@@ -94,10 +94,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
           notificationsComponent={
             <AddNotificationDialog
               productId={product.id}
-              filters={filters}
+              options={{
+                mustBeInStock: false,
+                priceInCents: prices ? prices[0].priceInCents : undefined,
+                style: filters.style,
+                size: filters.size,
+              }}
               sizes={sizes}
               styles={styles}
-              priceInCents={prices ? prices[0].priceInCents : undefined}
             />
           }
         />
@@ -108,7 +112,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         ) : null}
       </section>
-      <section className="container h-[50rem] py-4">
+      <section className="container h-[40rem] py-4">
         <ProductChart prices={prices} />
       </section>
     </Fragment>

@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@ui/Select";
 import { useRef, useState } from "react";
-import { FilterOptions } from "./ProductControls";
 import { Input } from "@ui/Input";
 import { Bell } from "@icons/Bell";
 
@@ -27,40 +26,37 @@ export type NotificationOptions = {
 
 export type AddNotificationDialogProps = {
   productId: string;
-  filters: FilterOptions;
+  options: NotificationOptions;
   styles: string[];
   sizes: string[];
-  priceInCents?: number;
+  disabled?: boolean;
 };
 
+/**
+ * AddNotificationDialog is an uncontrolled component, but controlled in the sense that any changes to the `options` prop will propagate to the internal options state
+ */
 export default function AddNotificationDialog({
   productId,
-  filters,
   styles,
   sizes,
-  priceInCents,
+  options: consumerOptions,
 }: AddNotificationDialogProps) {
-  const oldFilters = useRef(filters);
-  const oldPriceInCents = useRef(priceInCents);
+  const oldConsumerOptions = useRef(consumerOptions);
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [options, setOptions] = useState<NotificationOptions>({
-    style: filters.style,
-    size: filters.size,
-    mustBeInStock: false,
+  const [options, setOptions] = useState<NotificationOptions>(consumerOptions);
+
+  Object.keys(consumerOptions).forEach((key) => {
+    const typedKey = key as keyof NotificationOptions;
+    const oldValue = oldConsumerOptions.current[typedKey];
+    const newValue = consumerOptions[typedKey];
+    if (oldValue !== newValue) {
+      console.log(typedKey, oldValue, newValue);
+      setOptions((options) => ({ ...options, [typedKey]: newValue }));
+    }
   });
-
-  if (filters !== oldFilters.current) {
-    const { style, size } = filters;
-    setOptions((options) => ({ ...options, style, size }));
-    oldFilters.current = filters;
-  }
-
-  if (priceInCents !== undefined && priceInCents !== oldPriceInCents.current) {
-    setOptions((options) => ({ ...options, priceInCents }));
-    oldPriceInCents.current = priceInCents;
-  }
+  oldConsumerOptions.current = consumerOptions;
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -143,7 +139,7 @@ export default function AddNotificationDialog({
             </label>
             <Input
               id="price"
-              value={options.priceInCents ?? ""}
+              value={options.priceInCents !== undefined ? options.priceInCents : ""}
               onChange={(event) => {
                 const value = Math.max(1, parseInt(event.target.value.slice(-8)));
                 setOptions((options) => ({
@@ -155,7 +151,7 @@ export default function AddNotificationDialog({
                 if (event.target.value === "") {
                   setOptions((options) => ({
                     ...options,
-                    priceInCents,
+                    priceInCents: consumerOptions.priceInCents,
                   }));
                 }
               }}

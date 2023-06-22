@@ -1,6 +1,5 @@
 import { curveStepAfter } from "@visx/curve";
-import { ParentSize } from "@visx/responsive";
-import { AnimatedAxis, AnimatedGrid, AnimatedLineSeries, Tooltip, XYChart } from "@visx/xychart";
+import { Axis, Grid, LineSeries, Tooltip, XYChart } from "@visx/xychart";
 
 import { PriceWithVariant } from "@/hooks/usePrices";
 import { formatDate } from "@/utils/utils";
@@ -49,67 +48,57 @@ export function ProductChart({ prices }: PricesChartProps) {
   });
 
   return (
-    <ParentSize>
-      {({ height }) => {
+    <XYChart xScale={{ type: "time" }} yScale={{ type: "linear" }}>
+      <Grid
+        lineStyle={{
+          stroke: "#a1a1a1",
+          strokeLinecap: "round",
+          strokeWidth: 1,
+          strokeDasharray: "2, 4",
+        }}
+      />
+
+      <Axis hideTicks orientation="bottom" strokeWidth={1} />
+      <Axis hideTicks orientation="left" strokeWidth={1} />
+
+      {Object.keys(groupedPrices).map((key) => {
         return (
-          <XYChart
-            height={Math.min(600, height)}
-            xScale={{ type: "time" }}
-            yScale={{ type: "linear" }}
-          >
-            <AnimatedGrid
-              lineStyle={{
-                stroke: "#a1a1a1",
-                strokeLinecap: "round",
-                strokeWidth: 1,
-              }}
-              strokeDasharray="0, 4"
-            />
-
-            <AnimatedAxis hideAxisLine hideTicks orientation="bottom" />
-            <AnimatedAxis hideAxisLine hideTicks orientation="left" />
-
-            {Object.keys(groupedPrices).map((key) => {
-              return (
-                <AnimatedLineSeries
-                  key={key}
-                  dataKey={key}
-                  data={groupedPrices[key]}
-                  stroke="#008561"
-                  curve={curveStepAfter}
-                  {...accessors}
-                />
-              );
-            })}
-
-            <Tooltip<ChartUnitData>
-              showSeriesGlyphs
-              showVerticalCrosshair
-              glyphStyle={{
-                fill: "#008561",
-              }}
-              renderTooltip={({ tooltipData }) => {
-                if (!tooltipData?.nearestDatum?.datum) return;
-                const date = new Date(tooltipData.nearestDatum.datum.date);
-
-                return (
-                  <div className="flex flex-col gap-1">
-                    <h2 className="font-medium">{formatDate(date)}</h2>
-                    {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
-                      const [key, value] = lineDataArray;
-                      return (
-                        <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
-                          value.datum
-                        )}`}</div>
-                      );
-                    })}
-                  </div>
-                );
-              }}
-            />
-          </XYChart>
+          <LineSeries
+            key={key}
+            dataKey={key}
+            data={groupedPrices[key]}
+            stroke="#008561"
+            curve={curveStepAfter}
+            {...accessors}
+          />
         );
-      }}
-    </ParentSize>
+      })}
+
+      <Tooltip<ChartUnitData>
+        showSeriesGlyphs
+        showVerticalCrosshair
+        glyphStyle={{
+          fill: "#008561",
+        }}
+        renderTooltip={({ tooltipData }) => {
+          if (!tooltipData?.nearestDatum?.datum) return;
+          const date = new Date(tooltipData.nearestDatum.datum.date);
+
+          return (
+            <div className="flex flex-col gap-1">
+              <h2 className="font-medium">{formatDate(date)}</h2>
+              {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
+                const [key, value] = lineDataArray;
+                return (
+                  <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
+                    value.datum
+                  )}`}</div>
+                );
+              })}
+            </div>
+          );
+        }}
+      />
+    </XYChart>
   );
 }
