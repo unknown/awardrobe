@@ -16,6 +16,7 @@ import {
 import { useRef, useState } from "react";
 import { FilterOptions } from "./ProductControls";
 import { Input } from "@ui/Input";
+import { Bell } from "@icons/Bell";
 
 export type NotificationOptions = {
   style: string;
@@ -64,7 +65,10 @@ export default function AddNotificationDialog({
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button>Add Notification</Button>
+        <Button variant="outline">
+          <Bell className="mr-2" />
+          Add notification
+        </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-20 bg-black/50" />
@@ -78,7 +82,7 @@ export default function AddNotificationDialog({
         >
           <Dialog.Title className="text-primary text-sm font-medium">Add Notification</Dialog.Title>
           <Dialog.Description className="text-muted-foreground my-2 text-sm">
-            Create an alert to be notified when the price drops or is restocked.
+            Create an alert to be notified when the price drops below a threshold or is restocked.
           </Dialog.Description>
           <form
             onSubmit={async (event) => {
