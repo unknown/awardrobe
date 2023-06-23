@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
+import { Input } from "@ui/Input";
 import {
   Select,
   SelectContent,
@@ -10,10 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
-import { useState } from "react";
-import { Input } from "@ui/Input";
-import { Bell } from "@icons/Bell";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 
 export type NotificationOptions = {
   style: string;

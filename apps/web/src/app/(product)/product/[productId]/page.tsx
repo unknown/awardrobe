@@ -1,12 +1,13 @@
+import { Fragment } from "react";
+import Link from "next/link";
+import { Button } from "@ui/Button";
+import { getServerSession } from "next-auth";
+
 import { Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
-import { prisma } from "@/utils/prisma";
-import Link from "next/link";
-import { Button } from "@ui/Button";
-import { Fragment } from "react";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
+import { prisma } from "@/utils/prisma";
 
 export type ProductWithVariants = Product & {
   variants: ProductVariant[];

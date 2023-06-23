@@ -1,9 +1,9 @@
 "use client";
 
+import { ComponentPropsWithoutRef, ElementRef, forwardRef } from "react";
 import { Check } from "@icons/Check";
 import { ChevronDown } from "@icons/ChevronDown";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { ComponentPropsWithoutRef, ElementRef, forwardRef } from "react";
 
 import { cn } from "@/utils/utils";
 

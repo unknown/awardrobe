@@ -1,16 +1,16 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@ui/Button";
+
+import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { formatPrice } from "@/utils/utils";
-
 import { usePrices } from "../hooks/usePrices";
+import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
-import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
-import { ProductNotification } from "@awardrobe/prisma-types";
-import { Button } from "@ui/Button";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;

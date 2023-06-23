@@ -1,10 +1,9 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { HTMLAttributes, useRef, useState } from "react";
-
 import { Button } from "@ui/Button";
 import { Input } from "@ui/Input";
+import { signIn } from "next-auth/react";
 
 export type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 

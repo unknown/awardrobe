@@ -1,9 +1,10 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+
+import { Prisma } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
-import { Prisma } from "@awardrobe/prisma-types";
 
 type AddNotificationRequest = {
   productId: string;

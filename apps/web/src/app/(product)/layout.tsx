@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
 import Link from "next/link";
-
 import { Button } from "@ui/Button";
+import { getServerSession } from "next-auth";
 
 import { NavBar } from "@/components/NavBar";
 import { authOptions } from "@/utils/auth";

@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { Close } from "@icons/Close";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/utils/utils";
-import { Close } from "@icons/Close";
 
 const Dialog = DialogPrimitive.Root;
 

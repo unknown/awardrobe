@@ -1,8 +1,7 @@
-import { getServerSession } from "next-auth/next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
 import { Button } from "@ui/Button";
+import { getServerSession } from "next-auth/next";
 
 import { LoginForm } from "@/components/LoginForm";
 import { authOptions } from "@/utils/auth";
