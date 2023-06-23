@@ -9,7 +9,7 @@ import { usePrices } from "../hooks/usePrices";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
-import { ProductNotification } from "prisma-types";
+import { ProductNotification } from "@awardrobe/prisma-types";
 import { Button } from "@ui/Button";
 
 export type ProductInfoProps = {

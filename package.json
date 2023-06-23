@@ -1,14 +1,15 @@
 {
+  "name": "awardrobe-monorepo",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "clean": "turbo run clean && rm -rf node_modules"
   },
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "devDependencies": {
     "turbo": "^1.10.5"
   }

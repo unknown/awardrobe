@@ -3,8 +3,8 @@ import prisma from "../../utils/database";
 import emailTransporter from "../../utils/emailer";
 import { toTitleCase } from "../../utils/formatter";
 import { ProductDetails, UniqloType } from "./types";
-import { renderStockNotification } from "emails";
-import { Product } from "prisma-types";
+import { renderStockNotification } from "@awardrobe/emails";
+import { Product } from "@awardrobe/prisma-types";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
