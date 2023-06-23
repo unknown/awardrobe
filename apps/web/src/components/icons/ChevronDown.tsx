@@ -1,4 +1,4 @@
-import { SVGProps, forwardRef } from "react";
+import { forwardRef, SVGProps } from "react";
 
 export const ChevronDown = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, ref) => {
   return (

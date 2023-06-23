@@ -1,5 +1,6 @@
-import { Price, ProductVariant } from "@awardrobe/prisma-types";
 import { useCallback, useState } from "react";
+
+import { Price, ProductVariant } from "@awardrobe/prisma-types";
 
 export type PriceWithVariant = Price & {
   productVariant: ProductVariant;

@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactElement } from "react";
 import { Button } from "@ui/Button";
 import {
   Select,
@@ -11,7 +12,6 @@ import {
 } from "@ui/Select";
 
 import { cn } from "@/utils/utils";
-import { ReactElement } from "react";
 
 export type FilterOptions = {
   dateRange: DateRange;

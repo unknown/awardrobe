@@ -1,3 +1,15 @@
 {
-  "printWidth": 100
+  "printWidth": 100,
+  "tabWidth": 2,
+  "singleQuote": false,
+  "importOrder": [
+    "^(react/(.*)$)|^(react$)",
+    "^(next/(.*)$)|^(next$)",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@awardrobe/(.*)$",
+    "",
+    "^@/(.*)$",
+    "^[./]"
+  ]
 }
