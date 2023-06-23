@@ -1,6 +1,6 @@
-# Price Monitor
+# Awardrobe
 
-A small-scale tool to help users keep track of the online goods they've been eyeing. Currently supports price tracking and stock tracking.
+An app laser-focused on helping users save money while shopping for clothes.
 
 ## Getting Started
 
@@ -11,16 +11,9 @@ To get a local instance running, please follow these steps.
 - Node.js
 - npm
 
-## Development
+### Development
 
 1. Clone the repository
-1. Set up the server
-   1. Navigate to `server/` e.g. `cd server/`
-   1. Run `npm install`
-   1. Create a `.env` file if one does not already exist
-   1. Run `npm run dev`
-1. Set up the client
-   1. Navigate to `web/` e.g. `cd web/`
-   1. Run `npm install`
-   1. Create a `.env` file if one does not already exist
-   1. Run `npm run dev`
+1. Run `npm install`
+1. Create `.env` files if they don't already exist
+1. Run `npm run dev`
