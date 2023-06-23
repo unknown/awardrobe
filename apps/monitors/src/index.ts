@@ -1,9 +1,8 @@
-import * as dotenv from "dotenv";
-dotenv.config();
-
-import { handleHeartbeat } from "./monitors/uniqlo";
+import "dotenv/config";
 
 import cron from "node-cron";
+
+import { handleHeartbeat } from "./monitors/uniqlo";
 
 function setupMonitors() {
   cron.schedule(`*/10 * * * *`, async () => {
