@@ -1,7 +1,7 @@
 {
-  "name": "prisma-types",
+  "name": "@awardrobe/prisma-types",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -14,8 +14,6 @@
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.15.0"
   },

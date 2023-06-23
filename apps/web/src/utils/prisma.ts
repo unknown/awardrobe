@@ -1,4 +1,4 @@
-import { PrismaClient } from "prisma-types";
+import { PrismaClient } from "@awardrobe/prisma-types";
 
 const globalForPrisma = global as unknown as {
   prisma: PrismaClient | undefined;

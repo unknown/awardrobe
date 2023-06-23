@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
-import { Prisma } from "prisma-types";
+import { Prisma } from "@awardrobe/prisma-types";
 
 type AddNotificationRequest = {
   productId: string;
