@@ -1,8 +1,5 @@
 "use client";
 
-import { cn } from "@/utils/utils";
-import { Close } from "@icons/Close";
-import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
 import {
@@ -16,6 +13,7 @@ import {
 import { useState } from "react";
 import { Input } from "@ui/Input";
 import { Bell } from "@icons/Bell";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 
 export type NotificationOptions = {
   style: string;
@@ -45,147 +43,128 @@ export function AddNotificationDialog({
   const [options, setOptions] = useState<NotificationOptions>(defaultOptions);
 
   return (
-    <Dialog.Root
+    <Dialog
       open={open}
       onOpenChange={(open) => {
         setOpen(open);
         setOptions(defaultOptions);
       }}
     >
-      <Dialog.Trigger asChild>
+      <DialogTrigger asChild>
         <Button variant="outline" disabled={disabled}>
           <Bell className="mr-2" />
           Add notification
         </Button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-20 bg-black/50" />
-        <Dialog.Content
-          className={cn(
-            "fixed z-50",
-            "w-[95vw] max-w-md rounded-lg p-4 md:w-full",
-            "left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]",
-            "bg-background"
-          )}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Add Notification</DialogTitle>
+        <DialogDescription>
+          Create an alert to be notified when the price drops below a threshold or is restocked.
+        </DialogDescription>
+        <form
+          onSubmit={async (event) => {
+            // TODO: add loading state and handle errors
+            event.preventDefault();
+            setIsLoading(true);
+
+            const shouldClose = await consumerOnFiltersUpdate(options);
+
+            setIsLoading(false);
+            if (shouldClose) {
+              setOpen(false);
+            }
+          }}
         >
-          <Dialog.Title className="text-primary text-sm font-medium">Add Notification</Dialog.Title>
-          <Dialog.Description className="text-muted-foreground my-2 text-sm">
-            Create an alert to be notified when the price drops below a threshold or is restocked.
-          </Dialog.Description>
-          <form
-            onSubmit={async (event) => {
-              // TODO: add loading state and handle errors
-              event.preventDefault();
-              setIsLoading(true);
-
-              const shouldClose = await consumerOnFiltersUpdate(options);
-
-              setIsLoading(false);
-              if (shouldClose) {
-                setOpen(false);
-              }
+          <label className="text-primary text-sm font-medium">Style</label>
+          <Select
+            onValueChange={(style) => {
+              setOptions((options) => ({ ...options, style }));
             }}
+            value={options.style}
+            disabled={isLoading}
           >
-            <label className="text-primary text-xs font-medium">Style</label>
-            <Select
-              onValueChange={(style) => {
-                setOptions((options) => ({ ...options, style }));
-              }}
-              value={options.style}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={`Select a style...`} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {styles.map((style) => (
-                    <SelectItem value={style} key={style}>
-                      {style}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <label className="text-primary text-xs font-medium">Size</label>
-            <Select
-              onValueChange={(size) => {
-                setOptions((options) => ({ ...options, size }));
-              }}
-              value={options.size}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={`Select a size...`} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {sizes.map((size) => (
-                    <SelectItem value={size} key={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <label className="text-primary text-xs font-medium" htmlFor="price">
-              Price Threshold (In Cents)
-            </label>
-            <Input
-              id="price"
-              value={options.priceInCents !== undefined ? options.priceInCents : ""}
-              onChange={(event) => {
-                const value = Math.max(1, parseInt(event.target.value.slice(-8)));
+            <SelectTrigger>
+              <SelectValue placeholder={`Select a style...`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {styles.map((style) => (
+                  <SelectItem value={style} key={style}>
+                    {style}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <label className="text-primary text-sm font-medium">Size</label>
+          <Select
+            onValueChange={(size) => {
+              setOptions((options) => ({ ...options, size }));
+            }}
+            value={options.size}
+            disabled={isLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Select a size...`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {sizes.map((size) => (
+                  <SelectItem value={size} key={size}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <label className="text-primary text-sm font-medium" htmlFor="price">
+            Price Threshold (In Cents)
+          </label>
+          <Input
+            id="price"
+            value={options.priceInCents !== undefined ? options.priceInCents : ""}
+            onChange={(event) => {
+              const value = Math.max(1, parseInt(event.target.value.slice(-8)));
+              setOptions((options) => ({
+                ...options,
+                priceInCents: isNaN(value) ? undefined : value,
+              }));
+            }}
+            onBlur={(event) => {
+              if (event.target.value === "") {
                 setOptions((options) => ({
                   ...options,
-                  priceInCents: isNaN(value) ? undefined : value,
+                  priceInCents: defaultOptions.priceInCents,
                 }));
-              }}
-              onBlur={(event) => {
-                if (event.target.value === "") {
-                  setOptions((options) => ({
-                    ...options,
-                    priceInCents: defaultOptions.priceInCents,
-                  }));
-                }
-              }}
+              }
+            }}
+          />
+          <div className="flex items-center space-x-2 py-2">
+            <Checkbox
+              id="stock"
+              checked={options.mustBeInStock}
+              onCheckedChange={(checked) =>
+                setOptions({
+                  ...options,
+                  mustBeInStock: checked === true ? true : false,
+                })
+              }
+              disabled={isLoading}
             />
-            <div className="flex items-center space-x-2 py-2">
-              <Checkbox
-                id="stock"
-                checked={options.mustBeInStock}
-                onCheckedChange={(checked) =>
-                  setOptions({
-                    ...options,
-                    mustBeInStock: checked === true ? true : false,
-                  })
-                }
-                disabled={isLoading}
-              />
-              <label
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                htmlFor="stock"
-              >
-                Must be in stock
-              </label>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                Create notification
-              </Button>
-            </div>
-          </form>
-          <Dialog.Close asChild>
-            <Button
-              variant="secondary"
-              className="absolute right-3.5 top-3.5 inline-flex items-center justify-center rounded-full p-1"
-              aria-label="Close"
+            <label
+              className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              htmlFor="stock"
             >
-              <Close />
+              Must be in stock
+            </label>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button type="submit" disabled={isLoading}>
+              Create notification
             </Button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
