@@ -227,14 +227,19 @@ async function getProductDetails(productCode: string) {
   }, {} as Record<string, string>);
 
   const details: ProductDetails[] = Object.keys(stocks).map((key, index) => {
-    const colorDisplayCode: string = l2s[index].color.displayCode.toString();
-    const sizeDisplayCode: string = l2s[index].size.displayCode.toString();
-    const price: string = pricesObject[key].base.value.toString();
+    const colorDisplayCode = l2s[index].color.displayCode.toString();
+    const sizeDisplayCode = l2s[index].size.displayCode.toString();
+
+    const colorName = colorsRecord[colorDisplayCode];
+    const sizeName = sizesRecord[sizeDisplayCode];
+    const price = pricesObject[key].base.value.toString();
     const stock = parseInt(stocks[key].quantity);
 
+    if (!colorName || !sizeName) throw new Error("Failed to parse product details");
+
     return {
-      color: colorsRecord[colorDisplayCode],
-      size: sizesRecord[sizeDisplayCode],
+      color: colorName,
+      size: sizeName,
       priceInCents: dollarsToCents(price),
       stock,
     };
