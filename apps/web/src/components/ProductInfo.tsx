@@ -38,8 +38,8 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
 
   const defaultFilters = useRef<FilterOptions>({
     dateRange: "7d",
-    style: styles[0],
-    size: sizes[0],
+    style: styles[0] ?? "",
+    size: sizes[0] ?? "",
   });
 
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
@@ -65,7 +65,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
   const getLatestPriceText = () => {
     if (prices === null || loading) {
       return "Loading...";
-    } else if (prices.length === 0) {
+    } else if (!prices[0]) {
       return "No price data";
     } else {
       return formatPrice(prices[0].priceInCents);
@@ -127,7 +127,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
               <AddNotificationDialog
                 defaultOptions={{
                   mustBeInStock: false,
-                  priceInCents: prices && prices.length > 0 ? prices[0].priceInCents : undefined,
+                  priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
                   style: filters.style,
                   size: filters.size,
                 }}

@@ -23,16 +23,16 @@ export function ProductChart({ prices }: PricesChartProps) {
     return <div>Loading...</div>;
   }
 
+  // TODO: clean this up
   const groupedPrices: Record<string, ChartUnitData[]> = {};
   prices.forEach((price) => {
     const key = `${price.productVariant.style}-${price.productVariant.size}`;
-    if (groupedPrices[key] === undefined) {
-      groupedPrices[key] = [];
-    }
-    groupedPrices[key].push({
+    const group = groupedPrices[key] ?? [];
+    group.push({
       date: price.timestamp.toString(),
       price: price.priceInCents,
     });
+    groupedPrices[key] = group;
   });
 
   // ensure equal group lengths, sort data chronologically, and add a data point for "now"
@@ -40,11 +40,15 @@ export function ProductChart({ prices }: PricesChartProps) {
   const groupSize = prices.length / groupKeys.length;
   const currentDate = new Date();
   groupKeys.forEach((key) => {
-    groupedPrices[key] = groupedPrices[key].slice(0, groupSize).reverse();
+    let group = groupedPrices[key] ?? [];
+    group = group.slice(0, groupSize).reverse();
 
-    const lastPrice = { ...groupedPrices[key].slice(-1)[0] };
-    lastPrice.date = currentDate.toString();
-    groupedPrices[key].push(lastPrice);
+    const lastPrice = group.slice(-1)[0];
+    if (lastPrice) {
+      group.push({ date: currentDate.toString(), price: lastPrice.price });
+    }
+
+    groupedPrices[key] = group;
   });
 
   return (
@@ -62,11 +66,14 @@ export function ProductChart({ prices }: PricesChartProps) {
       <Axis hideTicks orientation="left" strokeWidth={1} />
 
       {Object.keys(groupedPrices).map((key) => {
+        const group = groupedPrices[key];
+        if (!group) return null;
+
         return (
           <LineSeries
             key={key}
             dataKey={key}
-            data={groupedPrices[key]}
+            data={group}
             stroke="#008561"
             curve={curveStepAfter}
             {...accessors}

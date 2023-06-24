@@ -86,12 +86,17 @@ async function getProductDetails(productCode: string) {
   }, {} as Record<string, string>);
 
   const details: { color: string; size: string }[] = l2s.map(({ color, size }) => {
-    const colorDisplayCode: string = color.displayCode.toString();
-    const sizeDisplayCode: string = size.displayCode.toString();
+    const colorDisplayCode = color.displayCode.toString();
+    const sizeDisplayCode = size.displayCode.toString();
+
+    const colorName = colorsRecord[colorDisplayCode];
+    const sizeName = sizesRecord[sizeDisplayCode];
+
+    if (!colorName || !sizeName) throw new Error("Failed to parse product details");
 
     return {
-      color: colorsRecord[colorDisplayCode],
-      size: sizesRecord[sizeDisplayCode],
+      color: colorName,
+      size: sizeName,
     };
   });
 
