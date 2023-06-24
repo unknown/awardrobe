@@ -13,6 +13,9 @@ dist/
 # ENV FILES
 .env
 
+# TYPESCRIPT
+*.tsbuildinfo
+
 # MAC
 ._*
 .DS_Store
