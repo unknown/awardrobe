@@ -22,7 +22,7 @@ const buttonVariants = cva(
       variant: "primary",
       size: "default",
     },
-  }
+  },
 );
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
@@ -33,6 +33,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
     );
-  }
+  },
 );
 Button.displayName = "Button";

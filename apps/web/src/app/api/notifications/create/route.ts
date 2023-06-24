@@ -56,8 +56,11 @@ export async function POST(req: Request) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {
         return NextResponse.json(
-          { status: "error", error: "Notificaton for this product already exists" },
-          { status: 400 }
+          {
+            status: "error",
+            error: "Notificaton for this product already exists",
+          },
+          { status: 400 },
         );
       }
     }

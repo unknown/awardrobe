@@ -20,7 +20,10 @@ export type ProductInfoProps = {
 export function ProductInfo({ product, defaultNotifications }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(product.id);
 
-  const { styles, sizes } = useMemo<{ styles: string[]; sizes: string[] }>(() => {
+  const { styles, sizes } = useMemo<{
+    styles: string[];
+    sizes: string[];
+  }>(() => {
     const stylesSet = new Set<string>();
     const sizesSet = new Set<string>();
     product.variants.forEach((variant) => {
@@ -48,7 +51,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
       const startDate = getStartDate(dateRange);
       await fetchPricesData(startDate, style, size, abortSignal);
     },
-    [invalidateData, fetchPricesData]
+    [invalidateData, fetchPricesData],
   );
 
   useEffect(() => {
@@ -112,7 +115,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
                   onClick={async () => {
                     await deleteNotification(notification.id);
                     setNotifications((notifications) =>
-                      [...notifications].filter((n) => n !== notification)
+                      [...notifications].filter((n) => n !== notification),
                     );
                   }}
                 >

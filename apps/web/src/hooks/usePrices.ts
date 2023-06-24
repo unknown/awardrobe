@@ -22,7 +22,7 @@ export function usePrices(productId: string) {
         setLoading(false);
       }
     },
-    [productId]
+    [productId],
   );
 
   const invalidateData = useCallback(() => {
@@ -43,7 +43,7 @@ async function getPrices(
   startDate: Date,
   style: string,
   size: string,
-  abortSignal?: AbortSignal
+  abortSignal?: AbortSignal,
 ) {
   const response = await fetch("/api/prices", {
     method: "POST",

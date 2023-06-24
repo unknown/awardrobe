@@ -27,14 +27,14 @@ async function pingProduct(product: Product) {
         updatePrices(product, currentTime, price),
         updateStock(product, currentTime, price),
       ]);
-    })
+    }),
   );
 }
 
 async function updatePrices(
   product: Product,
   currentTime: Date,
-  { color, size, priceInCents, stock }: ProductDetails
+  { color, size, priceInCents, stock }: ProductDetails,
 ) {
   const oldPrice = await prisma.price.findFirst({
     where: {
@@ -105,7 +105,7 @@ async function updatePrices(
         });
 
         console.log(user.email);
-      })
+      }),
     );
   }
 }
@@ -113,7 +113,7 @@ async function updatePrices(
 async function updateStock(
   product: Product,
   currentTime: Date,
-  { color, size, priceInCents, stock }: ProductDetails
+  { color, size, priceInCents, stock }: ProductDetails,
 ) {
   const oldStock = await prisma.stock.findFirst({
     where: {
@@ -198,7 +198,7 @@ async function updateStock(
         };
 
         emailTransporter.sendMail(options);
-      })
+      }),
     );
   }
 }

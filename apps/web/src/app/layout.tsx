@@ -20,7 +20,7 @@ type RootLayoutProps = {
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen bg-background font-sans antialiased">{children}</body>
+      <body className="bg-background min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
 }

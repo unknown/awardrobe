@@ -91,7 +91,7 @@ export function ProductChart({ prices }: PricesChartProps) {
                 const [key, value] = lineDataArray;
                 return (
                   <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
-                    value.datum
+                    value.datum,
                   )}`}</div>
                 );
               })}
