@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@awardrobe/tsconfig/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
     "plugins": [

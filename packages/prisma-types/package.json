@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup index.ts --format cjs --dts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate",
     "dev": "prisma studio --browser none",
@@ -15,7 +15,9 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^4.15.0"
+    "@awardrobe/tsconfig": "*",
+    "@prisma/client": "^4.15.0",
+    "tsup": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
