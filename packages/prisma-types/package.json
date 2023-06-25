@@ -15,14 +15,14 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@awardrobe/tsconfig": "*",
-    "@prisma/client": "^4.15.0",
-    "tsup": "^7.0.0"
+    "@prisma/client": "^4.15.0"
   },
   "devDependencies": {
+    "@awardrobe/tsconfig": "*",
     "@types/node": "^20.3.1",
     "prisma": "^4.15.0",
     "ts-node": "^10.9.1",
+    "tsup": "^7.1.0",
     "typescript": "^5.1.3"
   }
 }
