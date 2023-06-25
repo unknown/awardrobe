@@ -6,7 +6,8 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup index.ts --format cjs --dts",
-    "dev": "email dev --dir src/emails --port 3001",
+    "dev": "npm run build -- --watch",
+    "emails:preview": "email dev --dir src/emails --port 3001",
     "clean": "rm -rf .react-email .turbo node_modules dist"
   },
   "dependencies": {

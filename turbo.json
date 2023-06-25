@@ -18,6 +18,10 @@
       "cache": false,
       "persistent": true
     },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "clean": {
       "cache": false
     },
@@ -27,9 +31,9 @@
     "db:push": {
       "cache": false
     },
-    "start": {
-      "dependsOn": ["build"],
-      "cache": false
+    "emails:preview": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
