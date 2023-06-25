@@ -1,4 +1,4 @@
-import { renderStockNotification } from "@awardrobe/emails";
+import { render, StockNotificationEmail } from "@awardrobe/emails";
 import { Product } from "@awardrobe/prisma-types";
 
 import { dollarsToCents } from "../../utils/currency";
@@ -185,11 +185,14 @@ async function updateStock(
 
         if (!user.email) return;
 
-        const emailHtml = renderStockNotification({
-          productName: product.name,
-          priceInCents: priceInCents,
-          productUrl: "undefined",
-        });
+        // TODO: add product url
+        const emailHtml = render(
+          StockNotificationEmail({
+            productName: product.name,
+            priceInCents: priceInCents,
+            productUrl: "undefined",
+          }),
+        );
 
         const options = {
           to: user.email,
