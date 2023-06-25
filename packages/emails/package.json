@@ -5,19 +5,20 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup index.ts --format cjs --dts",
     "dev": "email dev --dir src/emails --port 3001",
     "clean": "rm -rf .react-email .turbo node_modules dist"
   },
   "dependencies": {
+    "@awardrobe/tsconfig": "*",
     "@react-email/components": "0.0.7",
     "react": "^18.2.0",
-    "react-email": "1.9.4"
+    "react-email": "1.9.4",
+    "tsup": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
     "@types/react": "^18.2.13",
-    "ts-node": "^10.9.1",
     "typescript": "^5.1.3"
   }
 }

@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@awardrobe/tsconfig/react-library.json",
   "include": ["*.ts", "src"]
 }

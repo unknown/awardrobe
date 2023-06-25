@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@awardrobe/tsconfig/base.json",
   "include": ["*.ts", "prisma/seed.ts"]
 }
