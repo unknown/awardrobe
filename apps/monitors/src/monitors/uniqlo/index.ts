@@ -1,4 +1,4 @@
-import { render, StockNotificationEmail } from "@awardrobe/emails";
+import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
 import { Product } from "@awardrobe/prisma-types";
 
 import { dollarsToCents } from "../../utils/currency";
@@ -104,6 +104,26 @@ async function updatePrices(
           where: { id: notification.userId },
         });
 
+        if (!user.email) return;
+
+        // TODO: add product url
+        const emailHtml = render(
+          PriceNotificationEmail({
+            productName: product.name,
+            style: color,
+            size,
+            priceInCents: priceInCents,
+            productUrl: "undefined",
+          }),
+        );
+
+        const options = {
+          to: user.email,
+          subject: "Item Restock",
+          html: emailHtml,
+        };
+
+        emailTransporter.sendMail(options);
         console.log(user.email);
       }),
     );
@@ -189,6 +209,8 @@ async function updateStock(
         const emailHtml = render(
           StockNotificationEmail({
             productName: product.name,
+            style: color,
+            size,
             priceInCents: priceInCents,
             productUrl: "undefined",
           }),

@@ -1,3 +1,6 @@
+import PriceNotificationEmail, {
+  PriceNotificationEmailProps,
+} from "./src/emails/PriceNotification";
 import StockNotificationEmail, {
   StockNotificationEmailProps,
 } from "./src/emails/StockNotification";
@@ -5,3 +8,4 @@ import StockNotificationEmail, {
 export * from "@react-email/render";
 
 export { StockNotificationEmail, StockNotificationEmailProps };
+export { PriceNotificationEmail, PriceNotificationEmailProps };
