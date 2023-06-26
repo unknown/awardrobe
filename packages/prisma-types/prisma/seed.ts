@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { UniqloUS } from "@awardrobe/adapters";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -27,7 +29,7 @@ async function main() {
 }
 
 async function addProduct(storeId: string, productCode: string) {
-  const { name, details } = await getProductDetails(productCode);
+  const { name, details } = await UniqloUS.getProductDetails(productCode);
 
   await prisma.product.upsert({
     where: {
@@ -50,62 +52,6 @@ async function addProduct(storeId: string, productCode: string) {
         },
       },
     },
-  });
-}
-
-type UniqloType = {
-  code: string;
-  displayCode: string;
-  name: string;
-};
-
-// TODO: sync with monitors code?
-async function getProductDetails(productCode: string) {
-  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-
-  const [pricesData, detailsData] = await Promise.all([
-    (await fetch(pricesEndpoint)).json(),
-    (await fetch(detailsEndpoint)).json(),
-  ]);
-
-  // TODO: type these result objects with zod?
-  const { l2s }: { l2s: { color: UniqloType; size: UniqloType }[] } = pricesData.result;
-
-  const { name, colors, sizes }: { name: string; colors: UniqloType[]; sizes: UniqloType[] } =
-    detailsData.result;
-
-  // used to map display codes to human-readable names (e.g. "08" -> "08 Dark Gray")
-  const colorsRecord = colors.reduce((colors, color) => {
-    colors[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
-    return colors;
-  }, {} as Record<string, string>);
-  const sizesRecord = sizes.reduce((sizes, size) => {
-    sizes[size.displayCode] = size.name;
-    return sizes;
-  }, {} as Record<string, string>);
-
-  const details: { color: string; size: string }[] = l2s.map(({ color, size }) => {
-    const colorDisplayCode = color.displayCode.toString();
-    const sizeDisplayCode = size.displayCode.toString();
-
-    const colorName = colorsRecord[colorDisplayCode];
-    const sizeName = sizesRecord[sizeDisplayCode];
-
-    if (!colorName || !sizeName) throw new Error("Failed to parse product details");
-
-    return {
-      color: colorName,
-      size: sizeName,
-    };
-  });
-
-  return { name, details };
-}
-
-function toTitleCase(text: string) {
-  return text.replace(/\w\S*/g, (substring) => {
-    return substring.charAt(0).toUpperCase() + substring.slice(1).toLowerCase();
   });
 }
 

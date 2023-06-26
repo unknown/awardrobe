@@ -12,9 +12,10 @@
     "clean": "rm -rf .turbo node_modules dist"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node --transpileOnly prisma/seed.ts"
   },
   "dependencies": {
+    "@awardrobe/adapters": "*",
     "@prisma/client": "^4.15.0"
   },
   "devDependencies": {
