@@ -1,11 +1,9 @@
+import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
 import { Product } from "@awardrobe/prisma-types";
 
-import { dollarsToCents } from "../../utils/currency";
 import prisma from "../../utils/database";
 import emailTransporter from "../../utils/emailer";
-import { toTitleCase } from "../../utils/formatter";
-import { ProductDetails, UniqloType } from "./types";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
@@ -14,7 +12,7 @@ export async function handleHeartbeat() {
 }
 
 async function pingProduct(product: Product) {
-  const details = await getProductDetails(product.productCode);
+  const { details } = await UniqloUS.getProductDetails(product.productCode);
   if (details.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
@@ -22,10 +20,10 @@ async function pingProduct(product: Product) {
   const currentTime = new Date();
 
   await Promise.all(
-    details.map(async (price) => {
+    details.map(async (productDetails) => {
       await Promise.all([
-        updatePrices(product, currentTime, price),
-        updateStock(product, currentTime, price),
+        updatePrices(product, currentTime, productDetails),
+        updateStock(product, currentTime, productDetails),
       ]);
     }),
   );
@@ -226,49 +224,4 @@ async function updateStock(
       }),
     );
   }
-}
-
-async function getProductDetails(productCode: string) {
-  const pricesEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-
-  const [pricesData, detailsData] = await Promise.all([
-    (await fetch(pricesEndpoint)).json(),
-    (await fetch(detailsEndpoint)).json(),
-  ]);
-
-  // TODO: type these result objects with zod?
-  const { stocks, prices: pricesObject, l2s } = pricesData.result;
-  const { colors, sizes }: { colors: UniqloType[]; sizes: UniqloType[] } = detailsData.result;
-
-  // used to map display codes to human-readable names (e.g. "08" -> "08 Dark Gray")
-  const colorsRecord = colors.reduce((colors, color) => {
-    colors[color.displayCode] = toTitleCase(`${color.displayCode} ${color.name}`);
-    return colors;
-  }, {} as Record<string, string>);
-  const sizesRecord = sizes.reduce((sizes, size) => {
-    sizes[size.displayCode] = size.name;
-    return sizes;
-  }, {} as Record<string, string>);
-
-  const details: ProductDetails[] = Object.keys(stocks).map((key, index) => {
-    const colorDisplayCode = l2s[index].color.displayCode.toString();
-    const sizeDisplayCode = l2s[index].size.displayCode.toString();
-
-    const colorName = colorsRecord[colorDisplayCode];
-    const sizeName = sizesRecord[sizeDisplayCode];
-    const price = pricesObject[key].base.value.toString();
-    const stock = parseInt(stocks[key].quantity);
-
-    if (!colorName || !sizeName) throw new Error("Failed to parse product details");
-
-    return {
-      color: colorName,
-      size: sizeName,
-      priceInCents: dollarsToCents(price),
-      stock,
-    };
-  });
-
-  return details;
 }
