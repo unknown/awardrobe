@@ -22,7 +22,7 @@
     "@visx/curve": "^3.0.0",
     "@visx/responsive": "^3.0.0",
     "@visx/xychart": "^3.1.2",
-    "class-variance-authority": "^0.5.2",
+    "class-variance-authority": "^0.6.0",
     "clsx": "^1.2.1",
     "eslint": "8.34.0",
     "eslint-config-next": "^13.4.0",
