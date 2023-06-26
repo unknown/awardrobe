@@ -12,7 +12,12 @@ export async function handleHeartbeat() {
 }
 
 async function pingProduct(product: Product) {
-  const { details } = await UniqloUS.getProductDetails(product.productCode);
+  // TODO: handle errors better
+  const { details } = await UniqloUS.getProductDetails(product.productCode).catch((error) => {
+    console.error(`Error fetching product ${product.productCode}: ${error.message}`);
+    return { details: [] };
+  });
+
   if (details.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
