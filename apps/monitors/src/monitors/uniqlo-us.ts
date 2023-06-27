@@ -2,8 +2,8 @@ import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
 import { Product } from "@awardrobe/prisma-types";
 
-import prisma from "../../utils/database";
-import emailTransporter from "../../utils/emailer";
+import prisma from "../utils/database";
+import emailTransporter from "../utils/emailer";
 
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
@@ -122,7 +122,7 @@ async function updatePrices(
 
         const options = {
           to: user.email,
-          subject: "Item Restock",
+          subject: "Price drop",
           html: emailHtml,
         };
 
@@ -221,7 +221,7 @@ async function updateStock(
 
         const options = {
           to: user.email,
-          subject: "Item Restock",
+          subject: "Item back in stock",
           html: emailHtml,
         };
 
