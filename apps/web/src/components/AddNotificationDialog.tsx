@@ -152,7 +152,7 @@ export function AddNotificationDialog({
               disabled={isLoading}
             />
             <label
-              className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               htmlFor="stock"
             >
               Must be in stock

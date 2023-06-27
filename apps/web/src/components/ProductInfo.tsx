@@ -159,7 +159,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
           </div>
         ) : null}
       </section>
-      <section className="container h-[40rem] py-4">
+      <section className="container h-[40rem]">
         <ProductChart prices={prices} />
       </section>
     </Fragment>
