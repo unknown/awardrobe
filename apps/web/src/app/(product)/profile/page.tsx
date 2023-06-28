@@ -26,21 +26,30 @@ export default async function ProfilePage() {
   });
 
   return (
-    <section className="container space-y-4">
-      <h1 className="text-xl font-bold">Notifications</h1>
-      <div className="space-y-6">
-        {notifications.map(({ id, productId, productVariant }) => (
-          <div key={id} className="space-y-2">
-            <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
-            <Link href={`/product/${productId}`} className="text-sky-600">
-              View product details
-            </Link>
-            <p>
-              Style: {productVariant.style}, Size: {productVariant.size}
-            </p>
-          </div>
-        ))}
-      </div>
+    <section className="container space-y-6">
+      <h1 className="text-3xl font-bold">Settings</h1>
+      <section className="space-y-2">
+        <h2 className="text-xl font-bold">Email</h2>
+        <div className="space-y-6">{session.user.email}</div>
+      </section>
+      <section className="space-y-2">
+        <h2 className="text-xl font-bold">Notifications</h2>
+        <div className="space-y-3">
+          {notifications.map(({ id, productId, productVariant }) => {
+            const { style, size } = productVariant;
+            return (
+              <div key={id}>
+                <Link href={`/product/${productId}?style=${style}&size=${size}`}>
+                  <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
+                  <p className="text-muted-foreground text-sm">
+                    {style} - {size}
+                  </p>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </section>
   );
 }
