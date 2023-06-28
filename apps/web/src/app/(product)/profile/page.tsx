@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
-export default async function Home() {
+export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {

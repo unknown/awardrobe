@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { LoginForm } from "@/components/LoginForm";
 import { authOptions } from "@/utils/auth";
 
-export default async function Home() {
+export default async function LoginPage() {
   const session = await getServerSession(authOptions);
 
   if (session?.user.id) {
