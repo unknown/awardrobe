@@ -35,7 +35,7 @@ export default function StockNotificationEmail({
         </Section>
         <Section className="py-6 text-center">
           <Heading className="my-0 text-xl font-normal">{productName}</Heading>
-          <Text className="my-3 text-base text-sm text-[#747474]">
+          <Text className="my-3 text-sm text-[#747474]">
             {style} - {size}
           </Text>
           <Text className="my-3 text-xl font-bold">{formatPrice(priceInCents)}</Text>
