@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 
 import { Price } from "@awardrobe/prisma-types";
 
+import { GetPricesResponse } from "@/app/api/products/prices/route";
+
 export function usePrices(productId: string) {
   const [loading, setLoading] = useState(false);
   const [pricesData, setPricesData] = useState<Price[] | null>(null);
@@ -10,11 +12,15 @@ export function usePrices(productId: string) {
     async function (startDate: Date, style: string, size: string, abortSignal?: AbortSignal) {
       setLoading(true);
 
-      const prices = await getPrices(productId, startDate, style, size, abortSignal);
+      const result = await getPrices(productId, startDate, style, size, abortSignal);
+      if (result.status === "error") {
+        invalidateData();
+        return;
+      }
 
       const aborted = abortSignal?.aborted ?? false;
       if (!aborted) {
-        setPricesData(prices);
+        setPricesData(result.prices);
         setLoading(false);
       }
     },
@@ -33,7 +39,6 @@ export function usePrices(productId: string) {
   };
 }
 
-// TODO: extract variant type?
 async function getPrices(
   productId: string,
   startDate: Date,
@@ -55,7 +60,5 @@ async function getPrices(
     signal: abortSignal,
   });
 
-  // IMRPOVE THESE HARDCODED TYPES
-  const json = await response.json();
-  return json.prices as Price[];
+  return (await response.json()) as GetPricesResponse;
 }

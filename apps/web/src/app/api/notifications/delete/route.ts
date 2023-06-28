@@ -10,16 +10,25 @@ type DeleteNotificationRequest = {
   notificationId: string;
 };
 
-const notFoundResponse = {
-  status: "error",
-  error: "Notificaton not found",
+type DeleteNotificationSuccess = {
+  status: "success";
 };
+
+type DeleteNotificationError = {
+  status: "error";
+  error: string;
+};
+
+export type DeleteNotificationResponse = DeleteNotificationSuccess | DeleteNotificationError;
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {
-    return NextResponse.json({ status: "error", error: "Unauthenticated" }, { status: 401 });
+    return NextResponse.json<DeleteNotificationResponse>(
+      { status: "error", error: "Unauthenticated" },
+      { status: 401 },
+    );
   }
 
   const { notificationId }: DeleteNotificationRequest = await req.json();
@@ -32,7 +41,13 @@ export async function POST(req: Request) {
     });
 
     if (notification.userId !== session.user.id) {
-      return NextResponse.json(notFoundResponse, { status: 400 });
+      return NextResponse.json<DeleteNotificationResponse>(
+        {
+          status: "error",
+          error: "Notificaton not found",
+        },
+        { status: 400 },
+      );
     }
 
     await prisma.productNotification.delete({
@@ -41,13 +56,22 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ status: "success" });
+    return NextResponse.json<DeleteNotificationResponse>({ status: "success" });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2005") {
-        return NextResponse.json(notFoundResponse, { status: 400 });
+        return NextResponse.json<DeleteNotificationResponse>(
+          {
+            status: "error",
+            error: "Notificaton not found",
+          },
+          { status: 400 },
+        );
       }
     }
-    return NextResponse.json({ status: "error", error: "Internal server error" }, { status: 500 });
+    return NextResponse.json<DeleteNotificationResponse>(
+      { status: "error", error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

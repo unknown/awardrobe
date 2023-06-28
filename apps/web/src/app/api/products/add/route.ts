@@ -11,23 +11,23 @@ type AddProductRequest = {
   productUrl: string;
 };
 
-type AddProductSuccessResponse = {
+type AddProductSuccess = {
   status: "success";
   product: Product;
 };
 
-type AddProductErrorResponse = {
+type AddProductError = {
   status: "error";
   error: string;
 };
 
-export type AddProductResponse = AddProductSuccessResponse | AddProductErrorResponse;
+export type AddProductResponse = AddProductSuccess | AddProductError;
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {
-    return NextResponse.json<AddProductErrorResponse>(
+    return NextResponse.json<AddProductResponse>(
       { status: "error", error: "Unauthenticated" },
       { status: 401 },
     );

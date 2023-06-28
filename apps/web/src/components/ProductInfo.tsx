@@ -8,6 +8,8 @@ import { ParentSize } from "@visx/responsive";
 import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
+import { AddNotificationResponse } from "@/app/api/notifications/create/route";
+import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
@@ -120,10 +122,12 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
                 <Button
                   variant="secondary"
                   onClick={async () => {
-                    await deleteNotification(notification.id);
-                    setNotifications((notifications) =>
-                      [...notifications].filter((n) => n !== notification),
-                    );
+                    const result = await deleteNotification(notification.id);
+                    if (result.status === "success") {
+                      setNotifications((notifications) =>
+                        [...notifications].filter((n) => n !== notification),
+                      );
+                    }
                   }}
                 >
                   Delete notification
@@ -139,16 +143,12 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
                   size: filters.size,
                 }}
                 onNotificationUpdate={async (options) => {
-                  const {
-                    status,
-                    notification,
-                  }: { status: string; notification?: ProductNotification } =
-                    await createNotification(product.id, options);
-                  if (status === "error") {
+                  const result = await createNotification(product.id, options);
+                  if (result.status === "error") {
                     return false;
                   }
-                  if (notification) {
-                    setNotifications((notifications) => [...notifications, notification]);
+                  if (result.notification) {
+                    setNotifications((notifications) => [...notifications, result.notification]);
                   }
                   return true;
                 }}
@@ -166,7 +166,7 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
           </div>
         ) : null}
       </section>
-      <section className="container h-[32rem]">
+      <section className="container h-[20rem] sm:h-[24rem] md:h-[32rem]">
         <ParentSize>
           {({ width, height }) => <ProductChart width={width} height={height} prices={prices} />}
         </ParentSize>
@@ -190,7 +190,6 @@ function getStartDate(dateRange: DateRange) {
   return startDate;
 }
 
-// TODO: make these more type-safe
 async function createNotification(productId: string, notificationOptions: NotificationOptions) {
   const { style, size, priceInCents, mustBeInStock } = notificationOptions;
   const response = await fetch("/api/notifications/create", {
@@ -206,7 +205,7 @@ async function createNotification(productId: string, notificationOptions: Notifi
       mustBeInStock,
     }),
   });
-  return response.json();
+  return (await response.json()) as AddNotificationResponse;
 }
 
 async function deleteNotification(notificationId: string) {
@@ -219,5 +218,5 @@ async function deleteNotification(notificationId: string) {
       notificationId,
     }),
   });
-  return response.json();
+  return (await response.json()) as DeleteNotificationResponse;
 }
