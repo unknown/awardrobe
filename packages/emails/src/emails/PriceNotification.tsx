@@ -12,6 +12,7 @@ export type PriceNotificationEmailProps = {
   productUrl: string;
 };
 
+// TODO: add ability to unsubscribe easily
 export default function PriceNotificationEmail({
   productName = "Product Name",
   style = "08 Dark Gray",
@@ -36,7 +37,7 @@ export default function PriceNotificationEmail({
         </Section>
         <Section className="py-6 text-center">
           <Heading className="my-0 text-xl font-normal">{productName}</Heading>
-          <Text className="my-3 text-base text-sm text-[#747474]">
+          <Text className="my-3 text-sm text-[#747474]">
             {style} - {size}
           </Text>
           <Text className="my-3 text-xl font-bold">{price}</Text>

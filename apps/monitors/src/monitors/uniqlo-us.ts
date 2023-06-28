@@ -120,14 +120,13 @@ async function handlePriceDrop(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
 
-      // TODO: add product url
       const emailHtml = render(
         PriceNotificationEmail({
           productName: product.name,
           style: color,
           size,
           priceInCents: priceInCents,
-          productUrl: "undefined",
+          productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );
 
@@ -173,14 +172,13 @@ async function handleRestock(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
 
-      // TODO: add product url
       const emailHtml = render(
         StockNotificationEmail({
           productName: product.name,
           style: color,
           size,
           priceInCents: priceInCents,
-          productUrl: "undefined",
+          productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );
 
