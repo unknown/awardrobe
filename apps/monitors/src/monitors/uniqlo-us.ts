@@ -30,19 +30,24 @@ async function pingProduct(product: Product) {
 
   await Promise.all(
     details.map(async (productDetails) => {
-      const productVariant: ExtendedProductVariant = await prisma.productVariant.findUniqueOrThrow({
-        where: {
-          productId_style_size: {
-            productId: product.id,
-            style: productDetails.color,
-            size: productDetails.size,
-          },
-        },
-        include: {
-          prices: { take: 1, orderBy: { timestamp: "desc" } },
-        },
-      });
-      await updatePrice(product, productVariant, currentTime, productDetails);
+      try {
+        const productVariant: ExtendedProductVariant =
+          await prisma.productVariant.findUniqueOrThrow({
+            where: {
+              productId_style_size: {
+                productId: product.id,
+                style: productDetails.color,
+                size: productDetails.size,
+              },
+            },
+            include: {
+              prices: { take: 1, orderBy: { timestamp: "desc" } },
+            },
+          });
+        await updatePrice(product, productVariant, currentTime, productDetails);
+      } catch (error) {
+        console.log(error);
+      }
     }),
   );
 }
