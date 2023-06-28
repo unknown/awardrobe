@@ -36,11 +36,8 @@ export async function POST(req: Request) {
   const { productUrl }: AddProductRequest = await req.json();
 
   try {
-    let product: Product;
     if (productUrl.includes("uniqlo.com/us/")) {
-      const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/g;
-      const productCode = productUrl.match(productCodeRegex)![0];
-      product = await addUniqloUS(productCode);
+      return await addUniqloUS(productUrl);
     } else {
       return NextResponse.json<AddProductResponse>(
         {
@@ -50,7 +47,6 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    return NextResponse.json<AddProductResponse>({ status: "success", product });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {
@@ -70,7 +66,20 @@ export async function POST(req: Request) {
   }
 }
 
-async function addUniqloUS(productCode: string) {
+async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductResponse>> {
+  const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/g;
+  const productCode = productUrl.match(productCodeRegex)?.[0];
+
+  if (!productCode) {
+    return NextResponse.json<AddProductResponse>(
+      {
+        status: "error",
+        error: "Error getting product code",
+      },
+      { status: 400 },
+    );
+  }
+
   const { name, details } = await UniqloUS.getProductDetails(productCode);
 
   const store = await prisma.store.findUniqueOrThrow({
@@ -79,7 +88,7 @@ async function addUniqloUS(productCode: string) {
     },
   });
 
-  return await prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       productCode,
       name,
@@ -93,5 +102,10 @@ async function addUniqloUS(productCode: string) {
         },
       },
     },
+  });
+
+  return NextResponse.json<AddProductResponse>({
+    status: "success",
+    product,
   });
 }
