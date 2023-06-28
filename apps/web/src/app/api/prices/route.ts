@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       productVariant: true,
     },
     orderBy: {
-      timestamp: "desc",
+      timestamp: "asc",
     },
     take: 1000,
   });

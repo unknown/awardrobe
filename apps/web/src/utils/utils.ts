@@ -36,7 +36,7 @@ export function formatTimeAgo(prev: Date, now: Date = new Date()) {
   return timeFormatter.format(roundedElapsed, "years");
 }
 
-export function formatPrice(priceInCents: number) {
+export function formatCurrency(priceInCents: number) {
   return (priceInCents / 100).toLocaleString(undefined, {
     style: "currency",
     currency: "USD",

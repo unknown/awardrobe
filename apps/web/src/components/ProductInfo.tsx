@@ -2,11 +2,12 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@ui/Button";
+import { ParentSize } from "@visx/responsive";
 
 import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
-import { formatPrice } from "@/utils/utils";
+import { formatCurrency } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
@@ -68,7 +69,7 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
     } else if (!prices[0]) {
       return "No price data";
     } else {
-      return formatPrice(prices[0].priceInCents);
+      return formatCurrency(prices[0].priceInCents);
     }
   };
 
@@ -159,8 +160,10 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
           </div>
         ) : null}
       </section>
-      <section className="container h-[40rem]">
-        <ProductChart prices={prices} />
+      <section className="container h-[32rem]">
+        <ParentSize>
+          {({ width, height }) => <ProductChart width={width} height={height} prices={prices} />}
+        </ParentSize>
       </section>
     </Fragment>
   );

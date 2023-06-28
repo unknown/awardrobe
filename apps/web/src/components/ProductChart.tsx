@@ -1,10 +1,20 @@
+import { AxisBottom, AxisLeft } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
-import { Axis, Grid, LineSeries, Tooltip, XYChart } from "@visx/xychart";
+import { localPoint } from "@visx/event";
+import { GridColumns, GridRows } from "@visx/grid";
+import { Group } from "@visx/group";
+import { scaleLinear, scaleTime } from "@visx/scale";
+import { Bar, Line, LinePath } from "@visx/shape";
+import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
+import { bisector, extent } from "d3-array";
 
 import { PriceWithVariant } from "@/hooks/usePrices";
-import { formatDate } from "@/utils/utils";
+import { formatCurrency, formatDate } from "@/utils/utils";
 
 export type PricesChartProps = {
+  width: number;
+  height: number;
+  margin?: { top: number; right: number; bottom: number; left: number };
   prices: PriceWithVariant[] | null;
 };
 
@@ -13,99 +23,142 @@ type ChartUnitData = {
   price: number;
 };
 
-const accessors = {
-  xAccessor: (d: ChartUnitData) => new Date(d.date),
-  yAccessor: (d: ChartUnitData) => d.price,
-};
+// accessors
+const dateAccessor = (d: ChartUnitData) => new Date(d.date);
+const priceAccessor = (d: ChartUnitData) => d.price;
+const dateBisector = bisector<ChartUnitData, Date>((d) => new Date(d.date)).left;
 
-export function ProductChart({ prices }: PricesChartProps) {
-  if (prices === null) {
+const defaultMargin = { top: 40, right: 30, bottom: 50, left: 50 };
+
+export function ProductChart({
+  width,
+  height,
+  margin = defaultMargin,
+  prices: consumerPrices,
+}: PricesChartProps) {
+  const { tooltipData, tooltipLeft, tooltipTop, tooltipOpen, showTooltip, hideTooltip } =
+    useTooltip<ChartUnitData>();
+
+  // bounds
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  if (innerWidth === 0 || innerHeight === 0) return null;
+
+  if (consumerPrices === null) {
     return <div>Loading...</div>;
   }
 
-  // TODO: clean this up
-  const groupedPrices: Record<string, ChartUnitData[]> = {};
-  prices.forEach((price) => {
-    const key = `${price.productVariant.style}-${price.productVariant.size}`;
-    const group = groupedPrices[key] ?? [];
-    group.push({
+  const lastPrice = consumerPrices[consumerPrices.length - 1];
+  if (!lastPrice) return <div>No price data</div>;
+
+  const prices = [...consumerPrices, { ...lastPrice, timestamp: new Date().toISOString() }].map(
+    (price) => ({
       date: price.timestamp.toString(),
       price: price.priceInCents,
+    }),
+  );
+
+  // scales
+  const timeScale = scaleTime<number>({
+    range: [0, innerWidth],
+    domain: extent(prices, dateAccessor) as [Date, Date],
+  });
+  const priceExtent = extent(prices, priceAccessor) as [number, number];
+  const priceScale = scaleLinear<number>({
+    range: [innerHeight, 0],
+    domain: [priceExtent[0] - 50, priceExtent[1] + 50],
+  });
+
+  const handleTooltip = (event: React.TouchEvent<SVGElement> | React.MouseEvent<SVGElement>) => {
+    const coords = localPoint(event) ?? { x: 0, y: 0 };
+    const invertedDate = timeScale.invert(coords.x - margin.left);
+    const index = dateBisector(prices, invertedDate, 1);
+
+    const price = prices[index - 1];
+    const data = {
+      price: price ? priceAccessor(price) : 0,
+      date: invertedDate.toISOString(),
+    };
+
+    showTooltip({
+      tooltipLeft: coords.x,
+      tooltipTop: coords.y,
+      tooltipData: data,
     });
-    groupedPrices[key] = group;
-  });
-
-  // ensure equal group lengths, sort data chronologically, and add a data point for "now"
-  const groupKeys = Object.keys(groupedPrices);
-  const groupSize = prices.length / groupKeys.length;
-  const currentDate = new Date();
-  groupKeys.forEach((key) => {
-    let group = groupedPrices[key] ?? [];
-    group = group.slice(0, groupSize).reverse();
-
-    const lastPrice = group.slice(-1)[0];
-    if (lastPrice) {
-      group.push({ date: currentDate.toString(), price: lastPrice.price });
-    }
-
-    groupedPrices[key] = group;
-  });
+  };
 
   return (
-    <XYChart xScale={{ type: "time" }} yScale={{ type: "linear" }}>
-      <Grid
-        lineStyle={{
-          stroke: "#a1a1a1",
-          strokeLinecap: "round",
-          strokeWidth: 1,
-          strokeDasharray: "2, 4",
-        }}
-      />
-
-      <Axis hideTicks orientation="bottom" strokeWidth={1} />
-      <Axis hideTicks orientation="left" strokeWidth={1} />
-
-      {Object.keys(groupedPrices).map((key) => {
-        const group = groupedPrices[key];
-        if (!group) return null;
-
-        return (
-          <LineSeries
-            key={key}
-            dataKey={key}
-            data={group}
-            stroke="#008561"
-            curve={curveStepAfter}
-            {...accessors}
+    <div className="relative">
+      <svg width={width} height={height}>
+        <Group left={margin.left} top={margin.top}>
+          <AxisLeft
+            scale={priceScale}
+            tickLabelProps={{ fontSize: 12 }}
+            tickFormat={(value) => formatCurrency(value.valueOf())}
+            hideTicks
+            hideAxisLine
           />
-        );
-      })}
-
-      <Tooltip<ChartUnitData>
-        showSeriesGlyphs
-        showVerticalCrosshair
-        glyphStyle={{
-          fill: "#008561",
-        }}
-        renderTooltip={({ tooltipData }) => {
-          if (!tooltipData?.nearestDatum?.datum) return;
-          const date = new Date(tooltipData.nearestDatum.datum.date);
-
-          return (
-            <div className="flex flex-col gap-1">
-              <h2 className="font-medium">{formatDate(date)}</h2>
-              {Object.entries(tooltipData.datumByKey).map((lineDataArray) => {
-                const [key, value] = lineDataArray;
-                return (
-                  <div key={key} className="font-normal">{`${key}: ${accessors.yAccessor(
-                    value.datum,
-                  )}`}</div>
-                );
-              })}
-            </div>
-          );
-        }}
-      />
-    </XYChart>
+          <AxisBottom
+            top={innerHeight}
+            scale={timeScale}
+            tickLabelProps={{ fontSize: 12 }}
+            numTicks={width > 520 ? 10 : 5}
+            hideTicks
+            hideAxisLine
+          />
+          <GridRows scale={priceScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
+          <GridColumns
+            scale={timeScale}
+            width={innerWidth}
+            height={innerHeight}
+            stroke="#e0e0e0"
+            numTicks={width > 520 ? 10 : 5}
+          />
+          <LinePath<ChartUnitData>
+            data={prices}
+            x={(d) => timeScale(dateAccessor(d))}
+            y={(d) => priceScale(priceAccessor(d))}
+            curve={curveStepAfter}
+            strokeWidth={2}
+            stroke="#398739"
+          />
+          <Bar
+            width={innerWidth}
+            height={innerHeight}
+            onTouchStart={handleTooltip}
+            onTouchMove={handleTooltip}
+            onMouseMove={handleTooltip}
+            onMouseLeave={() => hideTooltip()}
+            fill="transparent"
+            stroke="#e0e0e0"
+          />
+        </Group>
+        {tooltipData && (
+          <g>
+            <Line
+              from={{ x: tooltipLeft, y: margin.top }}
+              to={{ x: tooltipLeft, y: margin.top + innerHeight }}
+              stroke="#c0c0c0"
+              strokeWidth={2}
+              pointerEvents="none"
+              strokeDasharray="5,2"
+            />
+          </g>
+        )}
+      </svg>
+      {tooltipOpen && tooltipData && (
+        <TooltipWithBounds
+          className="border-border absolute space-y-1 rounded-md border bg-white p-3 shadow-lg"
+          style={{}}
+          key={Math.random()}
+          top={tooltipTop}
+          left={tooltipLeft}
+        >
+          <p className="text-sm">Price: {formatCurrency(priceAccessor(tooltipData))}</p>
+          <p className="text-[12px]">{formatDate(new Date(dateAccessor(tooltipData)))}</p>
+        </TooltipWithBounds>
+      )}
+    </div>
   );
 }
