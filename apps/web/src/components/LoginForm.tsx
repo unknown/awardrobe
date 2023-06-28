@@ -24,7 +24,7 @@ export const LoginForm = ({ className, ...props }: LoginFormProps) => {
           const signInResult = await signIn("email", {
             email: emailInputRef.current?.value.toLowerCase() ?? "",
             redirect: false,
-            callbackUrl: "/",
+            callbackUrl: "/browse",
           });
 
           if (!signInResult?.ok) {
