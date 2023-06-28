@@ -103,18 +103,12 @@ export function ProductChart({
             top={innerHeight}
             scale={timeScale}
             tickLabelProps={{ fontSize: 12 }}
-            numTicks={width > 520 ? 10 : 5}
+            numTicks={Math.min(10, innerWidth / 80)}
             hideTicks
             hideAxisLine
           />
           <GridRows scale={priceScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
-          <GridColumns
-            scale={timeScale}
-            width={innerWidth}
-            height={innerHeight}
-            stroke="#e0e0e0"
-            numTicks={width > 520 ? 10 : 5}
-          />
+          <GridColumns scale={timeScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
           <LinePath<ChartUnitData>
             data={prices}
             x={(d) => timeScale(dateAccessor(d))}
