@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { UniqloUS } from "@awardrobe/adapters";
-import { Prisma } from "@awardrobe/prisma-types";
+import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
@@ -11,22 +11,38 @@ type AddProductRequest = {
   productUrl: string;
 };
 
+type AddProductSuccessResponse = {
+  status: "success";
+  product: Product;
+};
+
+type AddProductErrorResponse = {
+  status: "error";
+  error: string;
+};
+
+export type AddProductResponse = AddProductSuccessResponse | AddProductErrorResponse;
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {
-    return NextResponse.json({ status: "error", error: "Unauthenticated" }, { status: 401 });
+    return NextResponse.json<AddProductErrorResponse>(
+      { status: "error", error: "Unauthenticated" },
+      { status: 401 },
+    );
   }
 
   const { productUrl }: AddProductRequest = await req.json();
 
   try {
+    let product: Product;
     if (productUrl.includes("uniqlo.com/us/")) {
       const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/g;
       const productCode = productUrl.match(productCodeRegex)![0];
-      await addUniqloUS(productCode);
+      product = await addUniqloUS(productCode);
     } else {
-      return NextResponse.json(
+      return NextResponse.json<AddProductResponse>(
         {
           status: "error",
           error: "Unsupported store",
@@ -34,12 +50,11 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-
-    return NextResponse.json({ status: "success" });
+    return NextResponse.json<AddProductResponse>({ status: "success", product });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {
-        return NextResponse.json(
+        return NextResponse.json<AddProductResponse>(
           {
             status: "error",
             error: "Product already exists",
@@ -48,7 +63,10 @@ export async function POST(req: Request) {
         );
       }
     }
-    return NextResponse.json({ status: "error", error: "Internal server error" }, { status: 500 });
+    return NextResponse.json<AddProductResponse>(
+      { status: "error", error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -61,7 +79,7 @@ async function addUniqloUS(productCode: string) {
     },
   });
 
-  await prisma.product.create({
+  return await prisma.product.create({
     data: {
       productCode,
       name,
