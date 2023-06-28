@@ -8,11 +8,10 @@ import { ParentSize } from "@visx/responsive";
 import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
-import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
-import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
+import { AddNotificationDialog } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
 import { DateRange, FilterOptions, isDateRange, ProductControls } from "./ProductControls";
 
@@ -136,22 +135,16 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
             }
             return (
               <AddNotificationDialog
+                productId={product.id}
                 defaultOptions={{
                   mustBeInStock: false,
                   priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
                   style: filters.style,
                   size: filters.size,
                 }}
-                onNotificationUpdate={async (options) => {
-                  const result = await createNotification(product.id, options);
-                  if (result.status === "error") {
-                    return false;
-                  }
-                  if (result.notification) {
-                    setNotifications((notifications) => [...notifications, result.notification]);
-                  }
-                  return true;
-                }}
+                onAddNotification={(newNotification) =>
+                  setNotifications((notifications) => [...notifications, newNotification])
+                }
                 sizes={sizes}
                 styles={styles}
                 disabled={hasExistingNotification}
@@ -188,24 +181,6 @@ function getStartDate(dateRange: DateRange) {
   const startDate = new Date();
   startDate.setTime(Math.max(0, startDate.getTime() - dateOffsets[dateRange]));
   return startDate;
-}
-
-async function createNotification(productId: string, notificationOptions: NotificationOptions) {
-  const { style, size, priceInCents, mustBeInStock } = notificationOptions;
-  const response = await fetch("/api/notifications/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productId,
-      style,
-      size,
-      priceInCents,
-      mustBeInStock,
-    }),
-  });
-  return (await response.json()) as AddNotificationResponse;
 }
 
 async function deleteNotification(notificationId: string) {
