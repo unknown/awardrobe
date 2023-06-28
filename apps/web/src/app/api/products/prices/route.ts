@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { Price, Prisma } from "@awardrobe/prisma-types";
+import { Price } from "@awardrobe/prisma-types";
 
 import { prisma } from "@/utils/prisma";
 
