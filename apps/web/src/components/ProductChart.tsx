@@ -145,6 +145,7 @@ export function ProductChart({
             onTouchMove={handleTooltip}
             onMouseMove={handleTooltip}
             onMouseLeave={() => hideTooltip()}
+            onTouchEnd={() => hideTooltip()}
             fill="transparent"
             stroke="#e0e0e0"
             strokeWidth={2}
