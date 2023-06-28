@@ -12,7 +12,7 @@ import { formatCurrency } from "@/utils/utils";
 import { usePrices } from "../hooks/usePrices";
 import { AddNotificationDialog, NotificationOptions } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
-import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
+import { DateRange, FilterOptions, isDateRange, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
@@ -27,12 +27,16 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [style, size] = [searchParams.get("style"), searchParams.get("size")];
 
+  const [daterangeParams, styleParams, sizeParams] = [
+    searchParams.get("dateRange"),
+    searchParams.get("style"),
+    searchParams.get("size"),
+  ];
   const defaultFilters = useRef<FilterOptions>({
-    dateRange: "7d",
-    style: style ?? styles[0] ?? "",
-    size: size ?? sizes[0] ?? "",
+    dateRange: isDateRange(daterangeParams) ? daterangeParams : "7d",
+    style: styleParams ?? styles[0] ?? "",
+    size: sizeParams ?? sizes[0] ?? "",
   });
 
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
@@ -91,9 +95,10 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
           filters={filters}
           onFiltersChange={async (newFilters) => {
             // TODO: fix this hacky way of creating `params` when types are fixed
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("style", newFilters.style);
-            params.set("size", newFilters.size);
+            const params = new URLSearchParams({
+              ...Object.fromEntries(searchParams.entries()),
+              ...newFilters,
+            });
             router.replace(`${pathname}?${params.toString()}`);
 
             setFilters(newFilters);

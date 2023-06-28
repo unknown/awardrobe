@@ -27,6 +27,7 @@ export type ProductControlsProps = {
 
 const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
+export const isDateRange = (x: any): x is DateRange => DateRanges.includes(x);
 
 export function ProductControls({
   filters,
