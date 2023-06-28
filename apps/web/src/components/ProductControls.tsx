@@ -1,5 +1,3 @@
-"use client";
-
 import { ReactElement } from "react";
 import { Button } from "@ui/Button";
 import {
@@ -21,7 +19,7 @@ export type FilterOptions = {
 
 export type ProductControlsProps = {
   filters: FilterOptions;
-  onFiltersUpdate: (newFilters: FilterOptions) => void;
+  onFiltersChange: (newFilters: FilterOptions) => void;
   styles: string[];
   sizes: string[];
   renderNotificationsComponent: (style: string, size: string) => ReactElement;
@@ -32,13 +30,13 @@ export type DateRange = (typeof DateRanges)[number];
 
 export function ProductControls({
   filters,
-  onFiltersUpdate: consumerOnFiltersUpdate,
+  onFiltersChange: consumerOnFiltersChange,
   styles,
   sizes,
   renderNotificationsComponent,
 }: ProductControlsProps) {
-  const onFiltersUpdate = (newFilters: FilterOptions) => {
-    consumerOnFiltersUpdate(newFilters);
+  const onFiltersChange = (newFilters: FilterOptions) => {
+    consumerOnFiltersChange(newFilters);
   };
 
   return (
@@ -49,10 +47,10 @@ export function ProductControls({
             Style
           </label>
           <Select
-            onValueChange={(style) => {
-              onFiltersUpdate({ ...filters, style });
-            }}
             value={filters.style}
+            onValueChange={(style) => {
+              onFiltersChange({ ...filters, style });
+            }}
           >
             <SelectTrigger className="w-[180px]" id="style-input">
               <SelectValue placeholder="Select a style..." />
@@ -73,10 +71,10 @@ export function ProductControls({
             Size
           </label>
           <Select
-            onValueChange={(size) => {
-              onFiltersUpdate({ ...filters, size });
-            }}
             value={filters.size}
+            onValueChange={(size) => {
+              onFiltersChange({ ...filters, size });
+            }}
           >
             <SelectTrigger className="w-[180px]" id="size-input">
               <SelectValue placeholder="Select a size..." />
@@ -109,7 +107,7 @@ export function ProductControls({
                 key={range}
                 variant="outline"
                 onClick={() => {
-                  onFiltersUpdate({ ...filters, dateRange: range });
+                  onFiltersChange({ ...filters, dateRange: range });
                 }}
                 className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
               >

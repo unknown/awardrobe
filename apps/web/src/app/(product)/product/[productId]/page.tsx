@@ -52,5 +52,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
       })
     : [];
 
-  return <ProductInfo product={product} defaultNotifications={notifications} />;
+  const stylesSet = new Set<string>();
+  const sizesSet = new Set<string>();
+  product.variants.forEach((variant) => {
+    stylesSet.add(variant.style);
+    sizesSet.add(variant.size);
+  });
+
+  return (
+    <ProductInfo
+      product={product}
+      styles={Array.from(stylesSet)}
+      sizes={Array.from(sizesSet)}
+      defaultNotifications={notifications}
+    />
+  );
 }

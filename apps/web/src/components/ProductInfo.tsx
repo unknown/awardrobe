@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/Button";
 import { ParentSize } from "@visx/responsive";
 
@@ -15,32 +16,23 @@ import { DateRange, FilterOptions, ProductControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   product: ProductWithVariants;
+  styles: string[];
+  sizes: string[];
   defaultNotifications: ProductNotification[];
 };
 
-export function ProductInfo({ product, defaultNotifications }: ProductInfoProps) {
+export function ProductInfo({ product, styles, sizes, defaultNotifications }: ProductInfoProps) {
   const { data: prices, loading, invalidateData, fetchPricesData } = usePrices(product.id);
 
-  const { styles, sizes } = useMemo<{
-    styles: string[];
-    sizes: string[];
-  }>(() => {
-    const stylesSet = new Set<string>();
-    const sizesSet = new Set<string>();
-    product.variants.forEach((variant) => {
-      stylesSet.add(variant.style);
-      sizesSet.add(variant.size);
-    });
-    return {
-      styles: Array.from(stylesSet),
-      sizes: Array.from(sizesSet),
-    };
-  }, [product]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [style, size] = [searchParams.get("style"), searchParams.get("size")];
 
   const defaultFilters = useRef<FilterOptions>({
     dateRange: "7d",
-    style: styles[0] ?? "",
-    size: sizes[0] ?? "",
+    style: style ?? styles[0] ?? "",
+    size: size ?? sizes[0] ?? "",
   });
 
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
@@ -97,7 +89,13 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
       <section className="container py-4">
         <ProductControls
           filters={filters}
-          onFiltersUpdate={async (newFilters) => {
+          onFiltersChange={async (newFilters) => {
+            // TODO: fix this hacky way of creating `params` when types are fixed
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("style", newFilters.style);
+            params.set("size", newFilters.size);
+            router.replace(`${pathname}?${params.toString()}`);
+
             setFilters(newFilters);
             await loadPricesData(newFilters);
           }}
