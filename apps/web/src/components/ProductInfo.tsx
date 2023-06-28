@@ -66,10 +66,13 @@ export function ProductInfo({ product, defaultNotifications }: ProductInfoProps)
   const getLatestPriceText = () => {
     if (prices === null || loading) {
       return "Loading...";
-    } else if (!prices[0]) {
+    }
+
+    const lastPrice = prices[prices.length - 1];
+    if (!lastPrice) {
       return "No price data";
     } else {
-      return formatCurrency(prices[0].priceInCents);
+      return formatCurrency(lastPrice.priceInCents);
     }
   };
 
