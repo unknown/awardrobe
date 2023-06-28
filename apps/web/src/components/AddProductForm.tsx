@@ -40,7 +40,7 @@ export const AddProductForm = ({ className, ...props }: AddProductFormProps) => 
 };
 
 async function addProduct(productUrl: string) {
-  const response = await fetch("/api/add-product", {
+  const response = await fetch("/api/products/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

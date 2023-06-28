@@ -1,14 +1,10 @@
 import { useCallback, useState } from "react";
 
-import { Price, ProductVariant } from "@awardrobe/prisma-types";
-
-export type PriceWithVariant = Price & {
-  productVariant: ProductVariant;
-};
+import { Price } from "@awardrobe/prisma-types";
 
 export function usePrices(productId: string) {
   const [loading, setLoading] = useState(false);
-  const [pricesData, setPricesData] = useState<PriceWithVariant[] | null>(null);
+  const [pricesData, setPricesData] = useState<Price[] | null>(null);
 
   const fetchPricesData = useCallback(
     async function (startDate: Date, style: string, size: string, abortSignal?: AbortSignal) {
@@ -45,7 +41,7 @@ async function getPrices(
   size: string,
   abortSignal?: AbortSignal,
 ) {
-  const response = await fetch("/api/prices", {
+  const response = await fetch("/api/products/prices", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -61,5 +57,5 @@ async function getPrices(
 
   // IMRPOVE THESE HARDCODED TYPES
   const json = await response.json();
-  return json.prices as PriceWithVariant[];
+  return json.prices as Price[];
 }

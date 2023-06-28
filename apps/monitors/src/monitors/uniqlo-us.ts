@@ -1,13 +1,12 @@
 import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
-import { Price, Product, ProductVariant, Stock } from "@awardrobe/prisma-types";
+import { Price, Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
 type ExtendedProductVariant = ProductVariant & {
   prices: Price[];
-  stocks: Stock[];
 };
 
 export async function handleHeartbeat() {
@@ -41,19 +40,14 @@ async function pingProduct(product: Product) {
         },
         include: {
           prices: { take: 1, orderBy: { timestamp: "desc" } },
-          stocks: { take: 1, orderBy: { timestamp: "desc" } },
         },
       });
-
-      await Promise.all([
-        updatePrices(product, productVariant, currentTime, productDetails),
-        updateStock(product, productVariant, currentTime, productDetails),
-      ]);
+      await updatePrice(product, productVariant, currentTime, productDetails);
     }),
   );
 }
 
-async function updatePrices(
+async function updatePrice(
   product: Product,
   productVariant: ExtendedProductVariant,
   currentTime: Date,
@@ -68,7 +62,8 @@ async function updatePrices(
   // to avoid the prices table blowing up in size, prices are sometimes skipped from being inserted into the table
   const isStale = diffDays >= 1;
   const hasPriceChanged = diffPrice !== 0;
-  if (oldPrice && !isStale && !hasPriceChanged) {
+  const hasStockChanged = oldPrice ? stock > 0 !== oldPrice.inStock : false;
+  if (oldPrice && !isStale && !hasPriceChanged && !hasStockChanged) {
     return;
   }
 
@@ -79,140 +74,126 @@ async function updatePrices(
         connect: { id: productVariant.id },
       },
       priceInCents,
+      inStock: stock > 0,
     },
   });
 
   const hasPriceDropped = diffPrice < 0;
   if (hasPriceDropped) {
-    const notifications = await prisma.productNotification.findMany({
-      where: {
-        mustBeInStock: stock > 0 ? undefined : false,
-        OR: [
-          {
-            priceInCents: null,
-          },
-          {
-            priceInCents: {
-              gte: priceInCents,
-            },
-          },
-        ],
-        productVariant: { id: productVariant.id },
-      },
-      include: {
-        user: true,
-      },
-    });
+    console.log(`Price dropped for ${product.productCode} ${color} ${size}`);
+    await handlePriceDrop(product, productVariant, { color, size, priceInCents, stock });
+  }
 
-    await Promise.all(
-      notifications.map(async (notification) => {
-        if (!notification.user.email) return;
-
-        // TODO: add product url
-        const emailHtml = render(
-          PriceNotificationEmail({
-            productName: product.name,
-            style: color,
-            size,
-            priceInCents: priceInCents,
-            productUrl: "undefined",
-          }),
-        );
-
-        const options = {
-          to: notification.user.email,
-          subject: "Price drop",
-          html: emailHtml,
-        };
-
-        emailTransporter.sendMail(options);
-        console.log(
-          `${notification.user.email} has been notified of a price drop for ${product.name} (${color} - ${size})`,
-        );
-      }),
-    );
+  const hasRestocked = hasStockChanged && stock > 0;
+  if (hasRestocked) {
+    console.log(`Restock for ${product.productCode} ${color} ${size}`);
+    await handleRestock(product, productVariant, { color, size, priceInCents, stock });
   }
 }
 
-async function updateStock(
+async function handlePriceDrop(
   product: Product,
   productVariant: ExtendedProductVariant,
-  currentTime: Date,
   { color, size, priceInCents, stock }: ProductDetails,
 ) {
-  const oldStock = productVariant.stocks[0];
-
-  const diffTime = oldStock ? currentTime.getTime() - oldStock.timestamp.getTime() : 0;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffStock = oldStock?.stock ? stock - oldStock.stock : 0;
-
-  // to avoid the stock table blowing up in size, stocks are sometimes skipped from being inserted into the table
-  const isStale = diffDays >= 1;
-  const hasStockChanged = diffStock !== 0;
-  if (oldStock && !isStale && !hasStockChanged) {
-    return;
-  }
-
-  await prisma.stock.create({
-    data: {
-      timestamp: currentTime,
-      productVariant: {
-        connect: {
-          id: productVariant.id,
+  const notifications = await prisma.productNotification.findMany({
+    where: {
+      mustBeInStock: stock > 0 ? undefined : false,
+      OR: [
+        {
+          priceInCents: null,
         },
-      },
-      inStock: stock > 0,
-      stock,
+        {
+          priceInCents: {
+            gte: priceInCents,
+          },
+        },
+      ],
+      productVariant: { id: productVariant.id },
+    },
+    include: {
+      user: true,
     },
   });
 
-  const hasRestocked = oldStock?.stock === 0 && diffStock > 0;
-  if (hasRestocked) {
-    const notifications = await prisma.productNotification.findMany({
-      where: {
-        OR: [
-          {
-            priceInCents: null,
+  await Promise.all(
+    notifications.map(async (notification) => {
+      if (!notification.user.email) return;
+
+      // TODO: add product url
+      const emailHtml = render(
+        PriceNotificationEmail({
+          productName: product.name,
+          style: color,
+          size,
+          priceInCents: priceInCents,
+          productUrl: "undefined",
+        }),
+      );
+
+      const options = {
+        to: notification.user.email,
+        subject: "Price drop",
+        html: emailHtml,
+      };
+
+      emailTransporter.sendMail(options);
+      console.log(
+        `${notification.user.email} has been notified of a price drop for ${product.name} (${color} - ${size})`,
+      );
+    }),
+  );
+}
+
+async function handleRestock(
+  product: Product,
+  productVariant: ExtendedProductVariant,
+  { color, size, priceInCents }: ProductDetails,
+) {
+  const notifications = await prisma.productNotification.findMany({
+    where: {
+      OR: [
+        {
+          priceInCents: null,
+        },
+        {
+          priceInCents: {
+            gte: priceInCents,
           },
-          {
-            priceInCents: {
-              gte: priceInCents,
-            },
-          },
-        ],
-        productVariant: { id: productVariant.id },
-      },
-      include: {
-        user: true,
-      },
-    });
+        },
+      ],
+      productVariant: { id: productVariant.id },
+    },
+    include: {
+      user: true,
+    },
+  });
 
-    await Promise.all(
-      notifications.map(async (notification) => {
-        if (!notification.user.email) return;
+  await Promise.all(
+    notifications.map(async (notification) => {
+      if (!notification.user.email) return;
 
-        // TODO: add product url
-        const emailHtml = render(
-          StockNotificationEmail({
-            productName: product.name,
-            style: color,
-            size,
-            priceInCents: priceInCents,
-            productUrl: "undefined",
-          }),
-        );
+      // TODO: add product url
+      const emailHtml = render(
+        StockNotificationEmail({
+          productName: product.name,
+          style: color,
+          size,
+          priceInCents: priceInCents,
+          productUrl: "undefined",
+        }),
+      );
 
-        const options = {
-          to: notification.user.email,
-          subject: "Item back in stock",
-          html: emailHtml,
-        };
+      const options = {
+        to: notification.user.email,
+        subject: "Item back in stock",
+        html: emailHtml,
+      };
 
-        emailTransporter.sendMail(options);
-        console.log(
-          `${notification.user.email} has been notified of a restock for ${product.name} (${color} - ${size})`,
-        );
-      }),
-    );
-  }
+      emailTransporter.sendMail(options);
+      console.log(
+        `${notification.user.email} has been notified of a restock for ${product.name} (${color} - ${size})`,
+      );
+    }),
+  );
 }

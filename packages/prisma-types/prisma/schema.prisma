@@ -87,18 +87,7 @@ model Price {
   productVariantId String
   timestamp        DateTime @default(now())
   priceInCents     Int
-
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
-
-  @@index([productVariantId])
-}
-
-model Stock {
-  id               String   @id @default(cuid())
-  productVariantId String
-  timestamp        DateTime @default(now())
-  stock            Int?
-  inStock          Boolean
+  inStock          Boolean  @default(false)
 
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
@@ -111,7 +100,6 @@ model ProductVariant {
   style         String
   size          String
   prices        Price[]
-  stocks        Stock[]
   notifications ProductNotification[]
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
