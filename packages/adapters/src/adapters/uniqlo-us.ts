@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { toTitleCase } from "../utils/formatter";
+import { dollarsToCents, toTitleCase } from "../utils/formatter";
 import { ProductDetails } from "../utils/types";
 
 // contains stock and price data of products
@@ -79,7 +79,7 @@ export async function getProductDetails(productCode: string) {
 
     const colorName = nameByDisplayCode.get(l2sEntry.color.displayCode);
     const sizeName = nameByDisplayCode.get(l2sEntry.size.displayCode);
-    const priceInCents = pricesEntry.base.value * 100;
+    const priceInCents = dollarsToCents(pricesEntry.base.value.toString());
     const stock = stocksEntry.quantity;
 
     if (!colorName || !sizeName) throw new Error("Failed to parse product details");

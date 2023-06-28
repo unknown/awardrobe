@@ -12,7 +12,12 @@ type ExtendedProductVariant = ProductVariant & {
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
   const promises = products.map((product) => pingProduct(product));
-  await Promise.all(promises);
+
+  try {
+    await Promise.all(promises);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function pingProduct(product: Product) {
@@ -30,24 +35,19 @@ async function pingProduct(product: Product) {
 
   await Promise.all(
     details.map(async (productDetails) => {
-      try {
-        const productVariant: ExtendedProductVariant =
-          await prisma.productVariant.findUniqueOrThrow({
-            where: {
-              productId_style_size: {
-                productId: product.id,
-                style: productDetails.color,
-                size: productDetails.size,
-              },
-            },
-            include: {
-              prices: { take: 1, orderBy: { timestamp: "desc" } },
-            },
-          });
-        await updatePrice(product, productVariant, currentTime, productDetails);
-      } catch (error) {
-        console.log(error);
-      }
+      const productVariant: ExtendedProductVariant = await prisma.productVariant.findUniqueOrThrow({
+        where: {
+          productId_style_size: {
+            productId: product.id,
+            style: productDetails.color,
+            size: productDetails.size,
+          },
+        },
+        include: {
+          prices: { take: 1, orderBy: { timestamp: "desc" } },
+        },
+      });
+      await updatePrice(product, productVariant, currentTime, productDetails);
     }),
   );
 }
