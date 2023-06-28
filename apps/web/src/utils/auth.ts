@@ -1,13 +1,11 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
-import { Adapter } from "next-auth/adapters";
 import EmailProvider from "next-auth/providers/email";
 
 import { prisma } from "@/utils/prisma";
 
-// TODO: hacky fix; track https://github.com/nextauthjs/next-auth/issues/7727
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+  adapter: PrismaAdapter(prisma),
   pages: {
     signIn: "/login",
   },
