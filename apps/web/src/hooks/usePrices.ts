@@ -13,16 +13,20 @@ export function usePrices(productId: string) {
       setLoading(true);
 
       const result = await getPrices(productId, startDate, style, size, abortSignal);
-      if (result.status === "error") {
-        invalidateData();
+
+      const aborted = abortSignal?.aborted ?? false;
+      if (aborted) {
         return;
       }
 
-      const aborted = abortSignal?.aborted ?? false;
-      if (!aborted) {
+      // TODO: handle error better
+      if (result.status === "error") {
+        setPricesData([]);
+      } else {
         setPricesData(result.prices);
-        setLoading(false);
       }
+
+      setLoading(false);
     },
     [productId],
   );

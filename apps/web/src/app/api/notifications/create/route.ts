@@ -48,8 +48,15 @@ export async function POST(req: Request) {
           },
         },
         productVariant: {
-          connect: {
-            productId_style_size: {
+          connectOrCreate: {
+            where: {
+              productId_style_size: {
+                productId: productId,
+                style,
+                size,
+              },
+            },
+            create: {
               productId: productId,
               style,
               size,

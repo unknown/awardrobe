@@ -54,7 +54,16 @@ export function ProductChart({
   }
 
   const lastPrice = consumerPrices[consumerPrices.length - 1];
-  if (!lastPrice) return <div>No price data</div>;
+  if (!lastPrice) {
+    return (
+      <div className="text-center">
+        <h2 className="text-2xl font-medium">No prices yet!</h2>
+        <p className="text-muted-foreground">
+          Hang tight, we&apos;ll fetch the prices for you soon.
+        </p>
+      </div>
+    );
+  }
 
   const prices = [...consumerPrices, { ...lastPrice, timestamp: new Date().toISOString() }].map(
     (price) => ({
