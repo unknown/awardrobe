@@ -61,7 +61,7 @@ export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
 
     return (
       <div className="relative flex h-full w-full items-center justify-center">
-        <svg className="absolute h-full w-full overflow-visible p-8">
+        <svg className="absolute -z-10 h-full w-full overflow-visible p-8">
           <g {...lineProps}>
             <line x1="0%" x2="100%" y1="0%" y2="0%" />
             <line x1="0%" x2="100%" y1="10%" y2="10%" />
@@ -90,7 +90,7 @@ export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
             <line x1="100%" x2="100%" y1="0%" y2="100%" />
           </g>
         </svg>
-        <div className="bg-gradient-radial from-background z-[999] to-transparent p-16 text-center">
+        <div className="bg-gradient-radial from-background to-transparent p-16 text-center">
           <h2 className="text-2xl font-medium">No price history</h2>
           <p className="text-muted-foreground">
             Hang tight, we&apos;ll fetch the prices for you soon.
