@@ -3,7 +3,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/Button";
-import { ParentSize } from "@visx/responsive";
 
 import { ProductNotification } from "@awardrobe/prisma-types";
 
@@ -163,9 +162,7 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
           </div>
         ) : null}
         <div className="h-[20rem] sm:h-[24rem] md:h-[32rem]">
-          <ParentSize className="flex items-center justify-center">
-            {({ width, height }) => <ProductChart width={width} height={height} prices={prices} />}
-          </ParentSize>
+          <ProductChart prices={prices} />
         </div>
       </section>
     </Fragment>
