@@ -2,15 +2,14 @@ import Link from "next/link";
 import { Button } from "@ui/Button";
 import { getServerSession } from "next-auth";
 
-import { Price, Product, ProductVariant } from "@awardrobe/prisma-types";
+import { Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
-// TODO: deal with these union types
-export type ExtendedProduct = Product & {
-  variants: (ProductVariant & { prices: Price[] })[];
+export type ProductWithVariants = Product & {
+  variants: ProductVariant[];
 };
 
 type ProductPageProps = {
@@ -21,16 +20,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
     include: {
-      variants: {
-        include: {
-          prices: {
-            orderBy: {
-              timestamp: "desc",
-            },
-            take: 1,
-          },
-        },
-      },
+      variants: true,
     },
   });
 

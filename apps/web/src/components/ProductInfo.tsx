@@ -7,145 +7,153 @@ import { ParentSize } from "@visx/responsive";
 
 import { ProductNotification } from "@awardrobe/prisma-types";
 
-import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
+import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
-import { usePrices } from "../hooks/usePrices";
+import { isDateRange, usePrices, UsePricesOptions } from "../hooks/usePrices";
 import { AddNotificationDialog } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
-import { DateRange, FilterOptions, isDateRange, ProductControls } from "./ProductControls";
+import { DateRangeControl, VariantControls } from "./ProductControls";
 
 export type ProductInfoProps = {
-  product: ExtendedProduct;
+  product: ProductWithVariants;
   styles: string[];
   sizes: string[];
   defaultNotifications: ProductNotification[];
 };
 
 export function ProductInfo({ product, styles, sizes, defaultNotifications }: ProductInfoProps) {
-  const { data: prices, invalidateData, fetchPricesData } = usePrices(product.id);
+  const { data: prices, fetchPricesData } = usePrices(product.id);
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
   const [daterangeParams, styleParams, sizeParams] = [
     searchParams.get("dateRange"),
     searchParams.get("style"),
     searchParams.get("size"),
   ];
-  const defaultFilters = useRef<FilterOptions>({
-    dateRange: isDateRange(daterangeParams) ? daterangeParams : "7d",
-    style: styleParams ?? styles[0] ?? "",
-    size: sizeParams ?? sizes[0] ?? "",
-  });
 
-  const [filters, setFilters] = useState<FilterOptions>(defaultFilters.current);
+  const defaultOptions = useRef<UsePricesOptions>({
+    dateRange: isDateRange(daterangeParams) ? daterangeParams : "7d",
+    style: styleParams && styles.includes(styleParams) ? styleParams : styles[0] ?? "",
+    size: sizeParams && sizes.includes(sizeParams) ? sizeParams : sizes[0] ?? "",
+  });
+  const [options, setOptions] = useState<UsePricesOptions>(defaultOptions.current);
   const [notifications, setNotifications] = useState<ProductNotification[]>(defaultNotifications);
 
-  const loadPricesData = useCallback(
-    async ({ dateRange, style, size }: FilterOptions, abortSignal?: AbortSignal) => {
-      invalidateData();
-      const startDate = getStartDate(dateRange);
-      await fetchPricesData(startDate, style, size, abortSignal);
+  const loadPrices = useCallback(
+    async (options: UsePricesOptions, abortSignal?: AbortSignal) => {
+      await fetchPricesData(options, abortSignal);
     },
-    [invalidateData, fetchPricesData],
+    [fetchPricesData],
   );
 
   useEffect(() => {
     const abortController = new AbortController();
-    loadPricesData(defaultFilters.current, abortController.signal);
+    loadPrices(defaultOptions.current, abortController.signal);
     return () => {
       abortController.abort();
     };
-  }, [loadPricesData]);
+  }, [loadPrices]);
 
   const getPillText = () => {
-    const variant = product.variants.find(
-      (variant) => variant.style === filters.style && variant.size === filters.size,
-    );
-    const lastPrice = variant?.prices[0]?.priceInCents;
-    if (lastPrice === undefined) {
+    const lastPrice = prices?.[prices.length - 1]?.priceInCents;
+    if (prices === null) {
+      return "Loading...";
+    } else if (lastPrice === undefined) {
       return "See price";
     } else {
       return `${formatCurrency(lastPrice)} on Uniqlo`;
     }
   };
 
+  const NotificationComponent = () => {
+    const selectedVariant = product.variants.find(
+      (variant) => variant.style === options.style && variant.size === options.size,
+    );
+    const notification = notifications.find((notification) => {
+      return notification.productVariantId === selectedVariant?.id;
+    });
+    if (notification) {
+      return (
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            const result = await deleteNotification(notification.id);
+            if (result.status === "success") {
+              setNotifications((notifications) =>
+                [...notifications].filter((n) => n !== notification),
+              );
+            }
+          }}
+        >
+          Delete notification
+        </Button>
+      );
+    }
+    return (
+      <AddNotificationDialog
+        productId={product.id}
+        defaultOptions={{
+          mustBeInStock: false,
+          priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
+          style: options.style,
+          size: options.size,
+        }}
+        onAddNotification={(newNotification) =>
+          setNotifications((notifications) => [...notifications, newNotification])
+        }
+        sizes={sizes}
+        styles={styles}
+        disabled={notification}
+      />
+    );
+  };
+
   // TODO: handle invalid product controls state when `prices` is invalidated
   return (
     <Fragment>
-      <section className="container py-6">
-        <h1 className="mb-3 text-3xl font-bold">{product.name}</h1>
+      <section className="container space-y-3 py-6">
+        <h1 className="text-3xl font-bold">{product.name}</h1>
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end">
+          <VariantControls
+            variant={options}
+            styles={styles}
+            sizes={sizes}
+            onVariantChange={(newVariant) => {
+              const newOptions = { ...options, ...newVariant };
+              setOptions(newOptions);
+              loadPrices(newOptions);
+
+              const params = new URLSearchParams({
+                ...Object.fromEntries(searchParams.entries()),
+                ...newOptions,
+              });
+              router.replace(`${pathname}?${params.toString()}`);
+            }}
+          />
+          <NotificationComponent />
+        </div>
         <a
           href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
           target="_blank"
           rel="noopener noreferrer"
+          className="block"
         >
           <div className="text-md inline-block rounded-full bg-sky-500 px-4 py-2 font-medium text-white">
             {getPillText()}
           </div>
         </a>
       </section>
-      <section className="container py-3">
-        <ProductControls
-          filters={filters}
-          onFiltersChange={async (newFilters) => {
-            // TODO: fix this hacky way of creating `params` when types are fixed
-            const params = new URLSearchParams({
-              ...Object.fromEntries(searchParams.entries()),
-              ...newFilters,
-            });
-            router.replace(`${pathname}?${params.toString()}`);
-
-            setFilters(newFilters);
-            await loadPricesData(newFilters);
-          }}
-          styles={styles}
-          sizes={sizes}
-          renderNotificationsComponent={(style, size) => {
-            const variant = product.variants.find((variant) => {
-              return variant.style === style && variant.size === size;
-            });
-            const notification = notifications.find((notification) => {
-              return notification.productVariantId === variant?.id;
-            });
-            const hasExistingNotification = notification !== undefined;
-
-            if (hasExistingNotification) {
-              return (
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    const result = await deleteNotification(notification.id);
-                    if (result.status === "success") {
-                      setNotifications((notifications) =>
-                        [...notifications].filter((n) => n !== notification),
-                      );
-                    }
-                  }}
-                >
-                  Delete notification
-                </Button>
-              );
-            }
-            return (
-              <AddNotificationDialog
-                productId={product.id}
-                defaultOptions={{
-                  mustBeInStock: false,
-                  priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
-                  style: filters.style,
-                  size: filters.size,
-                }}
-                onAddNotification={(newNotification) =>
-                  setNotifications((notifications) => [...notifications, newNotification])
-                }
-                sizes={sizes}
-                styles={styles}
-                disabled={hasExistingNotification}
-              />
-            );
+      <section className="container space-y-2">
+        <h2 className="text-xl font-bold">Price History</h2>
+        <DateRangeControl
+          dateRange={options.dateRange}
+          onDateRangeChange={(newDateRange) => {
+            const newOptions = { ...options, dateRange: newDateRange };
+            setOptions(newOptions);
+            loadPrices(newOptions);
           }}
         />
         {prices?.length === 1000 ? (
@@ -154,29 +162,14 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
             number of data points.
           </div>
         ) : null}
-      </section>
-      <section className="container h-[20rem] sm:h-[24rem] md:h-[32rem]">
-        <ParentSize className="flex items-center justify-center">
-          {({ width, height }) => <ProductChart width={width} height={height} prices={prices} />}
-        </ParentSize>
+        <div className="h-[20rem] sm:h-[24rem] md:h-[32rem]">
+          <ParentSize className="flex items-center justify-center">
+            {({ width, height }) => <ProductChart width={width} height={height} prices={prices} />}
+          </ParentSize>
+        </div>
       </section>
     </Fragment>
   );
-}
-
-const dateOffsets: Record<DateRange, number> = {
-  "7d": 7 * 24 * 60 * 60 * 1000,
-  "1m": 30 * 24 * 60 * 60 * 1000,
-  "3m": 90 * 24 * 60 * 60 * 1000,
-  "6m": 180 * 24 * 60 * 60 * 1000,
-  "1y": 365 * 24 * 60 * 60 * 1000,
-  All: Infinity,
-};
-
-function getStartDate(dateRange: DateRange) {
-  const startDate = new Date();
-  startDate.setTime(Math.max(0, startDate.getTime() - dateOffsets[dateRange]));
-  return startDate;
 }
 
 async function deleteNotification(notificationId: string) {

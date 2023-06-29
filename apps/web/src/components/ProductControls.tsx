@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { Fragment } from "react";
 import { Button } from "@ui/Button";
 import {
   Select,
@@ -9,115 +9,105 @@ import {
   SelectValue,
 } from "@ui/Select";
 
+import { DateRange, DateRanges } from "@/hooks/usePrices";
 import { cn } from "@/utils/utils";
 
-export type FilterOptions = {
-  dateRange: DateRange;
+// TODO: derive from ProductVariant type?
+export type Variant = {
   style: string;
   size: string;
 };
 
-export type ProductControlsProps = {
-  filters: FilterOptions;
-  onFiltersChange: (newFilters: FilterOptions) => void;
+export type VariantControlsProps = {
+  variant: Variant;
+  onVariantChange: (newVariant: Variant) => void;
   styles: string[];
   sizes: string[];
-  renderNotificationsComponent: (style: string, size: string) => ReactElement;
 };
 
-const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
-export type DateRange = (typeof DateRanges)[number];
-export const isDateRange = (x: any): x is DateRange => DateRanges.includes(x);
-
-export function ProductControls({
-  filters,
-  onFiltersChange: consumerOnFiltersChange,
-  styles,
-  sizes,
-  renderNotificationsComponent,
-}: ProductControlsProps) {
-  const onFiltersChange = (newFilters: FilterOptions) => {
-    consumerOnFiltersChange(newFilters);
-  };
-
+export function VariantControls({ variant, styles, sizes, onVariantChange }: VariantControlsProps) {
   return (
-    <div className="space-y-2">
-      <section className="flex flex-col items-start gap-2 md:flex-row md:items-end md:gap-2">
-        <fieldset>
-          <label htmlFor="style-input" className="text-primary text-sm font-medium">
-            Style
-          </label>
-          <Select
-            value={filters.style}
-            onValueChange={(style) => {
-              onFiltersChange({ ...filters, style });
-            }}
-          >
-            <SelectTrigger className="w-[180px]" id="style-input">
-              <SelectValue placeholder="Select a style..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {styles.map((style) => (
-                  <SelectItem value={style} key={style}>
-                    {style}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </fieldset>
-        <fieldset>
-          <label htmlFor="size-input" className="text-primary text-sm font-medium">
-            Size
-          </label>
-          <Select
-            value={filters.size}
-            onValueChange={(size) => {
-              onFiltersChange({ ...filters, size });
-            }}
-          >
-            <SelectTrigger className="w-[180px]" id="size-input">
-              <SelectValue placeholder="Select a size..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {sizes.map((size) => (
-                  <SelectItem value={size} key={size}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </fieldset>
-        {renderNotificationsComponent(filters.style, filters.size)}
-      </section>
-      <div>
-        <label htmlFor="range-input" className="text-primary text-sm font-medium">
-          Price History
+    <Fragment>
+      <fieldset>
+        <label htmlFor="style-input" className="text-primary text-sm font-medium">
+          Style
         </label>
-        <div id="range-input" aria-label="Select a date range">
-          {DateRanges.map((range, index) => {
-            const isSelected = range === filters.dateRange;
-            const [isFirst, isLast] = [index === 0, index === DateRanges.length - 1];
-            const rounded = isFirst ? "rounded-r-none" : isLast ? "rounded-l-none" : "rounded-none";
+        <Select
+          value={variant.style}
+          onValueChange={(style) => {
+            onVariantChange({ ...variant, style });
+          }}
+        >
+          <SelectTrigger className="w-[180px]" id="style-input">
+            <SelectValue placeholder="Select a style..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {styles.map((style) => (
+                <SelectItem value={style} key={style}>
+                  {style}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </fieldset>
+      <fieldset>
+        <label htmlFor="size-input" className="text-primary text-sm font-medium">
+          Size
+        </label>
+        <Select
+          value={variant.size}
+          onValueChange={(size) => {
+            onVariantChange({ ...variant, size });
+          }}
+        >
+          <SelectTrigger className="w-[180px]" id="size-input">
+            <SelectValue placeholder="Select a size..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {sizes.map((size) => (
+                <SelectItem value={size} key={size}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </fieldset>
+    </Fragment>
+  );
+}
 
-            return (
-              <Button
-                key={range}
-                variant="outline"
-                onClick={() => {
-                  onFiltersChange({ ...filters, dateRange: range });
-                }}
-                className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
-              >
-                {range}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+export type DateRangeControlProps = {
+  dateRange: DateRange;
+  onDateRangeChange: (newDateRange: DateRange) => void;
+};
+
+export function DateRangeControl({ dateRange, onDateRangeChange }: DateRangeControlProps) {
+  return (
+    <div aria-label="Select a date range">
+      {DateRanges.map((range, index) => {
+        const isSelected = range === dateRange;
+        const [isFirst, isLast] = [index === 0, index === DateRanges.length - 1];
+        const rounded = isFirst ? "rounded-r-none" : isLast ? "rounded-l-none" : "rounded-none";
+
+        return (
+          <Button
+            key={range}
+            variant="outline"
+            onClick={() => {
+              if (dateRange !== range) {
+                onDateRangeChange(range);
+              }
+            }}
+            className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
+          >
+            {range}
+          </Button>
+        );
+      })}
     </div>
   );
 }
