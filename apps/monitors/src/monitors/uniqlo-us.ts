@@ -5,10 +5,6 @@ import { Price, Product, ProductVariant } from "@awardrobe/prisma-types";
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
-type ExtendedProductVariant = ProductVariant & {
-  prices: Price[];
-};
-
 export async function handleHeartbeat() {
   const products = await prisma.product.findMany();
   const promises = products.map((product) => pingProduct(product));
@@ -31,42 +27,47 @@ async function pingProduct(product: Product) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
-  const currentTime = new Date();
+  const pricesTimestamp = new Date();
+
+  const productVariants = await prisma.productVariant.findMany({
+    where: { productId: product.id },
+    include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
+  });
 
   await Promise.all(
     details.map(async (productDetails) => {
-      const productVariant: ExtendedProductVariant = await prisma.productVariant.upsert({
-        where: {
-          productId_style_size: {
-            productId: product.id,
-            style: productDetails.color,
-            size: productDetails.size,
-          },
-        },
-        create: {
-          productId: product.id,
-          style: productDetails.color,
-          size: productDetails.size,
-        },
-        update: {},
-        include: {
-          prices: { take: 1, orderBy: { timestamp: "desc" } },
-        },
-      });
+      const existingVariant = productVariants.find(
+        (variant) => variant.style === productDetails.color && variant.size === productDetails.size,
+      );
 
-      await updatePrice(product, productVariant, currentTime, productDetails);
+      const variant =
+        existingVariant ??
+        (await prisma.productVariant.create({
+          data: { productId: product.id, style: productDetails.color, size: productDetails.size },
+        }));
+
+      await updatePrice(
+        product,
+        variant,
+        existingVariant?.prices[0],
+        pricesTimestamp,
+        productDetails,
+      );
     }),
+  );
+
+  console.log(
+    `Updated prices for ${product.productCode} in ${Date.now() - pricesTimestamp.getTime()}ms`,
   );
 }
 
 async function updatePrice(
   product: Product,
-  productVariant: ExtendedProductVariant,
+  productVariant: ProductVariant,
+  oldPrice: Price | undefined,
   currentTime: Date,
   { color, size, priceInCents, stock }: ProductDetails,
 ) {
-  const oldPrice = productVariant.prices[0];
-
   const diffTime = oldPrice ? currentTime.getTime() - oldPrice.timestamp.getTime() : 0;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
@@ -105,7 +106,7 @@ async function updatePrice(
 
 async function handlePriceDrop(
   product: Product,
-  productVariant: ExtendedProductVariant,
+  productVariant: ProductVariant,
   { color, size, priceInCents, stock }: ProductDetails,
 ) {
   const notifications = await prisma.productNotification.findMany({
@@ -158,7 +159,7 @@ async function handlePriceDrop(
 
 async function handleRestock(
   product: Product,
-  productVariant: ExtendedProductVariant,
+  productVariant: ProductVariant,
   { color, size, priceInCents }: ProductDetails,
 ) {
   const notifications = await prisma.productNotification.findMany({
