@@ -1,12 +1,20 @@
 import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
-import { Price, Product, ProductVariant } from "@awardrobe/prisma-types";
+import { Prisma, Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
+const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
+  include: { variants: { include: { prices: { take: 1 } } } },
+});
+type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
+
 export async function handleHeartbeat() {
-  const products = await prisma.product.findMany();
+  const products: ExtendedProduct[] = await prisma.product.findMany({
+    where: { store: { handle: "uniqlo-us" } },
+    include: { variants: { include: { prices: { take: 1, orderBy: { timestamp: "desc" } } } } },
+  });
   const promises = products.map((product) => pingProduct(product));
 
   try {
@@ -16,59 +24,38 @@ export async function handleHeartbeat() {
   }
 }
 
-async function pingProduct(product: Product) {
-  // TODO: handle errors better
-  const { details } = await UniqloUS.getProductDetails(product.productCode).catch((error) => {
-    console.error(`Error fetching product ${product.productCode}: ${error.message}`);
-    return { details: [] };
-  });
+async function pingProduct(product: ExtendedProduct) {
+  const { details } = await UniqloUS.getProductDetails(product.productCode);
 
   if (details.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
-  const pricesTimestamp = new Date();
-
-  const productVariants = await prisma.productVariant.findMany({
-    where: { productId: product.id },
-    include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
-  });
+  const timestamp = new Date();
 
   await Promise.all(
     details.map(async (productDetails) => {
-      const existingVariant = productVariants.find(
-        (variant) => variant.style === productDetails.color && variant.size === productDetails.size,
-      );
-
-      const variant =
-        existingVariant ??
-        (await prisma.productVariant.create({
-          data: { productId: product.id, style: productDetails.color, size: productDetails.size },
-        }));
-
-      await updatePrice(
-        product,
-        variant,
-        existingVariant?.prices[0],
-        pricesTimestamp,
-        productDetails,
-      );
+      await updatePrice(product, timestamp, productDetails);
     }),
-  );
-
-  console.log(
-    `Updated prices for ${product.productCode} in ${Date.now() - pricesTimestamp.getTime()}ms`,
   );
 }
 
 async function updatePrice(
-  product: Product,
-  productVariant: ProductVariant,
-  oldPrice: Price | undefined,
-  currentTime: Date,
+  product: ExtendedProduct,
+  timestamp: Date,
   { color, size, priceInCents, stock }: ProductDetails,
 ) {
-  const diffTime = oldPrice ? currentTime.getTime() - oldPrice.timestamp.getTime() : 0;
+  const existingVariant = product.variants.find(
+    (variant) => variant.style === color && variant.size === size,
+  );
+  const variant =
+    existingVariant ??
+    (await prisma.productVariant.create({
+      data: { productId: product.id, style: color, size },
+    }));
+  const oldPrice = existingVariant?.prices[0];
+
+  const diffTime = oldPrice ? timestamp.getTime() - oldPrice.timestamp.getTime() : 0;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
 
@@ -82,9 +69,9 @@ async function updatePrice(
 
   await prisma.price.create({
     data: {
-      timestamp: currentTime,
+      timestamp,
       productVariant: {
-        connect: { id: productVariant.id },
+        connect: { id: variant.id },
       },
       priceInCents,
       inStock: stock > 0,
@@ -94,13 +81,13 @@ async function updatePrice(
   const hasPriceDropped = diffPrice < 0;
   if (hasPriceDropped) {
     console.log(`Price dropped for ${product.productCode} ${color} ${size}`);
-    await handlePriceDrop(product, productVariant, { color, size, priceInCents, stock });
+    await handlePriceDrop(product, variant, { color, size, priceInCents, stock });
   }
 
   const hasRestocked = hasStockChanged && stock > 0;
   if (hasRestocked) {
     console.log(`Restock for ${product.productCode} ${color} ${size}`);
-    await handleRestock(product, productVariant, { color, size, priceInCents, stock });
+    await handleRestock(product, variant, { color, size, priceInCents, stock });
   }
 }
 
