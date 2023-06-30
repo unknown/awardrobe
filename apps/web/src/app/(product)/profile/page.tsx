@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
+import { NotificationList } from "@/components/NotificationsList";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
@@ -34,21 +34,7 @@ export default async function ProfilePage() {
       </section>
       <section className="space-y-2">
         <h2 className="text-xl font-bold">Notifications</h2>
-        <div className="space-y-3">
-          {notifications.map(({ id, productId, productVariant }) => {
-            const { style, size } = productVariant;
-            return (
-              <div key={id}>
-                <Link href={`/product/${productId}?style=${style}&size=${size}`}>
-                  <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
-                  <p className="text-muted-foreground text-sm">
-                    {style} - {size}
-                  </p>
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+        <NotificationList initialNotifications={notifications} />
       </section>
     </section>
   );
