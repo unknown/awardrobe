@@ -176,7 +176,7 @@ function ChartComponent({ prices, width, height, margin = defaultMargin }: Chart
           />
           <AxisLeft
             scale={priceScale}
-            tickLabelProps={{ fontSize: 12 }}
+            tickLabelProps={{ className: "font-sans text-xs" }}
             tickFormat={(value) => formatCurrency(value.valueOf())}
             hideTicks
             hideAxisLine
@@ -184,7 +184,7 @@ function ChartComponent({ prices, width, height, margin = defaultMargin }: Chart
           <AxisBottom
             top={innerHeight}
             scale={timeScale}
-            tickLabelProps={{ fontSize: 12 }}
+            tickLabelProps={{ className: "font-sans text-xs" }}
             numTicks={Math.min(10, innerWidth / 80)}
             hideTicks
             hideAxisLine
