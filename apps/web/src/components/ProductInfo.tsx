@@ -67,7 +67,7 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
     }
   };
 
-  const NotificationComponent = () => {
+  const NotificationButton = () => {
     const selectedVariant = product.variants.find(
       (variant) => variant.style === options.style && variant.size === options.size,
     );
@@ -110,43 +110,56 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
     );
   };
 
-  // TODO: handle invalid product controls state when `prices` is invalidated
   return (
     <Fragment>
-      <section className="container space-y-3 py-6">
-        <h1 className="text-3xl font-bold">{product.name}</h1>
-        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end">
-          <VariantControls
-            variant={options}
-            styles={styles}
-            sizes={sizes}
-            onVariantChange={(newVariant) => {
-              const newOptions = { ...options, ...newVariant };
-              setOptions(newOptions);
-              loadPrices(newOptions);
+      <section className="container py-12">
+        <div className="flex flex-col gap-2">
+          <p className="text-muted-foreground text-sm">Uniqlo US</p>
+          <h1 className="text-3xl font-medium">{product.name}</h1>
+          <div className="grid grid-cols-[max-content_1fr] items-center gap-3 md:flex">
+            <VariantControls
+              variant={options}
+              styles={styles}
+              sizes={sizes}
+              onVariantChange={(newVariant) => {
+                const newOptions = { ...options, ...newVariant };
+                setOptions(newOptions);
+                loadPrices(newOptions);
 
-              const params = new URLSearchParams({
-                ...Object.fromEntries(searchParams.entries()),
-                ...newOptions,
-              });
-              router.replace(`${pathname}?${params.toString()}`);
-            }}
-          />
-          <NotificationComponent />
-        </div>
-        <a
-          href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <div className="text-md inline-block rounded-full bg-sky-500 px-4 py-2 font-medium text-white">
-            {getPillText()}
+                const params = new URLSearchParams({
+                  ...Object.fromEntries(searchParams.entries()),
+                  ...newOptions,
+                });
+                router.replace(`${pathname}?${params.toString()}`);
+              }}
+            />
+            <div className="col-span-2">
+              <NotificationButton />
+            </div>
           </div>
-        </a>
+        </div>
+        <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
+          <a
+            href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {getPillText()}
+          </a>
+        </div>
       </section>
       <section className="container space-y-2">
-        <h2 className="text-xl font-bold">Price History</h2>
+        <div className="flex flex-col justify-between sm:flex-row">
+          <h2 className="text-xl font-medium">Price History</h2>
+          <div className="flex flex-row flex-wrap gap-4 text-sm">
+            <span className="flex items-center gap-2">
+              <div className="h-3 w-3 border border-[#398739] bg-[#edffea]" /> In Stock
+            </span>
+            <span className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-[#2b8bad]" /> Uniqlo US
+            </span>
+          </div>
+        </div>
         <DateRangeControl
           dateRange={options.dateRange}
           onDateRangeChange={(newDateRange) => {

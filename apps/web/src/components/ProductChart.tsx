@@ -38,7 +38,7 @@ const dateAccessor = (d: ChartUnit) => new Date(d.date);
 const priceAccessor = (d: ChartUnit) => d.price;
 const stockAccessor = (d: ChartUnit) => d.stock;
 
-const defaultMargin = { top: 40, right: 30, bottom: 50, left: 50 };
+const defaultMargin = { top: 10, right: 0, bottom: 35, left: 60 };
 
 export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
   if (consumerPrices === null) {
@@ -61,7 +61,7 @@ export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
 
     return (
       <div className="relative flex h-full w-full items-center justify-center">
-        <svg className="absolute -z-10 h-full w-full overflow-visible p-8">
+        <svg className="absolute -z-10 h-full w-full overflow-visible">
           <g {...lineProps}>
             <line x1="0%" x2="100%" y1="0%" y2="0%" />
             <line x1="0%" x2="100%" y1="10%" y2="10%" />
@@ -91,7 +91,7 @@ export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
           </g>
         </svg>
         <div className="bg-gradient-radial from-background to-transparent p-16 text-center">
-          <h2 className="text-2xl font-medium">No price history</h2>
+          <h2 className="text-xl font-medium">No price history</h2>
           <p className="text-muted-foreground">
             Hang tight, we&apos;ll fetch the prices for you soon.
           </p>

@@ -28,54 +28,50 @@ export type VariantControlsProps = {
 export function VariantControls({ variant, styles, sizes, onVariantChange }: VariantControlsProps) {
   return (
     <Fragment>
-      <fieldset>
-        <label htmlFor="style-input" className="text-primary text-sm font-medium">
-          Style
-        </label>
-        <Select
-          value={variant.style}
-          onValueChange={(style) => {
-            onVariantChange({ ...variant, style });
-          }}
-        >
-          <SelectTrigger className="w-[180px]" id="style-input">
-            <SelectValue placeholder="Select a style..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {styles.map((style) => (
-                <SelectItem value={style} key={style}>
-                  {style}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </fieldset>
-      <fieldset>
-        <label htmlFor="size-input" className="text-primary text-sm font-medium">
-          Size
-        </label>
-        <Select
-          value={variant.size}
-          onValueChange={(size) => {
-            onVariantChange({ ...variant, size });
-          }}
-        >
-          <SelectTrigger className="w-[180px]" id="size-input">
-            <SelectValue placeholder="Select a size..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {sizes.map((size) => (
-                <SelectItem value={size} key={size}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </fieldset>
+      <label htmlFor="style-input" className="text-primary text-sm font-medium">
+        Style
+      </label>
+      <Select
+        value={variant.style}
+        onValueChange={(style) => {
+          onVariantChange({ ...variant, style });
+        }}
+      >
+        <SelectTrigger className="w-[180px]" id="style-input">
+          <SelectValue placeholder="Select a style..." />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {styles.map((style) => (
+              <SelectItem value={style} key={style}>
+                {style}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      <label htmlFor="size-input" className="text-primary text-sm font-medium">
+        Size
+      </label>
+      <Select
+        value={variant.size}
+        onValueChange={(size) => {
+          onVariantChange({ ...variant, size });
+        }}
+      >
+        <SelectTrigger className="w-[180px]" id="size-input">
+          <SelectValue placeholder="Select a size..." />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {sizes.map((size) => (
+              <SelectItem value={size} key={size}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </Fragment>
   );
 }
