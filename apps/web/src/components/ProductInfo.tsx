@@ -112,7 +112,7 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
 
   return (
     <Fragment>
-      <section className="container py-12">
+      <section className="container max-w-4xl py-6">
         <div className="flex flex-col gap-2">
           <p className="text-muted-foreground text-sm">Uniqlo US</p>
           <h1 className="text-3xl font-medium">{product.name}</h1>
@@ -148,9 +148,17 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
           </a>
         </div>
       </section>
-      <section className="container space-y-2">
-        <div className="flex flex-col justify-between sm:flex-row">
-          <h2 className="text-xl font-medium">Price History</h2>
+      <section className="container max-w-4xl space-y-2 py-6">
+        <h2 className="text-xl font-medium">Price History</h2>
+        <div className="flex flex-col justify-between gap-2 pb-2 sm:flex-row">
+          <DateRangeControl
+            dateRange={options.dateRange}
+            onDateRangeChange={(newDateRange) => {
+              const newOptions = { ...options, dateRange: newDateRange };
+              setOptions(newOptions);
+              loadPrices(newOptions);
+            }}
+          />
           <div className="flex flex-row flex-wrap gap-4 text-sm">
             <span className="flex items-center gap-2">
               <div className="h-3 w-3 border border-[#398739] bg-[#edffea]" /> In Stock
@@ -160,21 +168,13 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
             </span>
           </div>
         </div>
-        <DateRangeControl
-          dateRange={options.dateRange}
-          onDateRangeChange={(newDateRange) => {
-            const newOptions = { ...options, dateRange: newDateRange };
-            setOptions(newOptions);
-            loadPrices(newOptions);
-          }}
-        />
         {prices?.length === 1000 ? (
           <div className="rounded-md border border-yellow-300 bg-yellow-100 p-4 text-yellow-900">
             Limited to showing only the first 1000 data points. Try applying filters to decrease the
             number of data points.
           </div>
         ) : null}
-        <div className="h-[20rem] sm:h-[24rem] md:h-[32rem]">
+        <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
           <ProductChart prices={prices} />
         </div>
       </section>

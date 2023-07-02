@@ -5,7 +5,7 @@ export default async function ProductsPage() {
   const products = await prisma.product.findMany();
 
   return (
-    <section className="container space-y-2">
+    <section className="container max-w-4xl space-y-2">
       <h1 className="text-xl font-bold">Products</h1>
       <ProductList initialProducts={products} />
     </section>

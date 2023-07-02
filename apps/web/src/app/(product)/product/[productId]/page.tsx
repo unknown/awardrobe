@@ -26,7 +26,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!product) {
     return (
-      <section className="container space-y-2">
+      <section className="container max-w-4xl space-y-2">
         <h1 className="text-2xl font-medium">Product not found</h1>
         <p>The product you&apos;re looking couldn&apos;t be found</p>
         <div>
