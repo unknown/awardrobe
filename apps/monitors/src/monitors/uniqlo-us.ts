@@ -1,5 +1,7 @@
+import { render } from "@react-email/render";
+
 import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
-import { PriceNotificationEmail, render, StockNotificationEmail } from "@awardrobe/emails";
+import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 import { Prisma, Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import prisma from "../utils/database";

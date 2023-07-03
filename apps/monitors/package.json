@@ -13,6 +13,7 @@
     "@awardrobe/emails": "*",
     "@awardrobe/prisma-types": "*",
     "@awardrobe/tsconfig": "*",
+    "@react-email/render": "^0.0.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "node-cron": "^3.0.2",
