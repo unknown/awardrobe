@@ -7,10 +7,17 @@ import { Prisma, Product, ProductVariant } from "@awardrobe/prisma-types";
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
+const extendedVariant = Prisma.validator<Prisma.ProductVariantArgs>()({
+  include: { prices: { take: 1 } },
+});
+type ExtendedVariant = Prisma.ProductVariantGetPayload<typeof extendedVariant>;
+
 const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: { include: { prices: { take: 1 } } } },
+  include: { variants: extendedVariant },
 });
 type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
+
+type PriceWithVariant = ProductPrice & { variant: ExtendedVariant };
 
 export async function handleHeartbeat() {
   const products: ExtendedProduct[] = await prisma.product.findMany({
@@ -28,62 +35,76 @@ export async function handleHeartbeat() {
 
 async function pingProduct(product: ExtendedProduct) {
   const { prices } = await UniqloUS.getProductDetails(product.productCode);
-
   if (prices.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
   const timestamp = new Date();
 
+  const pricesWithVariants: PriceWithVariant[] = (
+    await Promise.all(
+      prices.map(async (price) => {
+        const existingVariant = product.variants.find(
+          (variant) => variant.style === price.style && variant.size === price.size,
+        );
+        return {
+          ...price,
+          variant: existingVariant ?? {
+            ...(await prisma.productVariant.create({
+              data: { productId: product.id, style: price.style, size: price.size },
+            })),
+            prices: [],
+          },
+        };
+      }),
+    )
+  ).filter((price) => shouldUpdatePrice(price, timestamp));
+
+  await prisma.price.createMany({
+    data: pricesWithVariants.map(({ variant, priceInCents, stock }) => ({
+      timestamp,
+      productVariantId: variant.id,
+      priceInCents,
+      inStock: stock > 0,
+    })),
+  });
+
   await Promise.all(
-    prices.map(async (price) => {
-      await updatePrice(product, timestamp, price);
+    pricesWithVariants.map(async (price) => {
+      await handleNotifications(product, price);
     }),
   );
 }
 
-async function updatePrice(product: ExtendedProduct, timestamp: Date, price: ProductPrice) {
-  const { style, size, priceInCents, stock } = price;
+function shouldUpdatePrice({ priceInCents, stock, variant }: PriceWithVariant, timestamp: Date) {
+  const oldPrice = variant.prices[0];
+  if (!oldPrice) {
+    return true;
+  }
 
-  const existingVariant = product.variants.find(
-    (variant) => variant.style === style && variant.size === size,
-  );
-  const variant =
-    existingVariant ??
-    (await prisma.productVariant.create({
-      data: { productId: product.id, style, size },
-    }));
-  const oldPrice = existingVariant?.prices[0];
-
-  const diffTime = oldPrice ? timestamp.getTime() - oldPrice.timestamp.getTime() : 0;
+  const diffTime = timestamp.getTime() - oldPrice.timestamp.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
+  const diffPrice = priceInCents - oldPrice.priceInCents;
 
-  // to avoid the prices table blowing up in size, prices are sometimes skipped from being inserted into the table
   const isStale = diffDays >= 1;
   const hasPriceChanged = diffPrice !== 0;
   const hasStockChanged = oldPrice ? stock > 0 !== oldPrice.inStock : false;
-  if (oldPrice && !isStale && !hasPriceChanged && !hasStockChanged) {
-    return;
-  }
 
-  await prisma.price.create({
-    data: {
-      timestamp,
-      productVariant: {
-        connect: { id: variant.id },
-      },
-      priceInCents,
-      inStock: stock > 0,
-    },
-  });
+  return isStale || hasPriceChanged || hasStockChanged;
+}
 
+async function handleNotifications(product: ExtendedProduct, price: PriceWithVariant) {
+  const { style, size, priceInCents, stock, variant } = price;
+  const oldPrice = variant.prices[0];
+
+  const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
   const hasPriceDropped = diffPrice < 0;
   if (hasPriceDropped) {
     console.log(`Price dropped for ${product.productCode} ${style} ${size}`);
     await handlePriceDrop(product, variant, price);
   }
 
+  const hasStockChanged = oldPrice ? stock > 0 !== oldPrice.inStock : false;
   const hasRestocked = hasStockChanged && stock > 0;
   if (hasRestocked) {
     console.log(`Restock for ${product.productCode} ${style} ${size}`);
