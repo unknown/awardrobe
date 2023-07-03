@@ -41,3 +41,34 @@ export const detailsSchema = z.object({
     ),
   }),
 });
+
+// contains general product details
+export const productsSchema = z.object({
+  result: z.object({
+    items: z.array(
+      z.object({
+        name: z.string(),
+        productId: z.string(),
+        colors: z.array(
+          z.object({
+            code: z.string(),
+            displayCode: z.string(),
+            name: z.string(),
+          }),
+        ),
+        sizes: z.array(
+          z.object({
+            code: z.string(),
+            displayCode: z.string(),
+            name: z.string(),
+          }),
+        ),
+      }),
+    ),
+    pagination: z.object({
+      total: z.number(),
+      offset: z.number(),
+      count: z.number(),
+    }),
+  }),
+});

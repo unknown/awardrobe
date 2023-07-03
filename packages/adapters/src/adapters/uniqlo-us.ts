@@ -1,6 +1,41 @@
 import { dollarsToCents, toTitleCase } from "../utils/formatter";
 import { ProductPrice } from "../utils/types";
-import { detailsSchema, l2sSchema } from "./schemas";
+import { detailsSchema, l2sSchema, productsSchema } from "./schemas";
+
+const colorsStylizer = (color: { code: string; name: string; displayCode: string }) => {
+  return {
+    ...color,
+    stylizedName: toTitleCase(`${color.displayCode} ${color.name}`),
+  };
+};
+const sizeStylizer = (size: { code: string; name: string; displayCode: string }) => {
+  return {
+    ...size,
+    stylizedName: size.name,
+  };
+};
+
+export async function getProducts(offset: number = 0, limit: number = 36) {
+  const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products?offset=${offset}&limit=${limit}&httpFailure=true`;
+  const productsResponse = await fetch(productsEndpoint);
+  const { items, pagination } = productsSchema.parse(await productsResponse.json()).result;
+
+  const products = items.map((item) => {
+    const styles = item.colors.map((color) => colorsStylizer(color));
+    const sizes = item.sizes.map((size) => sizeStylizer(size));
+    return {
+      name: item.name,
+      productCode: item.productId,
+      styles,
+      sizes,
+    };
+  });
+
+  return {
+    products,
+    pagination,
+  };
+}
 
 export async function getProductDetails(productCode: string) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
@@ -13,14 +48,8 @@ export async function getProductDetails(productCode: string) {
   const { stocks, prices, l2s } = l2sSchema.parse(await l2sResponse.json()).result;
   const detailsResult = detailsSchema.parse(await detailsResonse.json()).result;
 
-  const styles = detailsResult.colors.map((color) => ({
-    ...color,
-    stylizedName: toTitleCase(`${color.displayCode} ${color.name}`),
-  }));
-  const sizes = detailsResult.sizes.map((size) => ({
-    ...size,
-    stylizedName: size.name,
-  }));
+  const styles = detailsResult.colors.map((color) => colorsStylizer(color));
+  const sizes = detailsResult.sizes.map((size) => sizeStylizer(size));
 
   const productPrices: ProductPrice[] = [];
 
