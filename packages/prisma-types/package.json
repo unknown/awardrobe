@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
-    "@prisma/client": "^4.15.0"
+    "@prisma/client": "^4.16.2"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
