@@ -21,7 +21,7 @@
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
     "@types/node": "^20.3.3",
-    "prisma": "^4.15.0",
+    "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
     "tsup": "^7.1.0",
     "typescript": "^5.1.6"
