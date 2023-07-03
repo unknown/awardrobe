@@ -29,7 +29,7 @@ async function main() {
 }
 
 async function addProduct(storeId: string, productCode: string) {
-  const { name, details } = await UniqloUS.getProductDetails(productCode);
+  const { name, styles, sizes } = await UniqloUS.getProductDetails(productCode);
 
   await prisma.product.upsert({
     where: {
@@ -45,10 +45,12 @@ async function addProduct(storeId: string, productCode: string) {
       storeId,
       variants: {
         createMany: {
-          data: details.map(({ color, size }) => ({
-            style: color,
-            size,
-          })),
+          data: styles.flatMap((style) =>
+            sizes.map((size) => ({
+              style: style.stylizedName,
+              size: size.stylizedName,
+            })),
+          ),
         },
       },
     },
