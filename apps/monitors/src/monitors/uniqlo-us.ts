@@ -1,6 +1,6 @@
 import { render } from "@react-email/render";
 
-import { ProductDetails, UniqloUS } from "@awardrobe/adapters";
+import { ProductPrice, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 import { Prisma, Product, ProductVariant } from "@awardrobe/prisma-types";
 
@@ -27,33 +27,31 @@ export async function handleHeartbeat() {
 }
 
 async function pingProduct(product: ExtendedProduct) {
-  const { details } = await UniqloUS.getProductDetails(product.productCode);
+  const { prices } = await UniqloUS.getProductDetails(product.productCode);
 
-  if (details.length === 0) {
+  if (prices.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
   const timestamp = new Date();
 
   await Promise.all(
-    details.map(async (productDetails) => {
-      await updatePrice(product, timestamp, productDetails);
+    prices.map(async (price) => {
+      await updatePrice(product, timestamp, price);
     }),
   );
 }
 
-async function updatePrice(
-  product: ExtendedProduct,
-  timestamp: Date,
-  { color, size, priceInCents, stock }: ProductDetails,
-) {
+async function updatePrice(product: ExtendedProduct, timestamp: Date, price: ProductPrice) {
+  const { style, size, priceInCents, stock } = price;
+
   const existingVariant = product.variants.find(
-    (variant) => variant.style === color && variant.size === size,
+    (variant) => variant.style === style && variant.size === size,
   );
   const variant =
     existingVariant ??
     (await prisma.productVariant.create({
-      data: { productId: product.id, style: color, size },
+      data: { productId: product.id, style, size },
     }));
   const oldPrice = existingVariant?.prices[0];
 
@@ -82,21 +80,21 @@ async function updatePrice(
 
   const hasPriceDropped = diffPrice < 0;
   if (hasPriceDropped) {
-    console.log(`Price dropped for ${product.productCode} ${color} ${size}`);
-    await handlePriceDrop(product, variant, { color, size, priceInCents, stock });
+    console.log(`Price dropped for ${product.productCode} ${style} ${size}`);
+    await handlePriceDrop(product, variant, price);
   }
 
   const hasRestocked = hasStockChanged && stock > 0;
   if (hasRestocked) {
-    console.log(`Restock for ${product.productCode} ${color} ${size}`);
-    await handleRestock(product, variant, { color, size, priceInCents, stock });
+    console.log(`Restock for ${product.productCode} ${style} ${size}`);
+    await handleRestock(product, variant, price);
   }
 }
 
 async function handlePriceDrop(
   product: Product,
   productVariant: ProductVariant,
-  { color, size, priceInCents, stock }: ProductDetails,
+  { style, size, priceInCents, stock }: ProductPrice,
 ) {
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -125,9 +123,9 @@ async function handlePriceDrop(
       const emailHtml = render(
         PriceNotificationEmail({
           productName: product.name,
-          style: color,
+          style,
           size,
-          priceInCents: priceInCents,
+          priceInCents,
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );
@@ -140,7 +138,7 @@ async function handlePriceDrop(
 
       emailTransporter.sendMail(options);
       console.log(
-        `${notification.user.email} has been notified of a price drop for ${product.name} (${color} - ${size})`,
+        `${notification.user.email} has been notified of a price drop for ${product.name} (${style} - ${size})`,
       );
     }),
   );
@@ -149,7 +147,7 @@ async function handlePriceDrop(
 async function handleRestock(
   product: Product,
   productVariant: ProductVariant,
-  { color, size, priceInCents }: ProductDetails,
+  { style, size, priceInCents }: ProductPrice,
 ) {
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -177,7 +175,7 @@ async function handleRestock(
       const emailHtml = render(
         StockNotificationEmail({
           productName: product.name,
-          style: color,
+          style,
           size,
           priceInCents: priceInCents,
           productUrl: `https://getawardrobe.com/product/${product.id}`,
@@ -192,7 +190,7 @@ async function handleRestock(
 
       emailTransporter.sendMail(options);
       console.log(
-        `${notification.user.email} has been notified of a restock for ${product.name} (${color} - ${size})`,
+        `${notification.user.email} has been notified of a restock for ${product.name} (${style} - ${size})`,
       );
     }),
   );

@@ -80,7 +80,7 @@ async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductR
     );
   }
 
-  const { name, details } = await UniqloUS.getProductDetails(productCode);
+  const { name, styles, sizes } = await UniqloUS.getProductDetails(productCode);
 
   const store = await prisma.store.findUniqueOrThrow({
     where: {
@@ -95,10 +95,12 @@ async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductR
       storeId: store.id,
       variants: {
         createMany: {
-          data: details.map(({ color, size }) => ({
-            style: color,
-            size,
-          })),
+          data: styles.flatMap((style) =>
+            sizes.map((size) => ({
+              style: style.stylizedName,
+              size: size.stylizedName,
+            })),
+          ),
         },
       },
     },
