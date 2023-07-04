@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 
 import { ProductPrice, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import { Prisma, Product, ProductVariant } from "@awardrobe/prisma-types";
+import { Prisma } from "@awardrobe/prisma-types";
 
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
@@ -121,7 +121,7 @@ function getFlags({ variant, ...newPrice }: PriceWithVariant, timestamp: Date) {
 }
 
 async function handlePriceDrop(
-  product: Product,
+  product: ExtendedProduct,
   { variant, style, size, priceInCents, stock }: PriceWithVariant,
 ) {
   const notifications = await prisma.productNotification.findMany({
@@ -173,7 +173,7 @@ async function handlePriceDrop(
 }
 
 async function handleRestock(
-  product: Product,
+  product: ExtendedProduct,
   { variant, style, size, priceInCents }: PriceWithVariant,
 ) {
   const notifications = await prisma.productNotification.findMany({
