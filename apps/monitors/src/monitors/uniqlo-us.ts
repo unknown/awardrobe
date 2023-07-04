@@ -52,81 +52,77 @@ async function pingProduct(product: ExtendedProduct) {
 
   const timestamp = new Date();
 
-  const pricesWithVariants: PriceWithVariant[] = (
-    await Promise.all(
-      prices.map(async (price) => {
-        const existingVariant = product.variants.find(
-          (variant) => variant.style === price.style && variant.size === price.size,
-        );
-        return {
-          ...price,
-          variant: existingVariant ?? {
-            ...(await prisma.productVariant.create({
-              data: { productId: product.id, style: price.style, size: price.size },
-            })),
-            prices: [],
-          },
-        };
-      }),
-    )
-  ).filter((price) => shouldUpdatePrice(price, timestamp));
+  const pricesWithVariants: PriceWithVariant[] = await Promise.all(
+    prices.map(async (price) => {
+      const existingVariant = product.variants.find(
+        (variant) => variant.style === price.style && variant.size === price.size,
+      );
+      return {
+        ...price,
+        variant: existingVariant ?? {
+          ...(await prisma.productVariant.create({
+            data: { productId: product.id, style: price.style, size: price.size },
+          })),
+          prices: [],
+        },
+      };
+    }),
+  );
 
   await prisma.price.createMany({
-    data: pricesWithVariants.map(({ variant, priceInCents, stock }) => ({
-      timestamp,
-      productVariantId: variant.id,
-      priceInCents,
-      inStock: stock > 0,
-    })),
+    data: pricesWithVariants
+      .filter((price) => getFlags(price, timestamp).shouldUpdatePrice)
+      .map(({ variant, priceInCents, stock }) => ({
+        timestamp,
+        productVariantId: variant.id,
+        priceInCents,
+        inStock: stock > 0,
+      })),
   });
 
   await Promise.all(
-    pricesWithVariants.map(async (price) => {
-      await handleNotifications(product, price);
-    }),
+    pricesWithVariants
+      .filter((price) => getFlags(price, timestamp).hasPriceDropped)
+      .map((price) => handlePriceDrop(product, price)),
+  );
+
+  await Promise.all(
+    pricesWithVariants
+      .filter((price) => getFlags(price, timestamp).hasRestocked)
+      .map((price) => handleRestock(product, price)),
   );
 }
 
-function shouldUpdatePrice({ priceInCents, stock, variant }: PriceWithVariant, timestamp: Date) {
+function getFlags({ variant, ...newPrice }: PriceWithVariant, timestamp: Date) {
   const oldPrice = variant.prices[0];
   if (!oldPrice) {
-    return true;
+    return {
+      shouldUpdatePrice: true,
+      hasPriceDropped: false,
+      hasRestocked: false,
+    };
   }
 
   const diffTime = timestamp.getTime() - oldPrice.timestamp.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffPrice = priceInCents - oldPrice.priceInCents;
-
   const isStale = diffDays >= 1;
-  const hasPriceChanged = diffPrice !== 0;
-  const hasStockChanged = oldPrice ? stock > 0 !== oldPrice.inStock : false;
 
-  return isStale || hasPriceChanged || hasStockChanged;
-}
+  const hasPriceChanged = newPrice.priceInCents !== oldPrice.priceInCents;
+  const hasPriceDropped = newPrice.priceInCents < oldPrice.priceInCents;
 
-async function handleNotifications(product: ExtendedProduct, price: PriceWithVariant) {
-  const { style, size, priceInCents, stock, variant } = price;
-  const oldPrice = variant.prices[0];
+  const hasStockChanged = newPrice.stock > 0 !== oldPrice.inStock;
+  const hasRestocked = newPrice.stock > 0 && oldPrice.inStock === false;
 
-  const diffPrice = oldPrice ? priceInCents - oldPrice.priceInCents : 0;
-  const hasPriceDropped = diffPrice < 0;
-  if (hasPriceDropped) {
-    console.log(`Price dropped for ${product.productCode} ${style} ${size}`);
-    await handlePriceDrop(product, variant, price);
-  }
-
-  const hasStockChanged = oldPrice ? stock > 0 !== oldPrice.inStock : false;
-  const hasRestocked = hasStockChanged && stock > 0;
-  if (hasRestocked) {
-    console.log(`Restock for ${product.productCode} ${style} ${size}`);
-    await handleRestock(product, variant, price);
-  }
+  return {
+    shouldUpdatePrice: isStale || hasPriceChanged || hasStockChanged,
+    hasPriceDropped,
+    hasRestocked,
+  };
 }
 
 async function handlePriceDrop(
   product: Product,
-  productVariant: ProductVariant,
-  { style, size, priceInCents, stock }: ProductPrice,
+  { variant, style, size, priceInCents, stock }: PriceWithVariant,
 ) {
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -141,7 +137,7 @@ async function handlePriceDrop(
           },
         },
       ],
-      productVariant: { id: productVariant.id },
+      productVariant: { id: variant.id },
     },
     include: {
       user: true,
@@ -178,8 +174,7 @@ async function handlePriceDrop(
 
 async function handleRestock(
   product: Product,
-  productVariant: ProductVariant,
-  { style, size, priceInCents }: ProductPrice,
+  { variant, style, size, priceInCents }: PriceWithVariant,
 ) {
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -193,7 +188,7 @@ async function handleRestock(
           },
         },
       ],
-      productVariant: { id: productVariant.id },
+      productVariant: { id: variant.id },
     },
     include: {
       user: true,
