@@ -9,7 +9,7 @@ import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
 const extendedVariant = Prisma.validator<Prisma.ProductVariantArgs>()({
-  include: { prices: { take: 1 } },
+  include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
 });
 type ExtendedVariant = Prisma.ProductVariantGetPayload<typeof extendedVariant>;
 
@@ -124,6 +124,8 @@ async function handlePriceDrop(
   product: ExtendedProduct,
   { variant, style, size, priceInCents, stock }: PriceWithVariant,
 ) {
+  console.log(`Price drop for ${product.name} - ${product.productCode} (${style} ${size})`);
+
   const notifications = await prisma.productNotification.findMany({
     where: {
       mustBeInStock: stock > 0 ? undefined : false,
@@ -147,7 +149,6 @@ async function handlePriceDrop(
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-
       const emailHtml = render(
         PriceNotificationEmail({
           productName: product.name,
@@ -157,17 +158,11 @@ async function handlePriceDrop(
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );
-
-      const options = {
+      emailTransporter.sendMail({
         to: notification.user.email,
         subject: "Price drop",
         html: emailHtml,
-      };
-
-      emailTransporter.sendMail(options);
-      console.log(
-        `${notification.user.email} has been notified of a price drop for ${product.name} (${style} - ${size})`,
-      );
+      });
     }),
   );
 }
@@ -176,6 +171,8 @@ async function handleRestock(
   product: ExtendedProduct,
   { variant, style, size, priceInCents }: PriceWithVariant,
 ) {
+  console.log(`Restock for ${product.name} - ${product.productCode} (${style} ${size})`);
+
   const notifications = await prisma.productNotification.findMany({
     where: {
       OR: [
@@ -198,7 +195,6 @@ async function handleRestock(
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-
       const emailHtml = render(
         StockNotificationEmail({
           productName: product.name,
@@ -208,17 +204,11 @@ async function handleRestock(
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );
-
-      const options = {
+      emailTransporter.sendMail({
         to: notification.user.email,
         subject: "Item back in stock",
         html: emailHtml,
-      };
-
-      emailTransporter.sendMail(options);
-      console.log(
-        `${notification.user.email} has been notified of a restock for ${product.name} (${style} - ${size})`,
-      );
+      });
     }),
   );
 }
