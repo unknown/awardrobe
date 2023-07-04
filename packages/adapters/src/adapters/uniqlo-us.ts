@@ -1,3 +1,5 @@
+import axios, { AxiosProxyConfig } from "axios";
+
 import { dollarsToCents, toTitleCase } from "../utils/formatter";
 import { ProductPrice } from "../utils/types";
 import { detailsSchema, l2sSchema, productsSchema } from "./schemas";
@@ -15,10 +17,25 @@ const sizeStylizer = (size: { code: string; name: string; displayCode: string })
   };
 };
 
-export async function getProducts(offset: number = 0, limit: number = 36) {
+const proxy: AxiosProxyConfig = {
+  protocol: "http",
+  host: "p.webshare.io",
+  port: 80,
+  auth: {
+    username: process.env.WEBSHARE_USERNAME!,
+    password: process.env.WEBSHARE_PASSWORD!,
+  },
+};
+
+export async function getProducts(offset: number = 0, limit: number = 36, useProxy = false) {
   const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products?offset=${offset}&limit=${limit}&httpFailure=true`;
-  const productsResponse = await fetch(productsEndpoint);
-  const { items, pagination } = productsSchema.parse(await productsResponse.json()).result;
+  const productsResponse = await axios.get(productsEndpoint, useProxy ? { proxy } : undefined);
+
+  if (productsResponse.status !== 200) {
+    throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
+  }
+
+  const { items, pagination } = productsSchema.parse(productsResponse.data).result;
 
   const products = items.map((item) => {
     const styles = item.colors.map((color) => colorsStylizer(color));
@@ -37,16 +54,22 @@ export async function getProducts(offset: number = 0, limit: number = 36) {
   };
 }
 
-export async function getProductDetails(productCode: string) {
+export async function getProductDetails(productCode: string, useProxy = false) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const [l2sResponse, detailsResonse] = await Promise.all([
-    fetch(l2sEndpoint),
-    fetch(detailsEndpoint),
+  const [l2sResponse, detailsResponse] = await axios.all([
+    axios.get(l2sEndpoint, useProxy ? { proxy } : undefined),
+    axios.get(detailsEndpoint, useProxy ? { proxy } : undefined),
   ]);
 
-  const { stocks, prices, l2s } = l2sSchema.parse(await l2sResponse.json()).result;
-  const detailsResult = detailsSchema.parse(await detailsResonse.json()).result;
+  if (l2sResponse?.status !== 200 || detailsResponse?.status !== 200) {
+    throw new Error(
+      `Failed to get product details for ${productCode}. Status codes: ${l2sResponse?.status} and ${detailsResponse?.status}`,
+    );
+  }
+
+  const { stocks, prices, l2s } = l2sSchema.parse(l2sResponse.data).result;
+  const detailsResult = detailsSchema.parse(detailsResponse.data).result;
 
   const styles = detailsResult.colors.map((color) => colorsStylizer(color));
   const sizes = detailsResult.sizes.map((size) => sizeStylizer(size));

@@ -12,12 +12,12 @@ async function main() {
   });
 
   const limit = 100;
-  let total = 100;
 
-  for (let offset = 0; offset < total; offset += limit) {
+  for (let [offset, total] = [0, 100]; offset < total; offset += limit) {
     const result = await UniqloUS.getProducts(offset, limit);
 
-    const { products } = result;
+    const { products, pagination } = result;
+    total = pagination.total;
 
     for (const product of products) {
       const { productCode, name, styles, sizes } = product;

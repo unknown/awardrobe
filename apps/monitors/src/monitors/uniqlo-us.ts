@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import pLimit from "p-limit";
 
 import { ProductPrice, UniqloUS } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
@@ -24,17 +25,27 @@ export async function handleHeartbeat() {
     where: { store: { handle: "uniqlo-us" } },
     include: { variants: { include: { prices: { take: 1, orderBy: { timestamp: "desc" } } } } },
   });
-  const promises = products.map((product) => pingProduct(product));
 
-  try {
-    await Promise.all(promises);
-  } catch (error) {
-    console.error(error);
-  }
+  const limit = pLimit(25);
+
+  await Promise.all(
+    products.map((product) => {
+      return limit(async () => {
+        try {
+          await pingProduct(product);
+          console.log(`Updated prices for ${product.name}`);
+        } catch (error) {
+          console.error(`Error updating prices for ${product.name}\n${error}`);
+        }
+      });
+    }),
+  );
+
+  console.log(`Updated prices for ${products.length} products`);
 }
 
 async function pingProduct(product: ExtendedProduct) {
-  const { prices } = await UniqloUS.getProductDetails(product.productCode);
+  const { prices } = await UniqloUS.getProductDetails(product.productCode, true);
   if (prices.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
