@@ -16,11 +16,12 @@ export async function testProxy() {
     axios.get(endpoint, { proxy }),
     axios.get(endpoint),
   ]);
-  if (!withProxy?.data.ip || !withoutProxy?.data.ip) {
+  const [withProxyIp, withoutProxyIp] = [withProxy?.data.ip, withoutProxy?.data.ip];
+  if (!withProxyIp || !withoutProxyIp) {
     throw new Error("Failed to get IP address");
   }
-  if (withProxy.data.ip === withoutProxy.data.ip) {
-    throw new Error("Proxy is not working");
+  if (withProxyIp === withoutProxyIp) {
+    throw new Error("Same IP addresses with proxy and without");
   }
   return true;
 }

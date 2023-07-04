@@ -23,15 +23,17 @@ type PriceWithVariant = ProductPrice & { variant: ExtendedVariant };
 export async function handleHeartbeat() {
   const products: ExtendedProduct[] = await prisma.product.findMany({
     where: { store: { handle: "uniqlo-us" } },
-    include: { variants: { include: { prices: { take: 1, orderBy: { timestamp: "desc" } } } } },
+    ...extendedProduct,
   });
 
+  let successfulUpdates = 0;
   const limit = pLimit(25);
   await Promise.all(
     products.map((product) => {
       return limit(async () => {
         try {
           await pingProduct(product);
+          successfulUpdates += 1;
         } catch (error) {
           console.error(`Error updating prices for ${product.name}\n${error}`);
         }
@@ -39,7 +41,7 @@ export async function handleHeartbeat() {
     }),
   );
 
-  console.log(`Updated prices for ${products.length} products`);
+  console.log(`Updated prices successfully for ${successfulUpdates}/${products.length} products`);
 }
 
 async function pingProduct(product: ExtendedProduct) {
