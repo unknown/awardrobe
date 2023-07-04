@@ -2,6 +2,8 @@ import "dotenv/config";
 
 import cron from "node-cron";
 
+import { testProxy } from "@awardrobe/adapters";
+
 import { handleHeartbeat } from "./monitors/uniqlo-us";
 
 function setupMonitors() {
@@ -12,7 +14,14 @@ function setupMonitors() {
   });
 }
 
-function main() {
+async function main() {
+  try {
+    await testProxy();
+    console.log("Proxy is working");
+  } catch (error) {
+    console.warn(`Proxy is not working: ${error}`);
+  }
+
   setupMonitors();
 
   console.log("Started monitoring");

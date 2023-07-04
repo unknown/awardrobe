@@ -1,6 +1,7 @@
-import axios, { AxiosProxyConfig } from "axios";
+import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../utils/formatter";
+import { proxy } from "../utils/proxy";
 import { ProductPrice } from "../utils/types";
 import { detailsSchema, l2sSchema, productsSchema } from "./schemas";
 
@@ -15,16 +16,6 @@ const sizeStylizer = (size: { code: string; name: string; displayCode: string })
     ...size,
     stylizedName: size.name,
   };
-};
-
-const proxy: AxiosProxyConfig = {
-  protocol: "http",
-  host: "p.webshare.io",
-  port: 80,
-  auth: {
-    username: process.env.WEBSHARE_USERNAME!,
-    password: process.env.WEBSHARE_PASSWORD!,
-  },
 };
 
 export async function getProducts(offset: number = 0, limit: number = 36, useProxy = false) {

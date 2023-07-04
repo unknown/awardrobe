@@ -27,13 +27,11 @@ export async function handleHeartbeat() {
   });
 
   const limit = pLimit(25);
-
   await Promise.all(
     products.map((product) => {
       return limit(async () => {
         try {
           await pingProduct(product);
-          console.log(`Updated prices for ${product.name}`);
         } catch (error) {
           console.error(`Error updating prices for ${product.name}\n${error}`);
         }

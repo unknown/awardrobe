@@ -12,7 +12,6 @@ async function main() {
   });
 
   const limit = 100;
-
   for (let [offset, total] = [0, 100]; offset < total; offset += limit) {
     const result = await UniqloUS.getProducts(offset, limit);
 
