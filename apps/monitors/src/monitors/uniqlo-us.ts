@@ -8,22 +8,28 @@ import { Prisma } from "@awardrobe/prisma-types";
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 
-const extendedVariant = Prisma.validator<Prisma.ProductVariantArgs>()({
+const variantWithPrice = Prisma.validator<Prisma.ProductVariantArgs>()({
   include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
 });
-type ExtendedVariant = Prisma.ProductVariantGetPayload<typeof extendedVariant>;
+type VariantWithPrice = Prisma.ProductVariantGetPayload<typeof variantWithPrice>;
 
-const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: extendedVariant },
+const productWithVariant = Prisma.validator<Prisma.ProductArgs>()({
+  include: { variants: variantWithPrice },
 });
-type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
+type ProductWithVariant = Prisma.ProductGetPayload<typeof productWithVariant>;
 
-type PriceWithVariant = ProductPrice & { variant: ExtendedVariant };
+type PriceFlags = {
+  shouldUpdatePrice: boolean;
+  hasPriceDropped: boolean;
+  hasRestocked: boolean;
+};
+
+type ExtendedPrice = ProductPrice & { variant: VariantWithPrice; flags: PriceFlags };
 
 export async function handleHeartbeat() {
-  const products: ExtendedProduct[] = await prisma.product.findMany({
+  const products: ProductWithVariant[] = await prisma.product.findMany({
     where: { store: { handle: "uniqlo-us" } },
-    ...extendedProduct,
+    ...productWithVariant,
   });
 
   let successfulUpdates = 0;
@@ -44,7 +50,7 @@ export async function handleHeartbeat() {
   console.log(`Updated prices successfully for ${successfulUpdates}/${products.length} products`);
 }
 
-async function pingProduct(product: ExtendedProduct) {
+async function pingProduct(product: ProductWithVariant) {
   const { prices } = await UniqloUS.getProductDetails(product.productCode, true);
   if (prices.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
@@ -52,26 +58,28 @@ async function pingProduct(product: ExtendedProduct) {
 
   const timestamp = new Date();
 
-  const pricesWithVariants: PriceWithVariant[] = await Promise.all(
+  const pricesWithVariants: ExtendedPrice[] = await Promise.all(
     prices.map(async (price) => {
       const existingVariant = product.variants.find(
         (variant) => variant.style === price.style && variant.size === price.size,
       );
+      const variant = existingVariant ?? {
+        ...(await prisma.productVariant.create({
+          data: { productId: product.id, style: price.style, size: price.size },
+        })),
+        prices: [],
+      };
       return {
         ...price,
-        variant: existingVariant ?? {
-          ...(await prisma.productVariant.create({
-            data: { productId: product.id, style: price.style, size: price.size },
-          })),
-          prices: [],
-        },
+        variant,
+        flags: getFlags(price, variant, timestamp),
       };
     }),
   );
 
   await prisma.price.createMany({
     data: pricesWithVariants
-      .filter((price) => getFlags(price, timestamp).shouldUpdatePrice)
+      .filter((price) => price.flags.shouldUpdatePrice)
       .map(({ variant, priceInCents, stock }) => ({
         timestamp,
         productVariantId: variant.id,
@@ -80,20 +88,17 @@ async function pingProduct(product: ExtendedProduct) {
       })),
   });
 
-  await Promise.all(
-    pricesWithVariants
-      .filter((price) => getFlags(price, timestamp).hasPriceDropped)
+  await Promise.all([
+    ...pricesWithVariants
+      .filter((price) => price.flags.hasPriceDropped)
       .map((price) => handlePriceDrop(product, price)),
-  );
-
-  await Promise.all(
-    pricesWithVariants
-      .filter((price) => getFlags(price, timestamp).hasRestocked)
+    ...pricesWithVariants
+      .filter((price) => price.flags.hasRestocked)
       .map((price) => handleRestock(product, price)),
-  );
+  ]);
 }
 
-function getFlags({ variant, ...newPrice }: PriceWithVariant, timestamp: Date) {
+function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: Date) {
   const oldPrice = variant.prices[0];
   if (!oldPrice) {
     return {
@@ -120,10 +125,8 @@ function getFlags({ variant, ...newPrice }: PriceWithVariant, timestamp: Date) {
   };
 }
 
-async function handlePriceDrop(
-  product: ExtendedProduct,
-  { variant, style, size, priceInCents, stock }: PriceWithVariant,
-) {
+async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPrice) {
+  const { variant, style, size, priceInCents, stock } = newPrice;
   console.log(`Price drop for ${product.name} - ${product.productCode} (${style} ${size})`);
 
   const notifications = await prisma.productNotification.findMany({
@@ -167,10 +170,8 @@ async function handlePriceDrop(
   );
 }
 
-async function handleRestock(
-  product: ExtendedProduct,
-  { variant, style, size, priceInCents }: PriceWithVariant,
-) {
+async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPrice) {
+  const { variant, style, size, priceInCents } = newPrice;
   console.log(`Restock for ${product.name} - ${product.productCode} (${style} ${size})`);
 
   const notifications = await prisma.productNotification.findMany({
