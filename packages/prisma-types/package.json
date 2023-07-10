@@ -5,11 +5,12 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup index.ts --format cjs --dts",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push --skip-generate",
-    "dev": "prisma studio --browser none",
-    "clean": "rm -rf .turbo node_modules dist"
+    "clean": "rm -rf .turbo node_modules dist",
+    "with-env": "dotenv -e ../../.env --",
+    "db:generate": "npm run with-env -- prisma generate",
+    "db:push": "npm run with-env -- prisma db push --skip-generate",
+    "dev": "npm run with-env -- prisma studio --browser none",
+    "build": "tsup index.ts --format cjs --dts"
   },
   "prisma": {
     "seed": "ts-node --transpileOnly prisma/seed.ts"
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
     "@types/node": "^20.3.3",
+    "dotenv-cli": "^7.2.1",
     "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
     "tsup": "^7.1.0",

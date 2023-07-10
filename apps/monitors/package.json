@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "nodemon",
-    "clean": "rm -rf .turbo node_modules dist"
+    "clean": "rm -rf .turbo node_modules dist",
+    "with-env": "dotenv -e ../../.env --",
+    "dev": "npm run with-env -- nodemon",
+    "build": "npm run with-env -- tsc",
+    "start": "npm run with-env -- node dist/index.js"
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
@@ -25,6 +26,7 @@
     "@types/node": "^20.3.3",
     "@types/node-cron": "^3.0.8",
     "@types/nodemailer": "^6.4.8",
+    "dotenv-cli": "^7.2.1",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",

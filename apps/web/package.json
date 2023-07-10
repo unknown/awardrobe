@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "clean": "rm -rf .next .turbo node_modules"
+    "clean": "rm -rf .next .turbo node_modules",
+    "with-env": "dotenv -e ../../.env --",
+    "dev": "npm run with-env -- next dev",
+    "build": "npm run with-env -- next build",
+    "start": "npm run with-env -- next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@types/d3-array": "^3.0.5",
     "autoprefixer": "^10.4.13",
+    "dotenv-cli": "^7.2.1",
     "encoding": "^0.1.13",
     "postcss": "^8.4.25",
     "tailwindcss": "^3.2.7"

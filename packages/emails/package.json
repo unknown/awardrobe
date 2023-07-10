@@ -5,10 +5,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup index.ts --format cjs --dts",
-    "dev": "npm run build -- --watch",
+    "clean": "rm -rf .react-email .turbo node_modules dist",
     "emails:preview": "email dev --dir src/emails --port 3001",
-    "clean": "rm -rf .react-email .turbo node_modules dist"
+    "dev": "npm run build -- --watch",
+    "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
     "@react-email/components": "0.0.7",
