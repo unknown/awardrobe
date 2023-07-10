@@ -37,7 +37,7 @@
     "clsx": "^1.2.1",
     "d3-array": "^3.2.4",
     "eslint": "8.44.0",
-    "eslint-config-next": "^13.4.0",
+    "eslint-config-next": "^13.4.9",
     "next": "^13.4.9",
     "next-auth": "^4.22.1",
     "nodemailer": "^6.9.3",
