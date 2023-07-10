@@ -6,16 +6,14 @@ import { formatPrice } from "../utils/currency";
 
 export type StockNotificationEmailProps = {
   productName: string;
-  style: string;
-  size: string;
+  description: string;
   priceInCents: number;
   productUrl: string;
 };
 
 export default function StockNotificationEmail({
   productName = "Product Name",
-  style = "08 Dark Gray",
-  size = "S",
+  description = "08 Dark Gray - S",
   priceInCents = 9999,
   productUrl = "https://example.com",
 }: StockNotificationEmailProps) {
@@ -35,9 +33,7 @@ export default function StockNotificationEmail({
         </Section>
         <Section className="py-6 text-center">
           <Heading className="my-0 text-xl font-normal">{productName}</Heading>
-          <Text className="my-3 text-sm text-[#747474]">
-            {style} - {size}
-          </Text>
+          <Text className="my-3 text-sm text-[#747474]">{description}</Text>
           <Text className="my-3 text-xl font-bold">{formatPrice(priceInCents)}</Text>
           <Button
             pX={16}

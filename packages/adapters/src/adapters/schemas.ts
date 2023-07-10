@@ -14,6 +14,8 @@ const optionSchema = z.object({
   }),
 });
 
+export type DetailedOption = z.infer<typeof optionSchema>;
+
 // contains stock and price data of products
 export const l2sSchema = z.object({
   result: z.object({

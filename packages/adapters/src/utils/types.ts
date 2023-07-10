@@ -1,6 +1,5 @@
 export type ProductPrice = {
-  style: string;
-  size: string;
+  attributes: Record<string, string>;
   priceInCents: number;
-  stock: number;
+  inStock: boolean;
 };
