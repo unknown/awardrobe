@@ -1,19 +1,28 @@
 import z from "zod";
 
+const partialOptionSchema = z.object({
+  code: z.string(),
+  displayCode: z.string(),
+});
+
+const optionSchema = z.object({
+  code: z.string(),
+  displayCode: z.string(),
+  name: z.string(),
+  display: z.object({
+    showFlag: z.boolean(),
+  }),
+});
+
 // contains stock and price data of products
 export const l2sSchema = z.object({
   result: z.object({
     l2s: z.array(
       z.object({
-        color: z.object({
-          code: z.string(),
-          displayCode: z.string(),
-        }),
-        size: z.object({
-          code: z.string(),
-          displayCode: z.string(),
-        }),
         l2Id: z.string(),
+        color: partialOptionSchema,
+        size: partialOptionSchema,
+        pld: partialOptionSchema,
       }),
     ),
     stocks: z.record(z.string(), z.object({ quantity: z.number() })),
@@ -25,20 +34,9 @@ export const l2sSchema = z.object({
 export const detailsSchema = z.object({
   result: z.object({
     name: z.string(),
-    colors: z.array(
-      z.object({
-        code: z.string(),
-        displayCode: z.string(),
-        name: z.string(),
-      }),
-    ),
-    sizes: z.array(
-      z.object({
-        code: z.string(),
-        displayCode: z.string(),
-        name: z.string(),
-      }),
-    ),
+    colors: z.array(optionSchema),
+    sizes: z.array(optionSchema),
+    plds: z.array(optionSchema),
   }),
 });
 
@@ -49,20 +47,9 @@ export const productsSchema = z.object({
       z.object({
         name: z.string(),
         productId: z.string(),
-        colors: z.array(
-          z.object({
-            code: z.string(),
-            displayCode: z.string(),
-            name: z.string(),
-          }),
-        ),
-        sizes: z.array(
-          z.object({
-            code: z.string(),
-            displayCode: z.string(),
-            name: z.string(),
-          }),
-        ),
+        colors: z.array(optionSchema),
+        sizes: z.array(optionSchema),
+        plds: z.array(optionSchema),
       }),
     ),
     pagination: z.object({
