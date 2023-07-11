@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductNotification } from "@awardrobe/prisma-types";
+import { ProductNotification, ProductVariant } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
@@ -15,6 +15,7 @@ import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 type ControlOptions = {
+  variant?: ProductVariant;
   attributes: Record<string, string>;
   dateRange: DateRange;
 };
@@ -37,31 +38,27 @@ export function ProductInfo({
   const [options, setOptions] = useState<ControlOptions>({ ...initialOptions });
   const [notifications, setNotifications] = useState<ProductNotification[]>(initialNotifications);
 
-  const selectedVariant = product.variants.find((variant) => {
-    const attributes = variant.attributes as VariantAttribute[];
-    if (attributes.length !== Object.keys(options.attributes).length) return false;
-    return attributes.every((attribute) => {
-      return options.attributes[attribute.name] === attribute.value;
-    });
-  });
-
   const loadPrices = useCallback(
-    async (options: ControlOptions, abortSignal?: AbortSignal) => {
-      if (!selectedVariant) {
+    async (options: {
+      variant?: ProductVariant;
+      dateRange: DateRange;
+      abortSignal?: AbortSignal;
+    }) => {
+      if (!options.variant) {
         return;
       }
       await fetchPrices({
-        variantId: selectedVariant.id,
+        variantId: options.variant.id,
         dateRange: options.dateRange,
-        abortSignal,
+        abortSignal: options.abortSignal,
       });
     },
-    [fetchPrices, selectedVariant],
+    [fetchPrices],
   );
 
   useEffect(() => {
     const abortController = new AbortController();
-    loadPrices(initialOptions, abortController.signal);
+    loadPrices({ ...initialOptions, abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
@@ -79,11 +76,12 @@ export function ProductInfo({
   };
 
   const NotificationButton = () => {
-    if (!selectedVariant) {
+    const variantId = options.variant?.id;
+    if (!variantId) {
       return null;
     }
     const notification = notifications.find((notification) => {
-      return notification.productVariantId === selectedVariant.id;
+      return notification.productVariantId === variantId;
     });
     if (notification) {
       return (
@@ -105,7 +103,7 @@ export function ProductInfo({
     return (
       <AddNotificationDialog
         productId={product.id}
-        variantId={selectedVariant.id}
+        variantId={variantId}
         defaultOptions={{
           mustBeInStock: false,
           priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
@@ -129,8 +127,16 @@ export function ProductInfo({
               attributes={options.attributes}
               productOptions={productOptions}
               onAttributesChange={(newAttributes) => {
+                const selectedVariant = product.variants.find((variant) => {
+                  const attributes = variant.attributes as VariantAttribute[];
+                  if (attributes.length !== Object.keys(newAttributes).length) return false;
+                  return attributes.every((attribute) => {
+                    return newAttributes[attribute.name] === attribute.value;
+                  });
+                });
                 const newOptions = {
                   ...options,
+                  variant: selectedVariant,
                   attributes: newAttributes,
                 };
                 setOptions(newOptions);
