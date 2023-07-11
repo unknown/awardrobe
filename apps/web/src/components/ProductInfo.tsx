@@ -3,11 +3,12 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Button } from "@ui/Button";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
-import { formatCurrency, shallowEquals } from "@/utils/utils";
+import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../hooks/usePrices";
 import { AddNotificationDialog } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
@@ -37,7 +38,11 @@ export function ProductInfo({
   const [notifications, setNotifications] = useState<ProductNotification[]>(initialNotifications);
 
   const selectedVariant = product.variants.find((variant) => {
-    return shallowEquals(variant.attributes, options.attributes);
+    const attributes = variant.attributes as VariantAttribute[];
+    if (attributes.length !== Object.keys(options.attributes).length) return false;
+    return attributes.every((attribute) => {
+      return options.attributes[attribute.name] === attribute.value;
+    });
   });
 
   const loadPrices = useCallback(

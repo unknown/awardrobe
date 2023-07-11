@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../utils/formatter";
 import { proxy } from "../utils/proxy";
-import { ProductPrice } from "../utils/types";
+import { ProductPrice, VariantAttribute } from "../utils/types";
 import { DetailedOption, detailsSchema, l2sSchema, productsSchema } from "./schemas";
 
 const getColorName = (color: DetailedOption) => toTitleCase(`${color.displayCode} ${color.name}`);
@@ -66,10 +66,10 @@ export async function getProductDetails(productCode: string, useProxy = false) {
       throw new Error("Failed to parse product details");
     }
 
-    const attributes: Record<string, string> = {};
-    if (color.display.showFlag) attributes["Color"] = getColorName(color);
-    if (size.display.showFlag) attributes["Size"] = getSizeName(size);
-    if (pld.display.showFlag) attributes["Length"] = getPldName(pld);
+    const attributes: VariantAttribute[] = [];
+    if (color.display.showFlag) attributes.push({ name: "Color", value: getColorName(color) });
+    if (size.display.showFlag) attributes.push({ name: "Size", value: getSizeName(size) });
+    if (pld.display.showFlag) attributes.push({ name: "Length", value: getPldName(pld) });
 
     productPrices.push({
       attributes,
@@ -110,15 +110,17 @@ function getFormattedOptions(options: {
   return formattedOptions;
 }
 
-function getVariantAttributes(options: Record<string, string[]>): Record<string, string>[] {
-  const entries = Object.entries(options);
-  if (entries.length <= 0) {
-    return [{}];
+function getVariantAttributes(options: Record<string, string[]>): VariantAttribute[][] {
+  const entry = Object.entries(options).at(0);
+  if (!entry) {
+    return [[]];
   }
 
-  const [key, values] = entries[entries.length - 1]!;
+  const [key, values] = entry;
   delete options[key];
-
   const otherVariants = getVariantAttributes(options);
-  return values.flatMap((value) => otherVariants.map((variant) => ({ [key]: value, ...variant })));
+
+  return values.flatMap((value) =>
+    otherVariants.map((variant) => [{ name: key, value }, ...variant]),
+  );
 }

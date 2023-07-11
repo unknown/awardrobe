@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { Prisma } from "@awardrobe/prisma-types";
 
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
@@ -29,10 +30,8 @@ export function NotificationList({ initialNotifications }: NotificationListProps
     <div className="space-y-4">
       {notifications.map(({ id, productId, productVariant }) => {
         // TODO: better types?
-        const attributes = productVariant.attributes as Record<string, string>;
-        const description = Object.entries(attributes)
-          .map(([_, value]) => value)
-          .join(" - ");
+        const attributes = productVariant.attributes as VariantAttribute[];
+        const description = attributes.map(({ value }) => value).join(" - ");
 
         return (
           <div key={id}>

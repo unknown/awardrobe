@@ -1,7 +1,7 @@
 import { render } from "@react-email/render";
 import pLimit from "p-limit";
 
-import { ProductPrice, UniqloUS } from "@awardrobe/adapters";
+import { ProductPrice, UniqloUS, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 import { Prisma } from "@awardrobe/prisma-types";
 
@@ -62,7 +62,13 @@ async function pingProduct(product: ProductWithVariant) {
   const pricesWithVariants: ExtendedPrice[] = await Promise.all(
     prices.map(async (price) => {
       let variant = product.variants.find((variant) => {
-        return shallowEquals(variant.attributes, price.attributes);
+        const attributes = variant.attributes as VariantAttribute[];
+        if (attributes.length !== price.attributes.length) return false;
+        return attributes.every((attribute) => {
+          return price.attributes.some((priceAttribute) => {
+            return shallowEquals(attribute, priceAttribute);
+          });
+        });
       });
       if (!variant) {
         console.warn(`Creating new variant for ${JSON.stringify(price.attributes)}`);

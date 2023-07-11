@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@ui/Button";
 import { getServerSession } from "next-auth";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
@@ -52,17 +53,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const productOptions: Record<string, string[]> = {};
   product.variants.forEach((variant) => {
     // TODO: better types?
-    const attributes = variant.attributes as Record<string, string>;
-    Object.entries(attributes).map(([key, value]) => {
-      const values = productOptions[key] ?? [];
+    const attributes = variant.attributes as VariantAttribute[];
+    attributes.forEach(({ name, value }) => {
+      const values = productOptions[name] ?? [];
       if (!values.includes(value)) {
         values.push(value);
       }
-      productOptions[key] = values;
+      productOptions[name] = values;
     });
   });
 
-  const initialAttributes = (product.variants[0]?.attributes as Record<string, string>) ?? {};
+  const initialVariant = product.variants[0];
+  const initialAttributes: Record<string, string> = {};
+  if (initialVariant) {
+    const attributes = initialVariant.attributes as VariantAttribute[];
+    attributes.forEach(({ name, value }) => {
+      initialAttributes[name] = value;
+    });
+  }
 
   return (
     <ProductInfo
