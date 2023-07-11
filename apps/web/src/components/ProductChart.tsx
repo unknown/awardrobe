@@ -119,11 +119,11 @@ function ChartComponent({ prices, width, height, margin = defaultMargin }: Chart
   const { tooltipData, tooltipLeft, tooltipTop, tooltipOpen, showTooltip, hideTooltip } =
     useTooltip<ChartUnit>();
 
+  if (width <= 0 || height <= 0) return null;
+
   // bounds
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
-
-  if (innerWidth === 0 || innerHeight === 0) return null;
 
   // scales
   const timeScale = scaleTime<number>({
