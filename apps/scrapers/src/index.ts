@@ -19,7 +19,7 @@ async function main() {
     total = pagination.total;
 
     for (const product of products) {
-      const { productCode, name, styles, sizes } = product;
+      const { productCode, name, variants } = product;
 
       await prisma.product.upsert({
         where: {
@@ -35,12 +35,7 @@ async function main() {
           name,
           variants: {
             createMany: {
-              data: styles.flatMap((style) =>
-                sizes.map((size) => ({
-                  style: style.stylizedName,
-                  size: size.stylizedName,
-                })),
-              ),
+              data: variants.map((variant) => ({ attributes: variant })),
             },
           },
         },

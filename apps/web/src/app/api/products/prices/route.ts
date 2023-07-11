@@ -5,10 +5,8 @@ import { Price } from "@awardrobe/prisma-types";
 import { prisma } from "@/utils/prisma";
 
 type GetPricesRequest = {
-  productId: string;
+  variantId: string;
   startDate: string;
-  style: string;
-  size: string;
 };
 
 type GetPricesSuccess = {
@@ -24,16 +22,12 @@ type GetPricesError = {
 export type GetPricesResponse = GetPricesSuccess | GetPricesError;
 
 export async function POST(req: Request) {
-  const { productId, startDate, style, size }: GetPricesRequest = await req.json();
+  const { variantId, startDate }: GetPricesRequest = await req.json();
 
   try {
     const productVariant = await prisma.productVariant.findUniqueOrThrow({
       where: {
-        productId_style_size: {
-          productId,
-          style,
-          size,
-        },
+        id: variantId,
       },
       include: {
         prices: {

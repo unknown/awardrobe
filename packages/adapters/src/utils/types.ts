@@ -1,6 +1,10 @@
+export type VariantAttribute = {
+  name: string;
+  value: string;
+};
+
 export type ProductPrice = {
-  style: string;
-  size: string;
+  attributes: VariantAttribute[];
   priceInCents: number;
-  stock: number;
+  inStock: boolean;
 };

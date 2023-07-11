@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { Prisma } from "@awardrobe/prisma-types";
 
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
@@ -28,15 +29,16 @@ export function NotificationList({ initialNotifications }: NotificationListProps
   return (
     <div className="space-y-4">
       {notifications.map(({ id, productId, productVariant }) => {
-        const { style, size } = productVariant;
+        // TODO: better types?
+        const attributes = productVariant.attributes as VariantAttribute[];
+        const description = attributes.map(({ value }) => value).join(" - ");
+
         return (
           <div key={id}>
-            <Link href={`/product/${productId}?style=${style}&size=${size}`}>
+            <Link href={`/product/${productId}`}>
               <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
             </Link>
-            <p className="text-muted-foreground text-sm">
-              {style} - {size}
-            </p>
+            <p className="text-muted-foreground text-sm">{description}</p>
             <Button
               className="mt-1"
               onClick={async () => {

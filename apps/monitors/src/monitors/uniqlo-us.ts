@@ -1,12 +1,13 @@
 import { render } from "@react-email/render";
 import pLimit from "p-limit";
 
-import { ProductPrice, UniqloUS } from "@awardrobe/adapters";
+import { ProductPrice, UniqloUS, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 import { Prisma } from "@awardrobe/prisma-types";
 
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
+import { shallowEquals } from "../utils/utils";
 
 const variantWithPrice = Prisma.validator<Prisma.ProductVariantArgs>()({
   include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
@@ -26,7 +27,7 @@ type PriceFlags = {
 
 type ExtendedPrice = ProductPrice & { variant: VariantWithPrice; flags: PriceFlags };
 
-export async function handleHeartbeat() {
+export async function pingProducts() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
@@ -73,15 +74,24 @@ async function pingProduct(product: ProductWithVariant) {
 
   const pricesWithVariants: ExtendedPrice[] = await Promise.all(
     prices.map(async (price) => {
-      const existingVariant = product.variants.find(
-        (variant) => variant.style === price.style && variant.size === price.size,
-      );
-      const variant = existingVariant ?? {
-        ...(await prisma.productVariant.create({
-          data: { productId: product.id, style: price.style, size: price.size },
-        })),
-        prices: [],
-      };
+      let variant = product.variants.find((variant) => {
+        const attributes = variant.attributes as VariantAttribute[];
+        if (attributes.length !== price.attributes.length) return false;
+        return attributes.every((attribute) => {
+          return price.attributes.some((priceAttribute) => {
+            return shallowEquals(attribute, priceAttribute);
+          });
+        });
+      });
+      if (!variant) {
+        console.warn(`Creating new variant for ${JSON.stringify(price.attributes)}`);
+        variant = {
+          ...(await prisma.productVariant.create({
+            data: { productId: product.id, attributes: price.attributes },
+          })),
+          prices: [],
+        };
+      }
       return {
         ...price,
         variant,
@@ -93,11 +103,11 @@ async function pingProduct(product: ProductWithVariant) {
   await prisma.price.createMany({
     data: pricesWithVariants
       .filter((price) => price.flags.shouldUpdatePrice)
-      .map(({ variant, priceInCents, stock }) => ({
+      .map(({ variant, priceInCents, inStock }) => ({
         timestamp,
         productVariantId: variant.id,
         priceInCents,
-        inStock: stock > 0,
+        inStock,
       })),
   });
 
@@ -128,8 +138,8 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
   const hasPriceChanged = newPrice.priceInCents !== oldPrice.priceInCents;
   const hasPriceDropped = newPrice.priceInCents < oldPrice.priceInCents;
 
-  const hasStockChanged = newPrice.stock > 0 !== oldPrice.inStock;
-  const hasRestocked = newPrice.stock > 0 && oldPrice.inStock === false;
+  const hasStockChanged = newPrice.inStock !== oldPrice.inStock;
+  const hasRestocked = newPrice.inStock && !oldPrice.inStock;
 
   return {
     shouldUpdatePrice: isStale || hasPriceChanged || hasStockChanged,
@@ -139,12 +149,16 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
 }
 
 async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPrice) {
-  const { variant, style, size, priceInCents, stock } = newPrice;
-  console.log(`Price drop for ${product.name} - ${product.productCode} (${style} ${size})`);
+  const { variant, attributes, priceInCents, inStock } = newPrice;
+  const description = Object.entries(attributes)
+    .map(([_, value]) => value)
+    .join(" - ");
+
+  console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
   const notifications = await prisma.productNotification.findMany({
     where: {
-      mustBeInStock: stock > 0 ? undefined : false,
+      mustBeInStock: inStock ? undefined : false,
       OR: [
         {
           priceInCents: null,
@@ -168,8 +182,7 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
       const emailHtml = render(
         PriceNotificationEmail({
           productName: product.name,
-          style,
-          size,
+          description,
           priceInCents,
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
@@ -184,8 +197,12 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
 }
 
 async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPrice) {
-  const { variant, style, size, priceInCents } = newPrice;
-  console.log(`Restock for ${product.name} - ${product.productCode} (${style} ${size})`);
+  const { variant, attributes, priceInCents } = newPrice;
+  const description = Object.entries(attributes)
+    .map(([_, value]) => value)
+    .join(" - ");
+
+  console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
 
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -212,8 +229,7 @@ async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPric
       const emailHtml = render(
         StockNotificationEmail({
           productName: product.name,
-          style,
-          size,
+          description,
           priceInCents: priceInCents,
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),

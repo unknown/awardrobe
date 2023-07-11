@@ -97,14 +97,12 @@ model Price {
 model ProductVariant {
   id            String                @id @default(cuid())
   productId     String
-  style         String
-  size          String
+  attributes    Json // record from name to value
   prices        Price[]
   notifications ProductNotification[]
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, style, size])
   @@index([productId])
 }
 

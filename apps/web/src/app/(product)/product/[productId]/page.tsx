@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@ui/Button";
 import { getServerSession } from "next-auth";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { Product, ProductVariant } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
@@ -49,19 +50,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
       })
     : [];
 
-  const stylesSet = new Set<string>();
-  const sizesSet = new Set<string>();
+  const productOptions: Record<string, string[]> = {};
   product.variants.forEach((variant) => {
-    stylesSet.add(variant.style);
-    sizesSet.add(variant.size);
+    // TODO: better types?
+    const attributes = variant.attributes as VariantAttribute[];
+    attributes.forEach(({ name, value }) => {
+      const values = productOptions[name] ?? [];
+      if (!values.includes(value)) {
+        values.push(value);
+      }
+      productOptions[name] = values;
+    });
   });
+
+  const initialVariant = product.variants[0];
+  const initialAttributes: Record<string, string> = {};
+  if (initialVariant) {
+    const attributes = initialVariant.attributes as VariantAttribute[];
+    attributes.forEach(({ name, value }) => {
+      initialAttributes[name] = value;
+    });
+  }
 
   return (
     <ProductInfo
       product={product}
-      styles={Array.from(stylesSet)}
-      sizes={Array.from(sizesSet)}
-      defaultNotifications={notifications}
+      productOptions={productOptions}
+      initialOptions={{
+        attributes: initialAttributes,
+        dateRange: "7d",
+      }}
+      initialNotifications={notifications}
     />
   );
 }

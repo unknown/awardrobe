@@ -22,6 +22,7 @@ async function main() {
     "E457263-000",
     "E457212-000",
     "E455498-000",
+    "E450251-000",
   ];
   for (const productCode of productCodes) {
     await addProduct(uniqlo.id, productCode);
@@ -29,14 +30,11 @@ async function main() {
 }
 
 async function addProduct(storeId: string, productCode: string) {
-  const { name, styles, sizes } = await UniqloUS.getProductDetails(productCode);
+  const { name, variants } = await UniqloUS.getProductDetails(productCode);
 
   await prisma.product.upsert({
     where: {
-      storeId_productCode: {
-        storeId,
-        productCode,
-      },
+      storeId_productCode: { storeId, productCode },
     },
     update: {},
     create: {
@@ -45,12 +43,7 @@ async function addProduct(storeId: string, productCode: string) {
       storeId,
       variants: {
         createMany: {
-          data: styles.flatMap((style) =>
-            sizes.map((size) => ({
-              style: style.stylizedName,
-              size: size.stylizedName,
-            })),
-          ),
+          data: variants.map((variant) => ({ attributes: variant })),
         },
       },
     },
