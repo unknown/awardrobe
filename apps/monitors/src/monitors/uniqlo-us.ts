@@ -27,9 +27,22 @@ type PriceFlags = {
 type ExtendedPrice = ProductPrice & { variant: VariantWithPrice; flags: PriceFlags };
 
 export async function handleHeartbeat() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
   const products: ProductWithVariant[] = await prisma.product.findMany({
     where: { store: { handle: "uniqlo-us" } },
-    ...productWithVariant,
+    include: {
+      variants: {
+        include: {
+          prices: {
+            take: 1,
+            orderBy: { timestamp: "desc" },
+            where: { timestamp: { gte: yesterday } },
+          },
+        },
+      },
+    },
   });
 
   let successfulUpdates = 0;
