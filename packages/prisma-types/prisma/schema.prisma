@@ -97,7 +97,7 @@ model Price {
 model ProductVariant {
   id            String                @id @default(cuid())
   productId     String
-  attributes    Json
+  attributes    Json // record from name to value
   prices        Price[]
   notifications ProductNotification[]
 

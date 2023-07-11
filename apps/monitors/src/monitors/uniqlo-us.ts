@@ -61,15 +61,18 @@ async function pingProduct(product: ProductWithVariant) {
 
   const pricesWithVariants: ExtendedPrice[] = await Promise.all(
     prices.map(async (price) => {
-      const existingVariant = product.variants.find((variant) => {
+      let variant = product.variants.find((variant) => {
         return shallowEquals(variant.attributes, price.attributes);
       });
-      const variant = existingVariant ?? {
-        ...(await prisma.productVariant.create({
-          data: { productId: product.id, attributes: price.attributes },
-        })),
-        prices: [],
-      };
+      if (!variant) {
+        console.warn(`Creating new variant for ${JSON.stringify(price.attributes)}`);
+        variant = {
+          ...(await prisma.productVariant.create({
+            data: { productId: product.id, attributes: price.attributes },
+          })),
+          prices: [],
+        };
+      }
       return {
         ...price,
         variant,
@@ -129,7 +132,7 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
 async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents, inStock } = newPrice;
   const description = Object.entries(attributes)
-    .map(([value]) => value)
+    .map(([_, value]) => value)
     .join(" - ");
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
@@ -177,7 +180,7 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
 async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents } = newPrice;
   const description = Object.entries(attributes)
-    .map(([value]) => value)
+    .map(([_, value]) => value)
     .join(" - ");
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);

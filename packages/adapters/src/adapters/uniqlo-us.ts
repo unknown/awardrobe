@@ -20,10 +20,11 @@ export async function getProducts(offset: number = 0, limit: number = 36, usePro
   const { items, pagination } = productsSchema.parse(productsResponse.data).result;
 
   const products = items.map(({ name, productId, ...options }) => {
+    const formattedOptions = getFormattedOptions(options);
     return {
       name,
       productCode: productId,
-      options: getFormattedOptions(options),
+      variants: getVariantAttributes(formattedOptions),
     };
   });
 
@@ -77,10 +78,12 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     });
   });
 
+  const formattedOptions = getFormattedOptions(options);
+
   return {
     name,
     prices: productPrices,
-    options: getFormattedOptions(options),
+    variants: getVariantAttributes(formattedOptions),
   };
 }
 
@@ -89,22 +92,33 @@ function getFormattedOptions(options: {
   sizes: DetailedOption[];
   plds: DetailedOption[];
 }) {
-  return {
-    color: {
-      name: "Color",
-      values: options.colors
-        .filter((color) => color.display.showFlag)
-        .map((color) => getColorName(color)),
-    },
-    size: {
-      name: "Size",
-      values: options.sizes
-        .filter((size) => size.display.showFlag)
-        .map((size) => getSizeName(size)),
-    },
-    length: {
-      name: "Length",
-      values: options.plds.filter((pld) => pld.display.showFlag).map((pld) => getPldName(pld)),
-    },
-  };
+  const formattedOptions: Record<string, string[]> = {};
+
+  const colors = options.colors
+    .filter((color) => color.display.showFlag)
+    .map((color) => getColorName(color));
+  if (colors.length > 0) formattedOptions["Color"] = colors;
+
+  const sizes = options.sizes
+    .filter((size) => size.display.showFlag)
+    .map((size) => getSizeName(size));
+  if (sizes.length > 0) formattedOptions["Size"] = sizes;
+
+  const lengths = options.plds.filter((pld) => pld.display.showFlag).map((pld) => getPldName(pld));
+  if (lengths.length > 0) formattedOptions["Length"] = lengths;
+
+  return formattedOptions;
+}
+
+function getVariantAttributes(options: Record<string, string[]>): Record<string, string>[] {
+  const entries = Object.entries(options);
+  if (entries.length <= 0) {
+    return [{}];
+  }
+
+  const [key, values] = entries[entries.length - 1]!;
+  delete options[key];
+
+  const otherVariants = getVariantAttributes(options);
+  return values.flatMap((value) => otherVariants.map((variant) => ({ [key]: value, ...variant })));
 }

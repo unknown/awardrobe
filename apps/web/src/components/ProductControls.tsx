@@ -12,66 +12,49 @@ import {
 import { DateRange, DateRanges } from "@/hooks/usePrices";
 import { cn } from "@/utils/utils";
 
-// TODO: derive from ProductVariant type?
-export type Variant = {
-  style: string;
-  size: string;
-};
-
 export type VariantControlsProps = {
-  variant: Variant;
-  onVariantChange: (newVariant: Variant) => void;
-  styles: string[];
-  sizes: string[];
+  productOptions: Record<string, string[]>;
+  attributes: Record<string, string>;
+  onAttributesChange: (attributes: Record<string, string>) => void;
 };
 
-export function VariantControls({ variant, styles, sizes, onVariantChange }: VariantControlsProps) {
+export function VariantControls({
+  productOptions,
+  attributes,
+  onAttributesChange,
+}: VariantControlsProps) {
   return (
     <Fragment>
-      <label htmlFor="style-input" className="text-primary text-sm font-medium">
-        Style
-      </label>
-      <Select
-        value={variant.style}
-        onValueChange={(style) => {
-          onVariantChange({ ...variant, style });
-        }}
-      >
-        <SelectTrigger className="w-[180px]" id="style-input">
-          <SelectValue placeholder="Select a style..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {styles.map((style) => (
-              <SelectItem value={style} key={style}>
-                {style}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-      <label htmlFor="size-input" className="text-primary text-sm font-medium">
-        Size
-      </label>
-      <Select
-        value={variant.size}
-        onValueChange={(size) => {
-          onVariantChange({ ...variant, size });
-        }}
-      >
-        <SelectTrigger className="w-[180px]" id="size-input">
-          <SelectValue placeholder="Select a size..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {sizes.map((size) => (
-              <SelectItem value={size} key={size}>
-                {size}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      {Object.entries(productOptions).map(([name, values]) => {
+        const selectedValue = attributes[name];
+        return (
+          <Fragment key={name}>
+            <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
+              {name}
+            </label>
+            <Select
+              value={selectedValue}
+              onValueChange={(newValue) => {
+                const newAttributes = { ...attributes, [name]: newValue };
+                onAttributesChange(newAttributes);
+              }}
+            >
+              <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
+                <SelectValue placeholder={`Select a ${name}...`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {values.map((value) => (
+                    <SelectItem value={value} key={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Fragment>
+        );
+      })}
     </Fragment>
   );
 }

@@ -8,10 +8,9 @@ import { prisma } from "@/utils/prisma";
 
 type AddNotificationRequest = {
   productId: string;
+  variantId: string;
   priceInCents?: number;
   mustBeInStock: boolean;
-  style: string;
-  size: string;
 };
 
 type AddNotificationSuccess = {
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { productId, priceInCents, mustBeInStock, style, size }: AddNotificationRequest =
+  const { productId, priceInCents, mustBeInStock, variantId }: AddNotificationRequest =
     await req.json();
 
   try {
@@ -49,11 +48,7 @@ export async function POST(req: Request) {
         },
         productVariant: {
           connect: {
-            productId_style_size: {
-              productId,
-              style,
-              size,
-            },
+            id: variantId,
           },
         },
         mustBeInStock,

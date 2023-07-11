@@ -49,19 +49,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
       })
     : [];
 
-  const stylesSet = new Set<string>();
-  const sizesSet = new Set<string>();
+  const productOptions: Record<string, string[]> = {};
   product.variants.forEach((variant) => {
-    stylesSet.add(variant.style);
-    sizesSet.add(variant.size);
+    // TODO: better types?
+    const attributes = variant.attributes as Record<string, string>;
+    Object.entries(attributes).map(([key, value]) => {
+      const values = productOptions[key] ?? [];
+      if (!values.includes(value)) {
+        values.push(value);
+      }
+      productOptions[key] = values;
+    });
   });
+
+  const initialAttributes = (product.variants[0]?.attributes as Record<string, string>) ?? {};
 
   return (
     <ProductInfo
       product={product}
-      styles={Array.from(stylesSet)}
-      sizes={Array.from(sizesSet)}
-      defaultNotifications={notifications}
+      productOptions={productOptions}
+      initialOptions={{
+        attributes: initialAttributes,
+        dateRange: "7d",
+      }}
+      initialNotifications={notifications}
     />
   );
 }

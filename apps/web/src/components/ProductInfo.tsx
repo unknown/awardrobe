@@ -1,60 +1,66 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { Button } from "@ui/Button";
 
 import { ProductNotification } from "@awardrobe/prisma-types";
 
 import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
-import { formatCurrency } from "@/utils/utils";
-import { isDateRange, usePrices, UsePricesOptions } from "../hooks/usePrices";
+import { formatCurrency, shallowEquals } from "@/utils/utils";
+import { DateRange, usePrices } from "../hooks/usePrices";
 import { AddNotificationDialog } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
-export type ProductInfoProps = {
-  product: ProductWithVariants;
-  styles: string[];
-  sizes: string[];
-  defaultNotifications: ProductNotification[];
+type ControlOptions = {
+  attributes: Record<string, string>;
+  dateRange: DateRange;
 };
 
-export function ProductInfo({ product, styles, sizes, defaultNotifications }: ProductInfoProps) {
-  const { data: prices, fetchPricesData } = usePrices(product.id);
+export type ProductInfoProps = {
+  product: ProductWithVariants;
+  productOptions: Record<string, string[]>;
+  initialOptions: ControlOptions;
+  initialNotifications: ProductNotification[];
+};
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [daterangeParams, styleParams, sizeParams] = [
-    searchParams.get("dateRange"),
-    searchParams.get("style"),
-    searchParams.get("size"),
-  ];
+export function ProductInfo({
+  product,
+  productOptions,
+  initialOptions,
+  initialNotifications,
+}: ProductInfoProps) {
+  const { data: prices, fetchPrices } = usePrices();
 
-  const defaultOptions = useRef<UsePricesOptions>({
-    dateRange: isDateRange(daterangeParams) ? daterangeParams : "7d",
-    style: styleParams && styles.includes(styleParams) ? styleParams : styles[0] ?? "",
-    size: sizeParams && sizes.includes(sizeParams) ? sizeParams : sizes[0] ?? "",
+  const [options, setOptions] = useState<ControlOptions>({ ...initialOptions });
+  const [notifications, setNotifications] = useState<ProductNotification[]>(initialNotifications);
+
+  const selectedVariant = product.variants.find((variant) => {
+    return shallowEquals(variant.attributes, options.attributes);
   });
-  const [options, setOptions] = useState<UsePricesOptions>(defaultOptions.current);
-  const [notifications, setNotifications] = useState<ProductNotification[]>(defaultNotifications);
 
   const loadPrices = useCallback(
-    async (options: UsePricesOptions, abortSignal?: AbortSignal) => {
-      await fetchPricesData(options, abortSignal);
+    async (options: ControlOptions, abortSignal?: AbortSignal) => {
+      if (!selectedVariant) {
+        return;
+      }
+      await fetchPrices({
+        variantId: selectedVariant.id,
+        dateRange: options.dateRange,
+        abortSignal,
+      });
     },
-    [fetchPricesData],
+    [fetchPrices, selectedVariant],
   );
 
   useEffect(() => {
     const abortController = new AbortController();
-    loadPrices(defaultOptions.current, abortController.signal);
+    loadPrices(initialOptions, abortController.signal);
     return () => {
       abortController.abort();
     };
-  }, [loadPrices]);
+  }, [initialOptions, loadPrices]);
 
   const getPillText = () => {
     const lastPrice = prices?.[prices.length - 1]?.priceInCents;
@@ -68,11 +74,11 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
   };
 
   const NotificationButton = () => {
-    const selectedVariant = product.variants.find(
-      (variant) => variant.style === options.style && variant.size === options.size,
-    );
+    if (!selectedVariant) {
+      return null;
+    }
     const notification = notifications.find((notification) => {
-      return notification.productVariantId === selectedVariant?.id;
+      return notification.productVariantId === selectedVariant.id;
     });
     if (notification) {
       return (
@@ -94,17 +100,14 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
     return (
       <AddNotificationDialog
         productId={product.id}
+        variantId={selectedVariant.id}
         defaultOptions={{
           mustBeInStock: false,
           priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
-          style: options.style,
-          size: options.size,
         }}
         onAddNotification={(newNotification) =>
           setNotifications((notifications) => [...notifications, newNotification])
         }
-        sizes={sizes}
-        styles={styles}
         disabled={notification}
       />
     );
@@ -116,21 +119,17 @@ export function ProductInfo({ product, styles, sizes, defaultNotifications }: Pr
         <div className="flex flex-col gap-2">
           <p className="text-muted-foreground text-sm">Uniqlo US</p>
           <h1 className="text-3xl font-medium">{product.name}</h1>
-          <div className="grid grid-cols-[max-content_1fr] items-center gap-3 md:flex">
+          <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
             <VariantControls
-              variant={options}
-              styles={styles}
-              sizes={sizes}
-              onVariantChange={(newVariant) => {
-                const newOptions = { ...options, ...newVariant };
+              attributes={options.attributes}
+              productOptions={productOptions}
+              onAttributesChange={(newAttributes) => {
+                const newOptions = {
+                  ...options,
+                  attributes: newAttributes,
+                };
                 setOptions(newOptions);
                 loadPrices(newOptions);
-
-                const params = new URLSearchParams({
-                  ...Object.fromEntries(searchParams.entries()),
-                  ...newOptions,
-                });
-                router.replace(`${pathname}?${params.toString()}`);
               }}
             />
             <div className="col-span-2">

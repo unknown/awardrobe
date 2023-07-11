@@ -16,36 +16,32 @@ const dateOffsets: Record<DateRange, number> = {
   All: Infinity,
 };
 
-export type UsePricesOptions = {
+export type FetchPricesOptions = {
+  variantId: string;
   dateRange: DateRange;
-  style: string;
-  size: string;
+  abortSignal?: AbortSignal;
 };
 
-export function usePrices(productId: string) {
+export function usePrices() {
   const [loading, setLoading] = useState(false);
   const [pricesData, setPricesData] = useState<Price[] | null>(null);
 
-  const fetchPricesData = useCallback(
-    async function ({ dateRange, style, size }: UsePricesOptions, abortSignal?: AbortSignal) {
-      setLoading(true);
+  const fetchPrices = useCallback(async function (options: FetchPricesOptions) {
+    const { variantId, dateRange, abortSignal } = options;
 
-      const startDate = getStartDate(dateRange);
-      const result = await getPrices(productId, startDate, style, size, abortSignal);
-      if (abortSignal?.aborted) {
-        return;
-      }
+    setLoading(true);
+    const startDate = getStartDate(dateRange);
+    const result = await getPrices(variantId, startDate, abortSignal);
+    if (!abortSignal?.aborted) {
       // TODO: handle error better
       if (result.status === "error") {
         setPricesData([]);
       } else {
         setPricesData(result.prices);
       }
-
-      setLoading(false);
-    },
-    [productId],
-  );
+    }
+    setLoading(false);
+  }, []);
 
   const invalidateData = useCallback(() => {
     setPricesData(null);
@@ -54,28 +50,20 @@ export function usePrices(productId: string) {
   return {
     data: pricesData,
     loading,
-    fetchPricesData,
+    fetchPrices,
     invalidateData,
   };
 }
 
-async function getPrices(
-  productId: string,
-  startDate: Date,
-  style: string,
-  size: string,
-  abortSignal?: AbortSignal,
-) {
+async function getPrices(variantId: string, startDate: Date, abortSignal?: AbortSignal) {
   const response = await fetch("/api/products/prices", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      productId,
+      variantId,
       startDate,
-      style,
-      size,
     }),
     signal: abortSignal,
   });
