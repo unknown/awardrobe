@@ -28,9 +28,10 @@ type PriceFlags = {
 type ExtendedPrice = ProductPrice & { variant: VariantWithPrice; flags: PriceFlags };
 
 export async function pingProducts() {
+  console.log(`Pinging Uniqlo US products`);
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-
   const products: ProductWithVariant[] = await prisma.product.findMany({
     where: { store: { handle: "uniqlo-us" } },
     include: {
@@ -157,16 +158,7 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
   const notifications = await prisma.productNotification.findMany({
     where: {
       mustBeInStock: inStock ? undefined : false,
-      OR: [
-        {
-          priceInCents: null,
-        },
-        {
-          priceInCents: {
-            gte: priceInCents,
-          },
-        },
-      ],
+      OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: variant.id },
     },
     include: {
@@ -202,16 +194,7 @@ async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPric
 
   const notifications = await prisma.productNotification.findMany({
     where: {
-      OR: [
-        {
-          priceInCents: null,
-        },
-        {
-          priceInCents: {
-            gte: priceInCents,
-          },
-        },
-      ],
+      OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: variant.id },
     },
     include: {
@@ -226,7 +209,7 @@ async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPric
         StockNotificationEmail({
           productName: product.name,
           description,
-          priceInCents: priceInCents,
+          priceInCents,
           productUrl: `https://getawardrobe.com/product/${product.id}`,
         }),
       );

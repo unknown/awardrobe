@@ -17,13 +17,13 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
-    "@prisma/client": "^4.16.2"
+    "@prisma/client": "^5.0.0"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
     "@types/node": "^20.3.3",
     "dotenv-cli": "^7.2.1",
-    "prisma": "^4.16.2",
+    "prisma": "^5.0.0",
     "ts-node": "^10.9.1",
     "tsup": "^7.1.0",
     "typescript": "^5.1.6"
