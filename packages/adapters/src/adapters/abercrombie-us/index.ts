@@ -3,7 +3,39 @@ import axios from "axios";
 import { dollarsToCents } from "../../utils/formatter";
 import { proxy } from "../../utils/proxy";
 import { ProductPrice, VariantAttribute } from "../../utils/types";
-import { productCollectionSchema } from "./schemas";
+import { productCollectionSchema, searchSchema } from "./schemas";
+
+export async function getCollectionId(url: string, useProxy = false) {
+  const productCodeRegex = /\/p\/(([a-zA-Z0-9-]+))/;
+  const matches = url.match(productCodeRegex);
+
+  const productCode = matches?.[1];
+  if (!productCode) {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+
+  const searchEndpoint = "https://www.abercrombie.com/api/search/a-us/search/departments";
+  const params = { version: "1.2", searchTerm: productCode };
+
+  const searchResponse = await axios.get(searchEndpoint, { params, ...(useProxy ? proxy : {}) });
+  if (searchResponse.status !== 200) {
+    throw new Error(
+      `Failed to search for product ${productCode}. Status code: ${searchResponse.status}`,
+    );
+  }
+
+  const searchResults = searchSchema.parse(searchResponse.data);
+  let collectionId: string | undefined;
+  searchResults.forEach((searchResult) => {
+    searchResult.results.products?.forEach((product) => {
+      if (product.productSeoToken.endsWith(productCode)) {
+        collectionId = product.collection;
+      }
+    });
+  });
+
+  return collectionId;
+}
 
 export async function getProductDetails(productCode: string, useProxy = false) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;

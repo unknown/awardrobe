@@ -36,9 +36,8 @@
       "persistent": true
     },
     "scrapers:run": {
-      "dependsOn": ["^db:generate"],
-      "cache": false,
-      "persistent": true
+      "dependsOn": ["^build", "^db:generate"],
+      "cache": false
     }
   }
 }

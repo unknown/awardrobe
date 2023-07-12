@@ -31,6 +31,7 @@ export const searchSchema = z.array(
           z.object({
             productId: z.string(),
             collection: z.string(),
+            productSeoToken: z.string(),
           }),
         )
         .optional(),
