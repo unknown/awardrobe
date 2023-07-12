@@ -150,9 +150,7 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
 
 async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents, inStock } = newPrice;
-  const description = Object.entries(attributes)
-    .map(([_, value]) => value)
-    .join(" - ");
+  const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
@@ -198,9 +196,7 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
 
 async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents } = newPrice;
-  const description = Object.entries(attributes)
-    .map(([_, value]) => value)
-    .join(" - ");
+  const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
 
