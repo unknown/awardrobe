@@ -1,8 +1,8 @@
 import axios from "axios";
 
-import { dollarsToCents, toTitleCase } from "../utils/formatter";
-import { proxy } from "../utils/proxy";
-import { ProductPrice, VariantAttribute } from "../utils/types";
+import { dollarsToCents, toTitleCase } from "../../utils/formatter";
+import { proxy } from "../../utils/proxy";
+import { ProductPrice, VariantAttribute } from "../../utils/types";
 import { DetailedOption, detailsSchema, l2sSchema, productsSchema } from "./schemas";
 
 const getColorName = (color: DetailedOption) => toTitleCase(`${color.displayCode} ${color.name}`);
