@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { dollarsToCents } from "../../utils/formatter";
+import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { proxy } from "../../utils/proxy";
 import { ProductPrice, VariantAttribute } from "../../utils/types";
 import { productCollectionSchema, searchSchema } from "./schemas";
@@ -53,20 +53,52 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     throw new Error(`Failed to get product details for ${productCode}. No products found.`);
   }
 
-  const name = products[0].name;
-  const productPrices: ProductPrice[] = [];
+  const prices: ProductPrice[] = [];
   const variants: VariantAttribute[][] = [];
   products.forEach((product) => {
+    if (!product.items[0]) return;
+
+    // sort items by attribute value sequence so that variants are ordered properly
+    Object.keys(product.items[0].definingAttrs).forEach((key) => {
+      product.items.sort((a, b) => {
+        const [aAttr, bAttr] = [a.definingAttrs[key], b.definingAttrs[key]];
+        if (!aAttr || !bAttr) return 0;
+        return aAttr.valueSequence - bAttr.valueSequence;
+      });
+    });
+
     product.items.forEach((item) => {
-      const attributes = Object.entries(item.definingAttrs).map(([_, value]) => value);
-      variants.push(attributes);
-      productPrices.push({
+      // the size is stored in individual grouped attributes and in a single composite attribute
+      // we only want the grouped attributes
+      const attributes = Object.values(item.definingAttrs)
+        .sort((a, b) => {
+          // move grouped attributes to the back
+          if (a.name.startsWith("Size_")) return 1;
+          if (b.name.startsWith("Size_")) return -1;
+          // sort by sequence
+          return a.sequence - b.sequence;
+        })
+        .filter((attribute) => attribute.name !== "Size") // remove composite attribute
+        .map((attribute) => {
+          const value = attribute.name === "Color" ? toTitleCase(attribute.value) : attribute.value;
+          return { name: attribute.description, value };
+        });
+
+      const lowestPrice = Math.min(
+        product.lowContractPrice,
+        product.highContractPrice,
+        item.offerPrice,
+        item.listPrice,
+      );
+
+      prices.push({
         attributes,
         inStock: item.inventory.inventory > 0,
-        priceInCents: dollarsToCents(item.offerPrice.toString()),
+        priceInCents: dollarsToCents(lowestPrice.toString()),
       });
+      variants.push(attributes);
     });
   });
 
-  return { name, productPrices, variants };
+  return { name: products[0].name, prices, variants };
 }

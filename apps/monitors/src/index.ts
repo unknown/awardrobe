@@ -4,7 +4,7 @@ import cron from "node-cron";
 
 import { testProxy } from "@awardrobe/adapters";
 
-import { pingProducts } from "./monitors/uniqlo-us";
+import { pingProducts } from "./monitors";
 
 function setupMonitors() {
   cron.schedule(`*/10 * * * *`, async () => {

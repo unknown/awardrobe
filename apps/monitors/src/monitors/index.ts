@@ -1,39 +1,21 @@
 import { render } from "@react-email/render";
 import pLimit from "p-limit";
 
-import { ProductPrice, UniqloUS, VariantAttribute } from "@awardrobe/adapters";
+import { ProductPrice, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import { Prisma } from "@awardrobe/prisma-types";
 
+import { getAdapter } from "../utils/adapters";
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
-
-const variantWithPrice = Prisma.validator<Prisma.ProductVariantArgs>()({
-  include: { prices: { take: 1, orderBy: { timestamp: "desc" } } },
-});
-type VariantWithPrice = Prisma.ProductVariantGetPayload<typeof variantWithPrice>;
-
-const productWithVariant = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: variantWithPrice },
-});
-type ProductWithVariant = Prisma.ProductGetPayload<typeof productWithVariant>;
-
-type PriceFlags = {
-  shouldUpdatePrice: boolean;
-  hasPriceDropped: boolean;
-  hasRestocked: boolean;
-};
-
-type ExtendedPrice = ProductPrice & { variant: VariantWithPrice; flags: PriceFlags };
+import { ExtendedPrice, ExtendedProduct, VariantWithPrice } from "./types";
 
 export async function pingProducts() {
-  console.log(`Pinging Uniqlo US products`);
+  console.log(`Pinging products`);
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const products: ProductWithVariant[] = await prisma.product.findMany({
-    where: { store: { handle: "uniqlo-us" } },
+  const products: ExtendedProduct[] = await prisma.product.findMany({
     include: {
       variants: {
         include: {
@@ -44,6 +26,7 @@ export async function pingProducts() {
           },
         },
       },
+      store: true,
     },
   });
 
@@ -65,8 +48,9 @@ export async function pingProducts() {
   console.log(`Updated prices successfully for ${successfulUpdates}/${products.length} products`);
 }
 
-async function pingProduct(product: ProductWithVariant) {
-  const { prices } = await UniqloUS.getProductDetails(product.productCode, true);
+async function pingProduct(product: ExtendedProduct) {
+  const adapter = getAdapter(product.store.handle);
+  const { prices } = await adapter.getProductDetails(product.productCode, true);
   if (prices.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
@@ -149,7 +133,7 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
   };
 }
 
-async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPrice) {
+async function handlePriceDrop(product: ExtendedProduct, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents, inStock } = newPrice;
   const description = attributes.map(({ value }) => value).join(" - ");
 
@@ -186,7 +170,7 @@ async function handlePriceDrop(product: ProductWithVariant, newPrice: ExtendedPr
   );
 }
 
-async function handleRestock(product: ProductWithVariant, newPrice: ExtendedPrice) {
+async function handleRestock(product: ExtendedProduct, newPrice: ExtendedPrice) {
   const { variant, attributes, priceInCents } = newPrice;
   const description = attributes.map(({ value }) => value).join(" - ");
 
