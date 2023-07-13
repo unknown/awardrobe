@@ -33,7 +33,7 @@ export function ProductInfo({
   initialOptions,
   initialNotifications,
 }: ProductInfoProps) {
-  const { data: prices, fetchPrices } = usePrices();
+  const { data: prices, fetchPrices, invalidateData } = usePrices();
 
   const [options, setOptions] = useState<ControlOptions>({ ...initialOptions });
   const [notifications, setNotifications] = useState<ProductNotification[]>(initialNotifications);
@@ -45,6 +45,7 @@ export function ProductInfo({
       abortSignal?: AbortSignal;
     }) => {
       if (!options.variant) {
+        invalidateData();
         return;
       }
       await fetchPrices({

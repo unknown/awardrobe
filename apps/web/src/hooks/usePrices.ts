@@ -44,7 +44,7 @@ export function usePrices() {
   }, []);
 
   const invalidateData = useCallback(() => {
-    setPricesData(null);
+    setPricesData([]);
   }, []);
 
   return {
