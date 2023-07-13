@@ -67,19 +67,7 @@ export async function POST(req: Request) {
 }
 
 async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductResponse>> {
-  const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/g;
-  const productCode = productUrl.match(productCodeRegex)?.[0];
-
-  if (!productCode) {
-    return NextResponse.json<AddProductResponse>(
-      {
-        status: "error",
-        error: "Error getting product code",
-      },
-      { status: 400 },
-    );
-  }
-
+  const productCode = await UniqloUS.getProductCode(productUrl);
   const { name, variants } = await UniqloUS.getProductDetails(productCode);
 
   const store = await prisma.store.findUniqueOrThrow({

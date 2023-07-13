@@ -8,3 +8,14 @@ export type ProductPrice = {
   priceInCents: number;
   inStock: boolean;
 };
+
+type ProductDetailsResult = {
+  name: string;
+  prices: ProductPrice[];
+  variants: VariantAttribute[][];
+};
+
+export type StoreAdapter = {
+  getProductCode: (url: string, useProxy?: boolean) => Promise<string>;
+  getProductDetails: (productCode: string, useProxy?: boolean) => Promise<ProductDetailsResult>;
+};

@@ -2,10 +2,15 @@ import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
-import { ProductPrice, VariantAttribute } from "../../utils/types";
+import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
 import { productCollectionSchema, searchSchema } from "./schemas";
 
-export async function getCollectionId(url: string, useProxy = false) {
+export const AbercrombieUS: StoreAdapter = {
+  getProductCode,
+  getProductDetails,
+};
+
+async function getProductCode(url: string, useProxy = false) {
   const productCodeRegex = /\/p\/(([a-zA-Z0-9-]+))/;
   const matches = url.match(productCodeRegex);
 
@@ -35,10 +40,14 @@ export async function getCollectionId(url: string, useProxy = false) {
     });
   });
 
+  if (!collectionId) {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+
   return collectionId;
 }
 
-export async function getProductDetails(productCode: string, useProxy = false) {
+async function getProductDetails(productCode: string, useProxy = false) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
   const httpsAgent = getHttpsProxyAgent(useProxy);
 

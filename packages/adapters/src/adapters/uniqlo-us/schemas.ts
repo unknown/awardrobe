@@ -16,8 +16,16 @@ const optionSchema = z.object({
 
 export type DetailedOption = z.infer<typeof optionSchema>;
 
+const errorSchema = z.object({
+  status: z.literal("nok"),
+  error: z.object({
+    code: z.number(),
+  }),
+});
+
 // contains stock and price data of products
-export const l2sSchema = z.object({
+const okL2sSchema = z.object({
+  status: z.literal("ok"),
   result: z.object({
     l2s: z.array(
       z.object({
@@ -31,9 +39,11 @@ export const l2sSchema = z.object({
     prices: z.record(z.string(), z.object({ base: z.object({ value: z.number() }) })),
   }),
 });
+export const l2sSchema = z.union([okL2sSchema, errorSchema]);
 
 // contains human-readable names for colors and sizes
-export const detailsSchema = z.object({
+const okDetailsSchema = z.object({
+  status: z.literal("ok"),
   result: z.object({
     name: z.string(),
     colors: z.array(optionSchema),
@@ -41,9 +51,11 @@ export const detailsSchema = z.object({
     plds: z.array(optionSchema),
   }),
 });
+export const detailsSchema = z.union([okDetailsSchema, errorSchema]);
 
 // contains general product details
-export const productsSchema = z.object({
+const okProductsSchema = z.object({
+  status: z.literal("ok"),
   result: z.object({
     items: z.array(
       z.object({
@@ -61,3 +73,4 @@ export const productsSchema = z.object({
     }),
   }),
 });
+export const productsSchema = z.union([okProductsSchema, errorSchema]);

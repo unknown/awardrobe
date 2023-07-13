@@ -2,8 +2,13 @@ import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
-import { ProductPrice, VariantAttribute } from "../../utils/types";
+import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
 import { DetailedOption, detailsSchema, l2sSchema, productsSchema } from "./schemas";
+
+export const UniqloUS: StoreAdapter = {
+  getProductCode,
+  getProductDetails,
+};
 
 const getColorName = (color: DetailedOption) => toTitleCase(`${color.displayCode} ${color.name}`);
 const getSizeName = (size: DetailedOption) => size.name;
@@ -14,13 +19,16 @@ export async function getProducts(offset: number = 0, limit: number = 36, usePro
   const httpsAgent = getHttpsProxyAgent(useProxy);
 
   const productsResponse = await axios.get(productsEndpoint, { httpsAgent });
-
   if (productsResponse.status !== 200) {
     throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
   }
 
-  const { items, pagination } = productsSchema.parse(productsResponse.data).result;
+  const productsData = productsSchema.parse(productsResponse.data);
+  if (productsData.status === "nok") {
+    throw new Error(`Failed to get products`);
+  }
 
+  const { items, pagination } = productsData.result;
   const products = items.map(({ name, productId, ...options }) => {
     const formattedOptions = getFormattedOptions(options);
     return {
@@ -34,6 +42,31 @@ export async function getProducts(offset: number = 0, limit: number = 36, usePro
     products,
     pagination,
   };
+}
+
+export async function getProductCode(url: string, useProxy = false) {
+  const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/;
+  const matches = url.match(productCodeRegex);
+
+  const productCode = matches?.[0];
+  if (!productCode) {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+
+  const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+  const httpsAgent = getHttpsProxyAgent(useProxy);
+
+  const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
+  if (searchResponse.status !== 200) {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+
+  const detailsResult = detailsSchema.parse(searchResponse.data);
+  if (detailsResult.status === "nok") {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+
+  return productCode;
 }
 
 export async function getProductDetails(productCode: string, useProxy = false) {
@@ -52,8 +85,17 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     );
   }
 
-  const { l2s, stocks, prices } = l2sSchema.parse(l2sResponse.data).result;
-  const { name, ...options } = detailsSchema.parse(detailsResponse.data).result;
+  const [l2sData, detailsData] = [
+    l2sSchema.parse(l2sResponse.data),
+    detailsSchema.parse(detailsResponse.data),
+  ];
+
+  if (l2sData.status === "nok" || detailsData.status === "nok") {
+    throw new Error(`Failed to get product details for ${productCode}`);
+  }
+
+  const { l2s, stocks, prices } = l2sData.result;
+  const { name, ...options } = detailsData.result;
 
   const productPrices: ProductPrice[] = [];
   l2s.forEach((variant) => {
