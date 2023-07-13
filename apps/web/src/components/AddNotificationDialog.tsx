@@ -20,7 +20,6 @@ export type AddNotificationDialogProps = {
   variantId: string;
   defaultOptions: NotificationOptions;
   onAddNotification: (newNotification: ProductNotification) => void;
-  disabled?: boolean;
 };
 
 export function AddNotificationDialog({
@@ -28,7 +27,6 @@ export function AddNotificationDialog({
   variantId,
   defaultOptions,
   onAddNotification,
-  disabled,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +43,7 @@ export function AddNotificationDialog({
         }}
       >
         <DialogTrigger asChild>
-          <Button variant="outline" disabled={disabled}>
+          <Button variant="outline">
             <Bell className="mr-2" />
             Add notification
           </Button>

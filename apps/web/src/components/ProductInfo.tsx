@@ -54,7 +54,7 @@ export function ProductInfo({
         abortSignal: options.abortSignal,
       });
     },
-    [fetchPrices],
+    [fetchPrices, invalidateData],
   );
 
   useEffect(() => {
@@ -112,7 +112,6 @@ export function ProductInfo({
         onAddNotification={(newNotification) =>
           setNotifications((notifications) => [...notifications, newNotification])
         }
-        disabled={notification}
       />
     );
   };
@@ -149,15 +148,15 @@ export function ProductInfo({
             </div>
           </div>
         </div>
-        <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
-          <a
-            href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+        <a
+          href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
             {getPillText()}
-          </a>
-        </div>
+          </div>
+        </a>
       </section>
       <section className="container max-w-4xl space-y-2 py-6">
         <h2 className="text-xl font-medium">Price History</h2>
