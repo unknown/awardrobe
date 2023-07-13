@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { proxy } from "../../utils/proxy";
+import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, VariantAttribute } from "../../utils/types";
 import { DetailedOption, detailsSchema, l2sSchema, productsSchema } from "./schemas";
 
@@ -11,7 +11,9 @@ const getPldName = (pld: DetailedOption) => pld.name;
 
 export async function getProducts(offset: number = 0, limit: number = 36, useProxy = false) {
   const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products?offset=${offset}&limit=${limit}&httpFailure=true`;
-  const productsResponse = await axios.get(productsEndpoint, useProxy ? { proxy } : undefined);
+  const httpsAgent = getHttpsProxyAgent(useProxy);
+
+  const productsResponse = await axios.get(productsEndpoint, { httpsAgent });
 
   if (productsResponse.status !== 200) {
     throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
@@ -37,9 +39,11 @@ export async function getProducts(offset: number = 0, limit: number = 36, usePro
 export async function getProductDetails(productCode: string, useProxy = false) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+  const httpsAgent = getHttpsProxyAgent(useProxy);
+
   const [l2sResponse, detailsResponse] = await axios.all([
-    axios.get(l2sEndpoint, useProxy ? { proxy } : undefined),
-    axios.get(detailsEndpoint, useProxy ? { proxy } : undefined),
+    axios.get(l2sEndpoint, { httpsAgent }),
+    axios.get(detailsEndpoint, { httpsAgent }),
   ]);
 
   if (l2sResponse?.status !== 200 || detailsResponse?.status !== 200) {

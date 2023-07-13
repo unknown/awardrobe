@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { proxy } from "../../utils/proxy";
+import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, VariantAttribute } from "../../utils/types";
 import { productCollectionSchema, searchSchema } from "./schemas";
 
@@ -16,8 +16,9 @@ export async function getCollectionId(url: string, useProxy = false) {
 
   const searchEndpoint = "https://www.abercrombie.com/api/search/a-us/search/departments";
   const params = { version: "1.2", searchTerm: productCode };
+  const httpsAgent = getHttpsProxyAgent(useProxy);
 
-  const searchResponse = await axios.get(searchEndpoint, { params, ...(useProxy ? proxy : {}) });
+  const searchResponse = await axios.get(searchEndpoint, { params, httpsAgent });
   if (searchResponse.status !== 200) {
     throw new Error(
       `Failed to search for product ${productCode}. Status code: ${searchResponse.status}`,
@@ -39,7 +40,9 @@ export async function getCollectionId(url: string, useProxy = false) {
 
 export async function getProductDetails(productCode: string, useProxy = false) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-  const collectionResponse = await axios.get(collectionEndpoint, useProxy ? { proxy } : undefined);
+  const httpsAgent = getHttpsProxyAgent(useProxy);
+
+  const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
 
   if (collectionResponse.status !== 200) {
     throw new Error(
