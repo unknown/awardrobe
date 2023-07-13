@@ -14,8 +14,6 @@ const optionSchema = z.object({
   }),
 });
 
-export type DetailedOption = z.infer<typeof optionSchema>;
-
 const errorSchema = z.object({
   status: z.literal("nok"),
   error: z.object({

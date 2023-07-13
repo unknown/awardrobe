@@ -1,49 +1,22 @@
-import { UniqloUS } from "@awardrobe/adapters";
-
 import "dotenv/config";
 
-import prisma from "./utils/database";
+import { AbercrombieUS, testProxy, UniqloUS } from "@awardrobe/adapters";
 
 async function main() {
-  const store = await prisma.store.findUniqueOrThrow({
-    where: {
-      handle: "uniqlo-us",
-    },
-  });
-
-  const limit = 100;
-  for (let [offset, total] = [0, 100]; offset < total; offset += limit) {
-    const result = await UniqloUS.getProducts(offset, limit);
-
-    const { products, pagination } = result;
-    total = pagination.total;
-
-    for (const product of products) {
-      const { productCode, name, variants } = product;
-
-      await prisma.product.upsert({
-        where: {
-          storeId_productCode: {
-            storeId: store.id,
-            productCode,
-          },
-        },
-        update: {},
-        create: {
-          storeId: store.id,
-          productCode,
-          name,
-          variants: {
-            createMany: {
-              data: variants.map((variant) => ({ attributes: variant })),
-            },
-          },
-        },
-      });
-
-      console.log(`Added product ${name} - ${productCode}`);
-    }
+  try {
+    await testProxy();
+    console.log("Proxy is working");
+  } catch (error) {
+    console.warn(`Proxy is not working: ${error}`);
   }
+
+  const limit = 120;
+
+  const uniqloProducts = await UniqloUS.getProducts(limit);
+  console.log(uniqloProducts, uniqloProducts.length);
+
+  const abercrombieProducts = await AbercrombieUS.getProducts(limit);
+  console.log(abercrombieProducts, abercrombieProducts.length);
 }
 
 void main();

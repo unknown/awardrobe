@@ -3,45 +3,43 @@ import axios from "axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
-import { DetailedOption, detailsSchema, l2sSchema, productsSchema } from "./schemas";
+import { detailsSchema, l2sSchema, productsSchema } from "./schemas";
 
 export const UniqloUS: StoreAdapter = {
+  getProducts,
   getProductCode,
   getProductDetails,
 };
 
-const getColorName = (color: DetailedOption) => toTitleCase(`${color.displayCode} ${color.name}`);
-const getSizeName = (size: DetailedOption) => size.name;
-const getPldName = (pld: DetailedOption) => pld.name;
+export async function getProducts(limit?: number, useProxy = false) {
+  const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
+  const productCodes: string[] = [];
 
-export async function getProducts(offset: number = 0, limit: number = 36, useProxy = false) {
-  const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products?offset=${offset}&limit=${limit}&httpFailure=true`;
-  const httpsAgent = getHttpsProxyAgent(useProxy);
+  const increment = 100;
 
-  const productsResponse = await axios.get(productsEndpoint, { httpsAgent });
-  if (productsResponse.status !== 200) {
-    throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
+  for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
+    const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
+    const httpsAgent = getHttpsProxyAgent(useProxy);
+    const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
+
+    if (productsResponse.status !== 200) {
+      throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
+    }
+
+    const productsData = productsSchema.parse(productsResponse.data);
+    if (productsData.status === "nok") {
+      throw new Error(`Failed to get products`);
+    }
+
+    const { items, pagination } = productsData.result;
+    productCodes.push(...items.map((item) => item.productId));
+
+    if (!limit) {
+      total = pagination.total;
+    }
   }
 
-  const productsData = productsSchema.parse(productsResponse.data);
-  if (productsData.status === "nok") {
-    throw new Error(`Failed to get products`);
-  }
-
-  const { items, pagination } = productsData.result;
-  const products = items.map(({ name, productId, ...options }) => {
-    const formattedOptions = getFormattedOptions(options);
-    return {
-      name,
-      productCode: productId,
-      variants: getVariantAttributes(formattedOptions),
-    };
-  });
-
-  return {
-    products,
-    pagination,
-  };
+  return productCodes;
 }
 
 export async function getProductCode(url: string, useProxy = false) {
@@ -98,6 +96,7 @@ export async function getProductDetails(productCode: string, useProxy = false) {
   const { name, ...options } = detailsData.result;
 
   const productPrices: ProductPrice[] = [];
+  const variants: VariantAttribute[][] = [];
   l2s.forEach((variant) => {
     const stocksEntry = stocks[variant.l2Id];
     const pricesEntry = prices[variant.l2Id];
@@ -113,60 +112,22 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     }
 
     const attributes: VariantAttribute[] = [];
-    if (color.display.showFlag) attributes.push({ name: "Color", value: getColorName(color) });
-    if (size.display.showFlag) attributes.push({ name: "Size", value: getSizeName(size) });
-    if (pld.display.showFlag) attributes.push({ name: "Length", value: getPldName(pld) });
+    if (color.display.showFlag)
+      attributes.push({ name: "Color", value: toTitleCase(`${color.displayCode} ${color.name}`) });
+    if (size.display.showFlag) attributes.push({ name: "Size", value: size.name });
+    if (pld.display.showFlag) attributes.push({ name: "Length", value: pld.name });
 
     productPrices.push({
       attributes,
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
       inStock: stocksEntry.quantity > 0,
     });
+    variants.push(attributes);
   });
-
-  const formattedOptions = getFormattedOptions(options);
 
   return {
     name,
     prices: productPrices,
-    variants: getVariantAttributes(formattedOptions),
+    variants,
   };
-}
-
-function getFormattedOptions(options: {
-  colors: DetailedOption[];
-  sizes: DetailedOption[];
-  plds: DetailedOption[];
-}) {
-  const formattedOptions: Record<string, string[]> = {};
-
-  const colors = options.colors
-    .filter((color) => color.display.showFlag)
-    .map((color) => getColorName(color));
-  if (colors.length > 0) formattedOptions["Color"] = colors;
-
-  const sizes = options.sizes
-    .filter((size) => size.display.showFlag)
-    .map((size) => getSizeName(size));
-  if (sizes.length > 0) formattedOptions["Size"] = sizes;
-
-  const lengths = options.plds.filter((pld) => pld.display.showFlag).map((pld) => getPldName(pld));
-  if (lengths.length > 0) formattedOptions["Length"] = lengths;
-
-  return formattedOptions;
-}
-
-function getVariantAttributes(options: Record<string, string[]>): VariantAttribute[][] {
-  const entry = Object.entries(options).at(0);
-  if (!entry) {
-    return [[]];
-  }
-
-  const [key, values] = entry;
-  delete options[key];
-  const otherVariants = getVariantAttributes(options);
-
-  return values.flatMap((value) =>
-    otherVariants.map((variant) => [{ name: key, value }, ...variant]),
-  );
 }

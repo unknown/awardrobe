@@ -3,12 +3,41 @@ import axios from "axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
-import { productCollectionSchema, searchSchema } from "./schemas";
+import { categorySearchSchema, collectionSchema, searchSchema } from "./schemas";
 
 export const AbercrombieUS: StoreAdapter = {
+  getProducts,
   getProductCode,
   getProductDetails,
 };
+
+async function getProducts(limit?: number, useProxy = false) {
+  // category 10000 represents all of A&F
+  const productsEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
+  const productCodes: string[] = [];
+
+  const increment = 100;
+  for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
+    const params = { start: offset, rows: Math.min(total - offset, increment) };
+    const httpsAgent = getHttpsProxyAgent(useProxy);
+    const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
+
+    if (productsResponse.status !== 200) {
+      throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
+    }
+
+    const productsData = categorySearchSchema.parse(productsResponse.data);
+
+    const { products, stats } = productsData;
+    productCodes.push(...products.map((product) => product.collection));
+
+    if (!limit) {
+      total = stats.total;
+    }
+  }
+
+  return productCodes;
+}
 
 async function getProductCode(url: string, useProxy = false) {
   const productCodeRegex = /\/p\/(([a-zA-Z0-9-]+))/;
@@ -59,7 +88,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
     );
   }
 
-  const { products } = productCollectionSchema.parse(collectionResponse.data);
+  const { products } = collectionSchema.parse(collectionResponse.data);
 
   if (products[0] === undefined) {
     throw new Error(`Failed to get product details for ${productCode}. No products found.`);
