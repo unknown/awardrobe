@@ -3,7 +3,7 @@ import axios from "axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
-import { categorySearchSchema, collectionSchema, searchSchema } from "./schemas";
+import { collectionSchema, listSchema, searchSchema } from "./schemas";
 
 export const AbercrombieUS: StoreAdapter = {
   getProducts,
@@ -13,22 +13,21 @@ export const AbercrombieUS: StoreAdapter = {
 
 async function getProducts(limit?: number, useProxy = false) {
   // category 10000 represents all of A&F
-  const productsEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
+  const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
   const productCodes: string[] = [];
 
   const increment = 100;
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { start: offset, rows: Math.min(total - offset, increment) };
     const httpsAgent = getHttpsProxyAgent(useProxy);
-    const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
+    const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
-    if (productsResponse.status !== 200) {
-      throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
+    if (searchResponse.status !== 200) {
+      throw new Error(`Failed to get products. Status code: ${searchResponse.status}`);
     }
 
-    const productsData = categorySearchSchema.parse(productsResponse.data);
+    const { products, stats } = searchSchema.parse(searchResponse.data);
 
-    const { products, stats } = productsData;
     productCodes.push(...products.map((product) => product.collection));
 
     if (!limit) {
@@ -40,7 +39,7 @@ async function getProducts(limit?: number, useProxy = false) {
 }
 
 async function getProductCode(url: string, useProxy = false) {
-  const productCodeRegex = /\/p\/(([a-zA-Z0-9-]+))/;
+  const productCodeRegex = /\/p\/[a-zA-Z-]+([0-9]+)/;
   const matches = url.match(productCodeRegex);
 
   const productCode = matches?.[1];
@@ -48,25 +47,24 @@ async function getProductCode(url: string, useProxy = false) {
     throw new Error(`Failed to get product code from ${url}`);
   }
 
-  const searchEndpoint = "https://www.abercrombie.com/api/search/a-us/search/departments";
-  const params = { version: "1.2", searchTerm: productCode };
+  const listEndpoint = "https://www.abercrombie.com/api/search/a-us/product/list/";
+  const params = { productIds: productCode };
   const httpsAgent = getHttpsProxyAgent(useProxy);
+  const listResponse = await axios.get(listEndpoint, { params, httpsAgent });
 
-  const searchResponse = await axios.get(searchEndpoint, { params, httpsAgent });
-  if (searchResponse.status !== 200) {
+  if (listResponse.status !== 200) {
     throw new Error(
-      `Failed to search for product ${productCode}. Status code: ${searchResponse.status}`,
+      `Failed to search for product ${productCode}. Status code: ${listResponse.status}`,
     );
   }
 
-  const searchResults = searchSchema.parse(searchResponse.data);
+  const { products } = listSchema.parse(listResponse.data);
+
   let collectionId: string | undefined;
-  searchResults.forEach((searchResult) => {
-    searchResult.results.products?.forEach((product) => {
-      if (product.productSeoToken.endsWith(productCode)) {
-        collectionId = product.collection;
-      }
-    });
+  products.forEach((product) => {
+    if (product.productId === productCode) {
+      collectionId = product.collection;
+    }
   });
 
   if (!collectionId) {
@@ -126,8 +124,8 @@ async function getProductDetails(productCode: string, useProxy = false) {
         });
 
       const lowestPrice = Math.min(
-        product.lowContractPrice,
-        product.highContractPrice,
+        product.lowContractPrice ?? Infinity,
+        product.highContractPrice ?? Infinity,
         item.offerPrice,
         item.listPrice,
       );

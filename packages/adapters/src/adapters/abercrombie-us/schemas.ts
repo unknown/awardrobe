@@ -5,8 +5,8 @@ const productSchema = z.object({
   collection: z.string(),
   productSeoToken: z.string(),
   name: z.string(),
-  lowContractPrice: z.number(),
-  highContractPrice: z.number(),
+  lowContractPrice: z.number().optional(),
+  highContractPrice: z.number().optional(),
   items: z.array(
     z.object({
       itemId: z.string(),
@@ -27,24 +27,15 @@ const productSchema = z.object({
   ),
 });
 
+export const listSchema = z.object({
+  products: z.array(productSchema),
+});
+
 export const collectionSchema = z.object({
   products: z.array(productSchema),
 });
 
-export const searchSchema = z.array(
-  z.object({
-    results: z.object({
-      stats: z.object({
-        count: z.number(),
-        total: z.number(),
-        startNum: z.number(),
-      }),
-      products: z.array(productSchema).optional(),
-    }),
-  }),
-);
-
-export const categorySearchSchema = z.object({
+export const searchSchema = z.object({
   stats: z.object({
     count: z.number(),
     total: z.number(),
