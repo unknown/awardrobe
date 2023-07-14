@@ -96,7 +96,7 @@ export async function getProductDetails(productCode: string, useProxy = false) {
   const { name, ...options } = detailsData.result;
 
   const productPrices: ProductPrice[] = [];
-  const variants: VariantAttribute[][] = [];
+  let [hasColor, hasSize, hasLength] = [false, false, false];
   l2s.forEach((variant) => {
     const stocksEntry = stocks[variant.l2Id];
     const pricesEntry = prices[variant.l2Id];
@@ -112,22 +112,39 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     }
 
     const attributes: VariantAttribute[] = [];
-    if (color.display.showFlag)
+    if (color.display.showFlag) {
       attributes.push({ name: "Color", value: toTitleCase(`${color.displayCode} ${color.name}`) });
-    if (size.display.showFlag) attributes.push({ name: "Size", value: size.name });
-    if (pld.display.showFlag) attributes.push({ name: "Length", value: pld.name });
+      hasColor = true;
+    }
+    if (size.display.showFlag) {
+      attributes.push({ name: "Size", value: size.name });
+      hasSize = true;
+    }
+    if (pld.display.showFlag) {
+      attributes.push({ name: "Length", value: pld.name });
+      hasLength = true;
+    }
 
     productPrices.push({
       attributes,
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
       inStock: stocksEntry.quantity > 0,
     });
-    variants.push(attributes);
+  });
+
+  // filter out prices and their variants that don't have all attributes
+  const filteredPrices = productPrices.filter(({ attributes, inStock }) => {
+    const priceHasColor = attributes.some((attribute) => attribute.name === "Color");
+    const priceHasSize = attributes.some((attribute) => attribute.name === "Size");
+    const priceHasLength = attributes.some((attribute) => attribute.name === "Length");
+    const isMissingAttribute =
+      (hasColor && !priceHasColor) || (hasSize && !priceHasSize) || (hasLength && !priceHasLength);
+    return !isMissingAttribute || inStock;
   });
 
   return {
     name,
-    prices: productPrices,
-    variants,
+    prices: filteredPrices,
+    variants: filteredPrices.map(({ attributes }) => attributes),
   };
 }
