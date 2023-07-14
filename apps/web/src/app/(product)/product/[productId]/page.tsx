@@ -31,7 +31,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
-    include: { variants: { include: { notifications: userId ? { where: { userId } } : false } } },
+    include: {
+      variants: { include: { notifications: userId ? { where: { userId } } : { take: 0 } } },
+    },
   });
 
   if (!product) {
