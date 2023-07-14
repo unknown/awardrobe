@@ -3,26 +3,35 @@ import { Button } from "@ui/Button";
 import { getServerSession } from "next-auth";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { Product, ProductVariant } from "@awardrobe/prisma-types";
+import { Prisma } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/ProductInfo";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
-export type ProductWithVariants = Product & {
-  variants: ProductVariant[];
-};
+const variantWithNotification = Prisma.validator<Prisma.ProductVariantArgs>()({
+  include: { notifications: true },
+});
+export type VariantWithNotification = Prisma.ProductVariantGetPayload<
+  typeof variantWithNotification
+>;
+
+const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
+  include: { variants: variantWithNotification },
+});
+export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
 type ProductPageProps = {
   params: { productId: string };
 };
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user.id;
+
   const product = await prisma.product.findUnique({
     where: { id: params.productId },
-    include: {
-      variants: true,
-    },
+    include: { variants: { include: { notifications: userId ? { where: { userId } } : false } } },
   });
 
   if (!product) {
@@ -38,17 +47,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </section>
     );
   }
-
-  const session = await getServerSession(authOptions);
-
-  const notifications = session?.user.id
-    ? await prisma.productNotification.findMany({
-        where: {
-          userId: session.user.id,
-          productId: product.id,
-        },
-      })
-    : [];
 
   const productOptions: Record<string, string[]> = {};
   product.variants.forEach((variant) => {
@@ -81,7 +79,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         attributes: initialAttributes,
         dateRange: "7d",
       }}
-      initialNotifications={notifications}
     />
   );
 }

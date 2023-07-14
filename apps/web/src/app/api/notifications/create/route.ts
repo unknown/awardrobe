@@ -7,7 +7,6 @@ import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
 type AddNotificationRequest = {
-  productId: string;
   variantId: string;
   priceInCents?: number;
   mustBeInStock: boolean;
@@ -35,17 +34,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const { productId, priceInCents, mustBeInStock, variantId }: AddNotificationRequest =
-    await req.json();
+  const { priceInCents, mustBeInStock, variantId }: AddNotificationRequest = await req.json();
 
   try {
     const notification = await prisma.productNotification.create({
       data: {
-        product: {
-          connect: {
-            id: productId,
-          },
-        },
         productVariant: {
           connect: {
             id: variantId,

@@ -5,20 +5,9 @@ import Link from "next/link";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { Prisma } from "@awardrobe/prisma-types";
 
+import { ExtendedNotification } from "@/app/(product)/profile/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
-
-const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
-  include: {
-    productVariant: {
-      include: {
-        product: true,
-      },
-    },
-  },
-});
-type ExtendedNotification = Prisma.ProductNotificationGetPayload<typeof extendedNotification>;
 
 export type NotificationListProps = {
   initialNotifications: ExtendedNotification[];
@@ -28,14 +17,14 @@ export function NotificationList({ initialNotifications }: NotificationListProps
 
   return (
     <div className="space-y-4">
-      {notifications.map(({ id, productId, productVariant }) => {
+      {notifications.map(({ id, productVariant }) => {
         // TODO: better types?
         const attributes = productVariant.attributes as VariantAttribute[];
         const description = attributes.map(({ value }) => value).join(" - ");
 
         return (
           <div key={id}>
-            <Link href={`/product/${productId}`}>
+            <Link href={`/product/${productVariant.product.id}`}>
               <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
             </Link>
             <p className="text-muted-foreground text-sm">{description}</p>

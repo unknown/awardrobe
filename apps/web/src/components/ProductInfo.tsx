@@ -1,12 +1,13 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductNotification, ProductVariant } from "@awardrobe/prisma-types";
+import { ProductVariant } from "@awardrobe/prisma-types";
 
-import { ProductWithVariants } from "@/app/(product)/product/[productId]/page";
+import { ExtendedProduct, VariantWithNotification } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../hooks/usePrices";
@@ -15,28 +16,22 @@ import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 type ControlOptions = {
-  variant?: ProductVariant;
+  variant?: VariantWithNotification;
   attributes: Record<string, string>;
   dateRange: DateRange;
 };
 
 export type ProductInfoProps = {
-  product: ProductWithVariants;
+  product: ExtendedProduct;
   productOptions: Record<string, string[]>;
   initialOptions: ControlOptions;
-  initialNotifications: ProductNotification[];
 };
 
-export function ProductInfo({
-  product,
-  productOptions,
-  initialOptions,
-  initialNotifications,
-}: ProductInfoProps) {
+export function ProductInfo({ product, productOptions, initialOptions }: ProductInfoProps) {
+  const router = useRouter();
   const { data: prices, fetchPrices, invalidateData } = usePrices();
 
   const [options, setOptions] = useState<ControlOptions>({ ...initialOptions });
-  const [notifications, setNotifications] = useState<ProductNotification[]>(initialNotifications);
 
   const loadPrices = useCallback(
     async (options: {
@@ -77,13 +72,12 @@ export function ProductInfo({
   };
 
   const NotificationButton = () => {
-    const variantId = options.variant?.id;
-    if (!variantId) {
+    const variant = options.variant;
+    if (!variant) {
       return null;
     }
-    const notification = notifications.find((notification) => {
-      return notification.productVariantId === variantId;
-    });
+    const notification = variant.notifications[0];
+
     if (notification) {
       return (
         <Button
@@ -91,9 +85,8 @@ export function ProductInfo({
           onClick={async () => {
             const result = await deleteNotification(notification.id);
             if (result.status === "success") {
-              setNotifications((notifications) =>
-                [...notifications].filter((n) => n !== notification),
-              );
+              setOptions((options) => ({ ...options, variant: { ...variant, notifications: [] } }));
+              router.refresh();
             }
           }}
         >
@@ -104,14 +97,18 @@ export function ProductInfo({
     return (
       <AddNotificationDialog
         productId={product.id}
-        variantId={variantId}
+        variantId={variant.id}
         defaultOptions={{
           mustBeInStock: false,
           priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
         }}
-        onAddNotification={(newNotification) =>
-          setNotifications((notifications) => [...notifications, newNotification])
-        }
+        onAddNotification={(newNotification) => {
+          setOptions((options) => ({
+            ...options,
+            variant: { ...variant, notifications: [newNotification] },
+          }));
+          router.refresh();
+        }}
       />
     );
   };

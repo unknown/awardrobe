@@ -1,9 +1,24 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
+import { Prisma } from "@awardrobe/prisma-types";
+
 import { NotificationList } from "@/components/NotificationsList";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
+
+const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
+  include: {
+    productVariant: {
+      include: {
+        product: true,
+      },
+    },
+  },
+});
+export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
+  typeof extendedNotification
+>;
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -13,16 +28,8 @@ export default async function ProfilePage() {
   }
 
   const notifications = await prisma.productNotification.findMany({
-    where: {
-      userId: session.user.id,
-    },
-    include: {
-      productVariant: {
-        include: {
-          product: true,
-        },
-      },
-    },
+    where: { userId: session.user.id },
+    ...extendedNotification,
   });
 
   return (

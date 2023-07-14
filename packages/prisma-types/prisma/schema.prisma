@@ -69,12 +69,11 @@ model Store {
 }
 
 model Product {
-  id            String                @id @default(cuid())
-  productCode   String
-  name          String
-  storeId       String
-  variants      ProductVariant[]
-  notifications ProductNotification[]
+  id          String           @id @default(cuid())
+  storeId     String
+  productCode String
+  name        String
+  variants    ProductVariant[]
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
@@ -109,17 +108,14 @@ model ProductVariant {
 model ProductNotification {
   id               String  @id @default(cuid())
   userId           String
-  productId        String
   productVariantId String
   priceInCents     Int?
   mustBeInStock    Boolean
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productVariantId])
   @@index([userId])
-  @@index([productId])
   @@index([productVariantId])
 }
