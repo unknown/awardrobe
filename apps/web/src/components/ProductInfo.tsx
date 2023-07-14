@@ -67,7 +67,7 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
     } else if (lastPrice === undefined) {
       return "See price";
     } else {
-      return `${formatCurrency(lastPrice)} on Uniqlo`;
+      return `${formatCurrency(lastPrice)} on ${product.store.shortenedName ?? product.store.name}`;
     }
   };
 
@@ -117,7 +117,7 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
     <Fragment>
       <section className="container max-w-4xl py-6">
         <div className="flex flex-col gap-2">
-          <p className="text-muted-foreground text-sm">Uniqlo US</p>
+          <p className="text-muted-foreground text-sm">{product.store.name}</p>
           <h1 className="text-3xl font-medium">{product.name}</h1>
           <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
             <VariantControls
@@ -145,11 +145,8 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
             </div>
           </div>
         </div>
-        <a
-          href={`https://www.uniqlo.com/us/en/products/${product.productCode}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        {/* TODO: hide this pill if product url doesn't exist? */}
+        <a href={options.variant?.productUrl} target="_blank" rel="noopener noreferrer">
           <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
             {getPillText()}
           </div>

@@ -61,11 +61,12 @@ model VerificationToken {
 }
 
 model Store {
-  id          String    @id @default(cuid())
-  handle      String    @unique
-  name        String
-  externalUrl String
-  products    Product[]
+  id            String    @id @default(cuid())
+  handle        String    @unique
+  name          String
+  shortenedName String?
+  externalUrl   String
+  products      Product[]
 }
 
 model Product {
@@ -96,6 +97,7 @@ model Price {
 model ProductVariant {
   id            String                @id @default(cuid())
   productId     String
+  productUrl    String
   attributes    Json // record from name to value
   prices        Price[]
   notifications ProductNotification[]

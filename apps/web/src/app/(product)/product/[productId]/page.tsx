@@ -17,7 +17,7 @@ export type VariantWithNotification = Prisma.ProductVariantGetPayload<
 >;
 
 const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: variantWithNotification },
+  include: { variants: variantWithNotification, store: true },
 });
 export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
@@ -29,10 +29,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user.id;
 
-  const product = await prisma.product.findUnique({
+  const product: ExtendedProduct | null = await prisma.product.findUnique({
     where: { id: params.productId },
     include: {
       variants: { include: { notifications: userId ? { where: { userId } } : { take: 0 } } },
+      store: true,
     },
   });
 

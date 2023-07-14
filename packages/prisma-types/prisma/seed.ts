@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { AbercrombieUS, UniqloUS, VariantAttribute } from "@awardrobe/adapters";
+import { AbercrombieUS, ProductPrice, UniqloUS } from "@awardrobe/adapters";
 
 const prisma = new PrismaClient();
 
@@ -11,6 +11,7 @@ async function seedUniqloUS() {
     update: {},
     create: {
       name: "Uniqlo US",
+      shortenedName: "Uniqlo",
       handle: "uniqlo-us",
       externalUrl: "https://www.uniqlo.com/",
     },
@@ -37,6 +38,7 @@ async function seedAbercrombieUS() {
     update: {},
     create: {
       name: "Abercrombie & Fitch US",
+      shortenedName: "Abercrombie",
       handle: "abercrombie-us",
       externalUrl: "https://www.abercrombie.com/",
     },
@@ -58,9 +60,9 @@ async function main() {
 async function addProduct(
   storeId: string,
   productCode: string,
-  productDetails: { name: string; variants: VariantAttribute[][] },
+  productDetails: { name: string; prices: ProductPrice[] },
 ) {
-  const { name, variants } = productDetails;
+  const { name, prices } = productDetails;
   await prisma.product.upsert({
     where: {
       storeId_productCode: { storeId, productCode },
@@ -72,7 +74,10 @@ async function addProduct(
       storeId,
       variants: {
         createMany: {
-          data: variants.map((variant) => ({ attributes: variant })),
+          data: prices.map((price) => ({
+            attributes: price.attributes,
+            productUrl: price.productUrl,
+          })),
         },
       },
     },

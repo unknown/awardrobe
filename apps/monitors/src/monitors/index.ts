@@ -69,10 +69,14 @@ async function pingProduct(product: ExtendedProduct) {
         });
       });
       if (!variant) {
-        console.warn(`Creating new variant for ${JSON.stringify(price.attributes)}`);
+        console.warn(`Creating new variant: ${JSON.stringify(price.attributes)}`);
         variant = {
           ...(await prisma.productVariant.create({
-            data: { productId: product.id, attributes: price.attributes },
+            data: {
+              productId: product.id,
+              attributes: price.attributes,
+              productUrl: price.productUrl,
+            },
           })),
           prices: [],
         };

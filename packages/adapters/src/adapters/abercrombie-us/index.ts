@@ -130,6 +130,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
       );
 
       prices.push({
+        productUrl: getProductUrl(product.productSeoToken),
         attributes,
         inStock: item.inventory.inventory > 0,
         priceInCents: dollarsToCents(lowestPrice.toString()),
@@ -137,9 +138,14 @@ async function getProductDetails(productCode: string, useProxy = false) {
     });
   });
 
+  // TODO: handle variants with different names
   return {
     name: products[0].name,
     prices,
-    variants: prices.map(({ attributes }) => attributes),
   };
 }
+
+const getProductUrl = (productSeoToken: string) => {
+  const productUrl = new URL(`https://www.abercrombie.com/shop/us/${productSeoToken}`);
+  return productUrl.href;
+};

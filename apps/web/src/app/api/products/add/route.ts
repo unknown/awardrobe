@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
 async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductResponse>> {
   const productCode = await UniqloUS.getProductCode(productUrl);
-  const { name, variants } = await UniqloUS.getProductDetails(productCode);
+  const { name, prices } = await UniqloUS.getProductDetails(productCode);
 
   const store = await prisma.store.findUniqueOrThrow({
     where: {
@@ -83,7 +83,7 @@ async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductR
       storeId: store.id,
       variants: {
         createMany: {
-          data: variants.map((variant) => ({ attributes: variant })),
+          data: prices.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
         },
       },
     },

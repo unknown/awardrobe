@@ -4,6 +4,7 @@ export type VariantAttribute = {
 };
 
 export type ProductPrice = {
+  productUrl: string;
   attributes: VariantAttribute[];
   priceInCents: number;
   inStock: boolean;
@@ -12,7 +13,6 @@ export type ProductPrice = {
 type ProductDetailsResult = {
   name: string;
   prices: ProductPrice[];
-  variants: VariantAttribute[][];
 };
 
 export type StoreAdapter = {

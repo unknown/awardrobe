@@ -13,6 +13,7 @@ const optionSchema = z.object({
     showFlag: z.boolean(),
   }),
 });
+export type Option = z.infer<typeof optionSchema>;
 
 const errorSchema = z.object({
   status: z.literal("nok"),

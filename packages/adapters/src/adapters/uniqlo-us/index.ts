@@ -3,7 +3,7 @@ import axios from "axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
-import { detailsSchema, l2sSchema, productsSchema } from "./schemas";
+import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
 export const UniqloUS: StoreAdapter = {
   getProducts,
@@ -126,6 +126,7 @@ export async function getProductDetails(productCode: string, useProxy = false) {
     }
 
     productPrices.push({
+      productUrl: getProductUrl(productCode, { color, size, pld }),
       attributes,
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
       inStock: stocksEntry.quantity > 0,
@@ -145,6 +146,19 @@ export async function getProductDetails(productCode: string, useProxy = false) {
   return {
     name,
     prices: filteredPrices,
-    variants: filteredPrices.map(({ attributes }) => attributes),
   };
 }
+
+const getProductUrl = (
+  productCode: string,
+  attributes: { color?: Option; size?: Option; pld?: Option },
+) => {
+  const { color, size, pld } = attributes;
+  const productUrl = new URL(`https://www.uniqlo.com/us/en/products/${productCode}/`);
+
+  if (color) productUrl.searchParams.append("colorDisplayCode", color.displayCode);
+  if (size) productUrl.searchParams.append("sizeDisplayCode", size.displayCode);
+  if (pld) productUrl.searchParams.append("pldDisplayCode", pld.displayCode);
+
+  return productUrl.href;
+};
