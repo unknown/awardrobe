@@ -5,13 +5,16 @@ import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
-export const UniqloUS: StoreAdapter = {
+const UniqloUS: StoreAdapter = {
+  urlPrefixes: ["uniqlo.com/us/"],
+  storeHandle: "uniqlo-us",
   getProducts,
   getProductCode,
   getProductDetails,
 };
+export default UniqloUS;
 
-export async function getProducts(limit?: number, useProxy = false) {
+async function getProducts(limit?: number, useProxy = false) {
   const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
   const productCodes: string[] = [];
 
@@ -42,7 +45,7 @@ export async function getProducts(limit?: number, useProxy = false) {
   return productCodes;
 }
 
-export async function getProductCode(url: string, useProxy = false) {
+async function getProductCode(url: string, useProxy = false) {
   const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/;
   const matches = url.match(productCodeRegex);
 
@@ -67,7 +70,7 @@ export async function getProductCode(url: string, useProxy = false) {
   return productCode;
 }
 
-export async function getProductDetails(productCode: string, useProxy = false) {
+async function getProductDetails(productCode: string, useProxy = false) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
   const httpsAgent = getHttpsProxyAgent(useProxy);

@@ -1,10 +1,9 @@
 import { render } from "@react-email/render";
 import pLimit from "p-limit";
 
-import { ProductPrice, VariantAttribute } from "@awardrobe/adapters";
+import { getAdapter, ProductPrice, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 
-import { getAdapter } from "../utils/adapters";
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";

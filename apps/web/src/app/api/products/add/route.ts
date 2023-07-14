@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { UniqloUS } from "@awardrobe/adapters";
+import { getAdapterFromUrl } from "@awardrobe/adapters";
 import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
@@ -35,19 +35,35 @@ export async function POST(req: Request) {
 
   const { productUrl }: AddProductRequest = await req.json();
 
+  // TODO: more descriptive errors
   try {
-    if (productUrl.includes("uniqlo.com/us/")) {
-      return await addUniqloUS(productUrl);
-    } else {
-      return NextResponse.json<AddProductResponse>(
-        {
-          status: "error",
-          error: "Unsupported store",
+    const adapter = getAdapterFromUrl(productUrl);
+    const productCode = await adapter.getProductCode(productUrl);
+    const { name, prices } = await adapter.getProductDetails(productCode);
+
+    const store = await prisma.store.findUniqueOrThrow({
+      where: { handle: adapter.storeHandle },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        productCode,
+        name,
+        storeId: store.id,
+        variants: {
+          createMany: {
+            data: prices.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
+          },
         },
-        { status: 400 },
-      );
-    }
+      },
+    });
+
+    return NextResponse.json<AddProductResponse>({
+      status: "success",
+      product,
+    });
   } catch (e) {
+    console.error(e);
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {
         return NextResponse.json<AddProductResponse>(
@@ -64,33 +80,4 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-}
-
-async function addUniqloUS(productUrl: string): Promise<NextResponse<AddProductResponse>> {
-  const productCode = await UniqloUS.getProductCode(productUrl);
-  const { name, prices } = await UniqloUS.getProductDetails(productCode);
-
-  const store = await prisma.store.findUniqueOrThrow({
-    where: {
-      handle: "uniqlo-us",
-    },
-  });
-
-  const product = await prisma.product.create({
-    data: {
-      productCode,
-      name,
-      storeId: store.id,
-      variants: {
-        createMany: {
-          data: prices.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
-        },
-      },
-    },
-  });
-
-  return NextResponse.json<AddProductResponse>({
-    status: "success",
-    product,
-  });
 }

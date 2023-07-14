@@ -5,11 +5,14 @@ import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter } from "../../utils/types";
 import { collectionSchema, listSchema, searchSchema } from "./schemas";
 
-export const AbercrombieUS: StoreAdapter = {
+const AbercrombieUS: StoreAdapter = {
+  urlPrefixes: ["abercrombie.com/shop/us/"],
+  storeHandle: "abercrombie-us",
   getProducts,
   getProductCode,
   getProductDetails,
 };
+export default AbercrombieUS;
 
 async function getProducts(limit?: number, useProxy = false) {
   // category 10000 represents all of A&F
