@@ -14,19 +14,19 @@ async function main() {
 
   const uniqloProductCodes = await UniqloUS.getProducts(limit);
   uniqloProductCodes.forEach(async (productCode) => {
-    const { name, prices } = await UniqloUS.getProductDetails(productCode);
+    const { name, variants } = await UniqloUS.getProductDetails(productCode);
     console.log(
       name,
-      prices.map((price) => price.attributes),
+      variants.map((variant) => variant.attributes),
     );
   });
 
   const abercrombieProductCodes = await AbercrombieUS.getProducts(limit);
   abercrombieProductCodes.forEach(async (productCode) => {
-    const { name, prices } = await AbercrombieUS.getProductDetails(productCode);
+    const { name, variants } = await AbercrombieUS.getProductDetails(productCode);
     console.log(
       name,
-      prices.map((price) => price.attributes),
+      variants.map((variant) => variant.attributes),
     );
   });
 }

@@ -3,16 +3,11 @@ export type VariantAttribute = {
   value: string;
 };
 
-export type ProductPrice = {
+export type VariantInfo = {
   productUrl: string;
   attributes: VariantAttribute[];
   priceInCents: number;
   inStock: boolean;
-};
-
-type ProductDetailsResult = {
-  name: string;
-  prices: ProductPrice[];
 };
 
 export type StoreAdapter = {
@@ -21,5 +16,11 @@ export type StoreAdapter = {
   // TODO: create pagination interface?
   getProducts: (limit?: number, useProxy?: boolean) => Promise<string[]>;
   getProductCode: (url: string, useProxy?: boolean) => Promise<string>;
-  getProductDetails: (productCode: string, useProxy?: boolean) => Promise<ProductDetailsResult>;
+  getProductDetails: (
+    productCode: string,
+    useProxy?: boolean,
+  ) => Promise<{
+    name: string;
+    variants: VariantInfo[];
+  }>;
 };

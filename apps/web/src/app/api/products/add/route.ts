@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   try {
     const adapter = getAdapterFromUrl(productUrl);
     const productCode = await adapter.getProductCode(productUrl, true);
-    const { name, prices } = await adapter.getProductDetails(productCode, true);
+    const { name, variants } = await adapter.getProductDetails(productCode, true);
 
     const store = await prisma.store.findUniqueOrThrow({
       where: { handle: adapter.storeHandle },
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         storeId: store.id,
         variants: {
           createMany: {
-            data: prices.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
+            data: variants.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
           },
         },
       },

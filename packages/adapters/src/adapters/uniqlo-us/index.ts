@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
-import { ProductPrice, StoreAdapter, VariantAttribute } from "../../utils/types";
+import { StoreAdapter, VariantAttribute, VariantInfo } from "../../utils/types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
 const UniqloUS: StoreAdapter = {
@@ -98,7 +98,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
   const { l2s, stocks, prices } = l2sData.result;
   const { name, ...options } = detailsData.result;
 
-  const productPrices: ProductPrice[] = [];
+  const variants: VariantInfo[] = [];
   let [hasColor, hasSize, hasLength] = [false, false, false];
   l2s.forEach((variant) => {
     const stocksEntry = stocks[variant.l2Id];
@@ -128,7 +128,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
       hasLength = true;
     }
 
-    productPrices.push({
+    variants.push({
       productUrl: getProductUrl(productCode, { color, size, pld }),
       attributes,
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
@@ -136,19 +136,19 @@ async function getProductDetails(productCode: string, useProxy = false) {
     });
   });
 
-  // filter out prices and their variants that don't have all attributes
-  const filteredPrices = productPrices.filter(({ attributes, inStock }) => {
+  // filter variants that don't have all attributes
+  const filteredVariants = variants.filter(({ attributes, inStock }) => {
     const priceHasColor = attributes.some((attribute) => attribute.name === "Color");
     const priceHasSize = attributes.some((attribute) => attribute.name === "Size");
     const priceHasLength = attributes.some((attribute) => attribute.name === "Length");
-    const isMissingAttribute =
-      (hasColor && !priceHasColor) || (hasSize && !priceHasSize) || (hasLength && !priceHasLength);
-    return !isMissingAttribute || inStock;
+    const hasAllAttributes =
+      (priceHasColor || !hasColor) && (priceHasSize || !hasSize) && (priceHasLength || !hasLength);
+    return hasAllAttributes || inStock;
   });
 
   return {
     name,
-    prices: filteredPrices,
+    variants: filteredVariants,
   };
 }
 

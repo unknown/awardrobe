@@ -7,17 +7,19 @@ import { testProxy } from "@awardrobe/adapters";
 import { pingProducts } from "./monitors";
 
 function setupMonitors() {
-  cron.schedule(`*/10 * * * *`, async () => {
-    await pingProducts();
+  cron.schedule(`*/10 * * * *`, () => {
+    pingProducts().catch((error) => {
+      console.error(`Error pinging products\n${error}`);
+    });
   });
 }
 
 async function main() {
-  try {
-    await testProxy();
+  const result = await testProxy();
+  if (result.success) {
     console.log("Proxy is working");
-  } catch (error) {
-    console.warn(`Proxy is not working: ${error}`);
+  } else {
+    console.warn(`Proxy is not working: ${result.error}`);
   }
 
   setupMonitors();

@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
-import { ProductPrice, StoreAdapter } from "../../utils/types";
+import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { collectionSchema, Item, listSchema, Product, searchSchema } from "./schemas";
 
 const AbercrombieUS: StoreAdapter = {
@@ -95,7 +95,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
     throw new Error(`Failed to get product details for ${productCode}. No products found.`);
   }
 
-  const prices: ProductPrice[] = [];
+  const variants: VariantInfo[] = [];
   products.forEach((product) => {
     if (!product.items[0]) return;
 
@@ -135,7 +135,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
         item.listPrice,
       );
 
-      prices.push({
+      variants.push({
         productUrl: getProductUrl(product, item),
         attributes,
         inStock: item.inventory.inventory > 0,
@@ -147,7 +147,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
   // TODO: handle variants with different names
   return {
     name: products[0].name,
-    prices,
+    variants,
   };
 }
 

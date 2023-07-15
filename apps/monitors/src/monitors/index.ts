@@ -1,19 +1,16 @@
 import { render } from "@react-email/render";
 import pLimit from "p-limit";
 
-import { getAdapter, ProductPrice, VariantAttribute } from "@awardrobe/adapters";
+import { getAdapter, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 
 import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
-import { ExtendedPrice, ExtendedProduct, VariantWithPrice } from "./types";
+import { ExtendedProduct, ExtendedVariantInfo } from "./types";
 
 export async function pingProducts() {
-  console.log(`Pinging products`);
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const products: ExtendedProduct[] = await prisma.product.findMany({
     include: {
       variants: {
@@ -29,91 +26,89 @@ export async function pingProducts() {
     },
   });
 
-  let successfulUpdates = 0;
+  console.log(`Pinging ${products.length} products`);
+
   const limit = pLimit(25);
   await Promise.all(
     products.map((product) => {
       return limit(async () => {
         try {
           await pingProduct(product);
-          successfulUpdates += 1;
         } catch (error) {
-          console.error(`Error updating prices for ${product.name}\n${error}`);
+          console.error(`Error updating ${product.name}\n${error}`);
         }
       });
     }),
   );
 
-  console.log(`Updated prices successfully for ${successfulUpdates}/${products.length} products`);
+  console.log("Done pinging products");
 }
 
 async function pingProduct(product: ExtendedProduct) {
   const adapter = getAdapter(product.store.handle);
-  const { prices } = await adapter.getProductDetails(product.productCode, true);
-  if (prices.length === 0) {
+  const { variants } = await adapter.getProductDetails(product.productCode, true);
+  if (variants.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }
 
   const timestamp = new Date();
 
-  const pricesWithVariants: ExtendedPrice[] = await Promise.all(
-    prices.map(async (price) => {
-      let variant = product.variants.find((variant) => {
-        const attributes = variant.attributes as VariantAttribute[];
-        if (attributes.length !== price.attributes.length) return false;
+  const outOfDatePrices: ExtendedVariantInfo[] = [];
+  const priceDroppedVariants: ExtendedVariantInfo[] = [];
+  const restockedVariants: ExtendedVariantInfo[] = [];
+  await Promise.all(
+    variants.map(async (variant) => {
+      let productVariant = product.variants.find((productVariant) => {
+        const attributes = productVariant.attributes as VariantAttribute[];
+        if (attributes.length !== variant.attributes.length) return false;
+        // TODO: use a map?
         return attributes.every((attribute) => {
-          return price.attributes.some((priceAttribute) => {
+          return variant.attributes.some((priceAttribute) => {
             return shallowEquals(attribute, priceAttribute);
           });
         });
       });
-      if (!variant) {
-        console.warn(`Creating new variant: ${JSON.stringify(price.attributes)}`);
-        variant = {
-          ...(await prisma.productVariant.create({
-            data: {
-              productId: product.id,
-              attributes: price.attributes,
-              productUrl: price.productUrl,
-            },
-          })),
-          prices: [],
-        };
+      if (!productVariant) {
+        console.warn(`Creating new variant: ${JSON.stringify(variant.attributes)}`);
+        productVariant = await prisma.productVariant.create({
+          data: {
+            productId: product.id,
+            attributes: variant.attributes,
+            productUrl: variant.productUrl,
+          },
+          include: { prices: true },
+        });
       }
-      return {
-        ...price,
-        variant,
-        flags: getFlags(price, variant, timestamp),
-      };
+
+      const extendedVariant: ExtendedVariantInfo = { ...variant, productVariant };
+      const { isOutOfDate, hasPriceDropped, hasRestocked } = getFlags(extendedVariant, timestamp);
+
+      if (isOutOfDate) outOfDatePrices.push(extendedVariant);
+      if (hasPriceDropped) priceDroppedVariants.push(extendedVariant);
+      if (hasRestocked) restockedVariants.push(extendedVariant);
     }),
   );
 
   await prisma.price.createMany({
-    data: pricesWithVariants
-      .filter((price) => price.flags.shouldUpdatePrice)
-      .map(({ variant, priceInCents, inStock }) => ({
-        timestamp,
-        productVariantId: variant.id,
-        priceInCents,
-        inStock,
-      })),
+    data: outOfDatePrices.map(({ productVariant: variant, priceInCents, inStock }) => ({
+      timestamp,
+      productVariantId: variant.id,
+      priceInCents,
+      inStock,
+    })),
   });
 
   await Promise.all([
-    ...pricesWithVariants
-      .filter((price) => price.flags.hasPriceDropped)
-      .map((price) => handlePriceDrop(product, price)),
-    ...pricesWithVariants
-      .filter((price) => price.flags.hasRestocked)
-      .map((price) => handleRestock(product, price)),
+    ...priceDroppedVariants.map((variant) => handlePriceDrop(product, variant)),
+    ...restockedVariants.map((variant) => handleRestock(product, variant)),
   ]);
 }
 
-function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: Date) {
-  const oldPrice = variant.prices[0];
+function getFlags(variant: ExtendedVariantInfo, timestamp: Date) {
+  const oldPrice = variant.productVariant.prices[0];
   if (!oldPrice) {
     return {
-      shouldUpdatePrice: true,
+      isOutOfDate: true,
       hasPriceDropped: false,
       hasRestocked: false,
     };
@@ -123,21 +118,21 @@ function getFlags(newPrice: ProductPrice, variant: VariantWithPrice, timestamp: 
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const isStale = diffDays >= 1;
 
-  const hasPriceChanged = newPrice.priceInCents !== oldPrice.priceInCents;
-  const hasPriceDropped = newPrice.priceInCents < oldPrice.priceInCents;
+  const hasPriceChanged = variant.priceInCents !== oldPrice.priceInCents;
+  const hasPriceDropped = variant.priceInCents < oldPrice.priceInCents;
 
-  const hasStockChanged = newPrice.inStock !== oldPrice.inStock;
-  const hasRestocked = newPrice.inStock && !oldPrice.inStock;
+  const hasStockChanged = variant.inStock !== oldPrice.inStock;
+  const hasRestocked = variant.inStock && !oldPrice.inStock;
 
   return {
-    shouldUpdatePrice: isStale || hasPriceChanged || hasStockChanged,
+    isOutOfDate: isStale || hasPriceChanged || hasStockChanged,
     hasPriceDropped,
     hasRestocked,
   };
 }
 
-async function handlePriceDrop(product: ExtendedProduct, newPrice: ExtendedPrice) {
-  const { variant, attributes, priceInCents, inStock } = newPrice;
+async function handlePriceDrop(product: ExtendedProduct, variant: ExtendedVariantInfo) {
+  const { productVariant, attributes, priceInCents, inStock } = variant;
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
@@ -146,7 +141,7 @@ async function handlePriceDrop(product: ExtendedProduct, newPrice: ExtendedPrice
     where: {
       mustBeInStock: inStock ? undefined : false,
       OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
-      productVariant: { id: variant.id },
+      productVariant: { id: productVariant.id },
     },
     include: {
       user: true,
@@ -173,8 +168,8 @@ async function handlePriceDrop(product: ExtendedProduct, newPrice: ExtendedPrice
   );
 }
 
-async function handleRestock(product: ExtendedProduct, newPrice: ExtendedPrice) {
-  const { variant, attributes, priceInCents } = newPrice;
+async function handleRestock(product: ExtendedProduct, variant: ExtendedVariantInfo) {
+  const { productVariant, attributes, priceInCents } = variant;
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
@@ -182,7 +177,7 @@ async function handleRestock(product: ExtendedProduct, newPrice: ExtendedPrice) 
   const notifications = await prisma.productNotification.findMany({
     where: {
       OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
-      productVariant: { id: variant.id },
+      productVariant: { id: productVariant.id },
     },
     include: {
       user: true,

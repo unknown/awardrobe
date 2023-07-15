@@ -16,7 +16,16 @@ export const getHttpsProxyAgent = (useProxy: boolean) => {
   return agents[randomIndex];
 };
 
-export async function testProxy() {
+type ProxyTestResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+export async function testProxy(): Promise<ProxyTestResult> {
   const endpoint = "https://api.ipify.org?format=json";
   const [withProxy, withoutProxy] = await axios.all([
     axios.get(endpoint, { httpsAgent: getHttpsProxyAgent(true) }),
@@ -24,17 +33,16 @@ export async function testProxy() {
   ]);
 
   if (!withProxy || !withoutProxy) {
-    throw new Error("Failed to get IP address");
+    return { success: false, error: "Failed to get IP address" };
   }
   const withProxyIp = ipifySchema.parse(withProxy.data).ip;
   const withoutProxyIp = ipifySchema.parse(withoutProxy.data).ip;
 
   if (withProxyIp === "<nil>" || withoutProxyIp === "<nil>") {
-    throw new Error("Failed to get IP address");
+    return { success: false, error: "Failed to get IP address" };
+  } else if (withProxyIp === withoutProxyIp) {
+    return { success: false, error: "Same IP addresses with proxy and without" };
   }
 
-  if (withProxyIp === withoutProxyIp) {
-    throw new Error("Same IP addresses with proxy and without");
-  }
-  return true;
+  return { success: true };
 }
