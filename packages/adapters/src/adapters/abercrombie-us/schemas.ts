@@ -1,5 +1,23 @@
 import z from "zod";
 
+export const itemSchema = z.object({
+  itemId: z.string(),
+  listPrice: z.number(),
+  offerPrice: z.number(),
+  definingAttrs: z.record(
+    z.string(),
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      value: z.string(),
+      sequence: z.number(),
+      valueSequence: z.number(),
+    }),
+  ),
+  inventory: z.object({ inventory: z.number() }),
+});
+export type Item = z.infer<typeof itemSchema>;
+
 const productSchema = z.object({
   productId: z.string(),
   collection: z.string(),
@@ -7,25 +25,9 @@ const productSchema = z.object({
   name: z.string(),
   lowContractPrice: z.number().optional(),
   highContractPrice: z.number().optional(),
-  items: z.array(
-    z.object({
-      itemId: z.string(),
-      listPrice: z.number(),
-      offerPrice: z.number(),
-      definingAttrs: z.record(
-        z.string(),
-        z.object({
-          name: z.string(),
-          description: z.string(),
-          value: z.string(),
-          sequence: z.number(),
-          valueSequence: z.number(),
-        }),
-      ),
-      inventory: z.object({ inventory: z.number() }),
-    }),
-  ),
+  items: z.array(itemSchema),
 });
+export type Product = z.infer<typeof productSchema>;
 
 export const listSchema = z.object({
   products: z.array(productSchema),

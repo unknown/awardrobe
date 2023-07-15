@@ -3,7 +3,7 @@ import axios from "axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { ProductPrice, StoreAdapter } from "../../utils/types";
-import { collectionSchema, listSchema, searchSchema } from "./schemas";
+import { collectionSchema, Item, listSchema, Product, searchSchema } from "./schemas";
 
 const AbercrombieUS: StoreAdapter = {
   urlPrefixes: ["abercrombie.com/shop/us/"],
@@ -136,7 +136,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
       );
 
       prices.push({
-        productUrl: getProductUrl(product.productSeoToken),
+        productUrl: getProductUrl(product, item),
         attributes,
         inStock: item.inventory.inventory > 0,
         priceInCents: dollarsToCents(lowestPrice.toString()),
@@ -151,7 +151,9 @@ async function getProductDetails(productCode: string, useProxy = false) {
   };
 }
 
-const getProductUrl = (productSeoToken: string) => {
-  const productUrl = new URL(`https://www.abercrombie.com/shop/us/${productSeoToken}`);
+const getProductUrl = (product: Product, item: Item) => {
+  const color = item.definingAttrs.Color?.sequence.toString();
+  const productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
+  if (color) productUrl.searchParams.set("seq", color);
   return productUrl.href;
 };
