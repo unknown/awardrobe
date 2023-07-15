@@ -121,7 +121,10 @@ async function getProductDetails(productCode: string, useProxy = false) {
         })
         .filter((attribute) => attribute.name !== "Size") // remove composite attribute
         .map((attribute) => {
-          const value = attribute.name === "Color" ? toTitleCase(attribute.value) : attribute.value;
+          const value =
+            attribute.name === "Color"
+              ? toTitleCase(`${attribute.sequence} ${attribute.value}`)
+              : attribute.value;
           return { name: attribute.description, value };
         });
 

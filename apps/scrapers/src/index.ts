@@ -10,13 +10,25 @@ async function main() {
     console.warn(`Proxy is not working: ${error}`);
   }
 
-  const limit = 120;
+  const limit = 1;
 
-  const uniqloProducts = await UniqloUS.getProducts(limit);
-  console.log(uniqloProducts, uniqloProducts.length);
+  const uniqloProductCodes = await UniqloUS.getProducts(limit);
+  uniqloProductCodes.forEach(async (productCode) => {
+    const { name, prices } = await UniqloUS.getProductDetails(productCode);
+    console.log(
+      name,
+      prices.map((price) => price.attributes),
+    );
+  });
 
-  const abercrombieProducts = await AbercrombieUS.getProducts(limit);
-  console.log(abercrombieProducts, abercrombieProducts.length);
+  const abercrombieProductCodes = await AbercrombieUS.getProducts(limit);
+  abercrombieProductCodes.forEach(async (productCode) => {
+    const { name, prices } = await AbercrombieUS.getProductDetails(productCode);
+    console.log(
+      name,
+      prices.map((price) => price.attributes),
+    );
+  });
 }
 
 void main();
