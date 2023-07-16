@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 import {
@@ -19,20 +20,25 @@ interface ProductLayout {
 }
 
 export default async function ProductLayout({ children }: ProductLayout) {
-  const session = await getServerSession(authOptions);
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="container">
         <div className="flex items-center justify-between py-4">
           <NavBar />
-          {session ? <ProfileButton /> : <LoginButton />}
+          <Suspense>
+            <NavBarButton />
+          </Suspense>
         </div>
       </header>
       <main className="flex-1">{children}</main>
     </div>
   );
 }
+
+const NavBarButton = async () => {
+  const session = await getServerSession(authOptions);
+  return session ? <ProfileButton /> : <LoginButton />;
+};
 
 const ProfileButton = () => {
   return (
