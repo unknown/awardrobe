@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductVariant } from "@awardrobe/prisma-types";
 
-import { ExtendedProduct, VariantWithNotification } from "@/app/(product)/product/[productId]/page";
+import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
+import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../hooks/usePrices";
@@ -16,7 +16,7 @@ import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 type ControlOptions = {
-  variant?: VariantWithNotification;
+  variantIndex: number;
   attributes: Record<string, string>;
   dateRange: DateRange;
 };
@@ -31,20 +31,17 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
   const router = useRouter();
   const { data: prices, fetchPrices, invalidateData } = usePrices();
 
-  const [options, setOptions] = useState<ControlOptions>({ ...initialOptions });
+  const [options, setOptions] = useState<ControlOptions>(initialOptions);
 
   const loadPrices = useCallback(
-    async (options: {
-      variant?: ProductVariant;
-      dateRange: DateRange;
-      abortSignal?: AbortSignal;
-    }) => {
-      if (!options.variant) {
+    async (options: { variantIndex: number; dateRange: DateRange; abortSignal?: AbortSignal }) => {
+      const variant = product.variants[options.variantIndex];
+      if (!variant) {
         invalidateData();
         return;
       }
       await fetchPrices({
-        variantId: options.variant.id,
+        variantId: variant.id,
         dateRange: options.dateRange,
         abortSignal: options.abortSignal,
       });
@@ -60,8 +57,10 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
     };
   }, [initialOptions, loadPrices]);
 
+  const variant = product.variants[options.variantIndex];
+
   const getPillText = () => {
-    const lastPrice = prices?.[prices.length - 1]?.priceInCents;
+    const lastPrice = prices?.at(-1)?.priceInCents;
     if (prices === null) {
       return "Loading...";
     } else if (lastPrice === undefined) {
@@ -72,12 +71,9 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
   };
 
   const NotificationButton = () => {
-    const variant = options.variant;
-    if (!variant) {
-      return null;
-    }
-    const notification = variant.notifications[0];
+    if (!variant) return null;
 
+    const notification = variant.notifications[0];
     if (notification) {
       return (
         <Button
@@ -85,7 +81,6 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
           onClick={async () => {
             const result = await deleteNotification(notification.id);
             if (result.status === "success") {
-              setOptions((options) => ({ ...options, variant: { ...variant, notifications: [] } }));
               router.refresh();
             }
           }}
@@ -96,18 +91,20 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
     }
     return (
       <AddNotificationDialog
-        productId={product.id}
-        variantId={variant.id}
         defaultOptions={{
           mustBeInStock: false,
           priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
         }}
-        onAddNotification={(newNotification) => {
-          setOptions((options) => ({
-            ...options,
-            variant: { ...variant, notifications: [newNotification] },
-          }));
-          router.refresh();
+        onAddNotification={async ({ mustBeInStock, priceInCents }) => {
+          const result = await createNotification(
+            product.id,
+            variant.id,
+            mustBeInStock,
+            priceInCents,
+          );
+          if (result.status === "success") {
+            router.refresh();
+          }
         }}
       />
     );
@@ -124,16 +121,16 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
               attributes={options.attributes}
               productOptions={productOptions}
               onAttributesChange={(newAttributes) => {
-                const selectedVariant = product.variants.find((variant) => {
+                const newIndex = product.variants.findIndex((variant) => {
                   const attributes = variant.attributes as VariantAttribute[];
                   if (attributes.length !== Object.keys(newAttributes).length) return false;
                   return attributes.every((attribute) => {
                     return newAttributes[attribute.name] === attribute.value;
                   });
                 });
-                const newOptions = {
+                const newOptions: ControlOptions = {
                   ...options,
-                  variant: selectedVariant,
+                  variantIndex: newIndex,
                   attributes: newAttributes,
                 };
                 setOptions(newOptions);
@@ -146,7 +143,7 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
           </div>
         </div>
         {/* TODO: hide this pill if product url doesn't exist? */}
-        <a href={options.variant?.productUrl} target="_blank" rel="noopener noreferrer">
+        <a href={variant?.productUrl} target="_blank" rel="noopener noreferrer">
           <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
             {getPillText()}
           </div>
@@ -158,7 +155,7 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
           <DateRangeControl
             dateRange={options.dateRange}
             onDateRangeChange={(newDateRange) => {
-              const newOptions = { ...options, dateRange: newDateRange };
+              const newOptions: ControlOptions = { ...options, dateRange: newDateRange };
               setOptions(newOptions);
               loadPrices(newOptions);
             }}
@@ -186,15 +183,25 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
   );
 }
 
+async function createNotification(
+  productId: string,
+  variantId: string,
+  mustBeInStock: boolean,
+  priceInCents?: number,
+) {
+  const response = await fetch("/api/notifications/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, variantId, priceInCents, mustBeInStock }),
+  });
+  return (await response.json()) as AddNotificationResponse;
+}
+
 async function deleteNotification(notificationId: string) {
   const response = await fetch("/api/notifications/delete", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      notificationId,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notificationId }),
   });
   return (await response.json()) as DeleteNotificationResponse;
 }

@@ -31,31 +31,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const { notificationId }: DeleteNotificationRequest = await req.json();
-
   try {
-    const notification = await prisma.productNotification.findUniqueOrThrow({
-      where: {
-        id: notificationId,
-      },
-    });
-
-    if (notification.userId !== session.user.id) {
-      return NextResponse.json<DeleteNotificationResponse>(
-        {
-          status: "error",
-          error: "Notificaton not found",
-        },
-        { status: 400 },
-      );
-    }
+    const { notificationId }: DeleteNotificationRequest = await req.json();
 
     await prisma.productNotification.delete({
-      where: {
-        id: notificationId,
-      },
+      where: { id: notificationId, userId: session.user.id },
     });
-
     return NextResponse.json<DeleteNotificationResponse>({ status: "success" });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {

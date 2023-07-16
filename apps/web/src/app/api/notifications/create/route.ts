@@ -39,21 +39,12 @@ export async function POST(req: Request) {
   try {
     const notification = await prisma.productNotification.create({
       data: {
-        productVariant: {
-          connect: {
-            id: variantId,
-          },
-        },
+        productVariant: { connect: { id: variantId } },
         mustBeInStock,
         priceInCents,
-        user: {
-          connect: {
-            id: session.user.id,
-          },
-        },
+        user: { connect: { id: session.user.id } },
       },
     });
-
     return NextResponse.json<AddNotificationResponse>({ status: "success", notification });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {

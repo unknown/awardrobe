@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       product={product}
       productOptions={productOptions}
       initialOptions={{
-        variant: initialVariant,
+        variantIndex: 0,
         attributes: initialAttributes,
         dateRange: "7d",
       }}

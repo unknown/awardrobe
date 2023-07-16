@@ -4,11 +4,6 @@ import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 import { Input } from "@ui/Input";
-import toast, { Toaster } from "react-hot-toast";
-
-import { ProductNotification } from "@awardrobe/prisma-types";
-
-import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 
 export type NotificationOptions = {
   mustBeInStock: boolean;
@@ -16,15 +11,11 @@ export type NotificationOptions = {
 };
 
 export type AddNotificationDialogProps = {
-  productId: string;
-  variantId: string;
   defaultOptions: NotificationOptions;
-  onAddNotification: (newNotification: ProductNotification) => void;
+  onAddNotification: (options: NotificationOptions) => Promise<void>;
 };
 
 export function AddNotificationDialog({
-  productId,
-  variantId,
   defaultOptions,
   onAddNotification,
 }: AddNotificationDialogProps) {
@@ -57,16 +48,9 @@ export function AddNotificationDialog({
             onSubmit={async (event) => {
               event.preventDefault();
               setIsLoading(true);
-
-              const result = await createNotification(productId, variantId, options);
-              if (result.status === "success") {
-                onAddNotification(result.notification);
-                setOpen(false);
-              } else if (result.status === "error") {
-                toast.error(result.error);
-              }
-
+              await onAddNotification(options);
               setIsLoading(false);
+              setOpen(false);
             }}
           >
             <label className="text-primary text-sm font-medium" htmlFor="price">
@@ -118,29 +102,6 @@ export function AddNotificationDialog({
           </form>
         </DialogContent>
       </Dialog>
-      <Toaster />
     </Fragment>
   );
-}
-
-async function createNotification(
-  productId: string,
-  variantId: string,
-  notificationOptions: NotificationOptions,
-) {
-  const { priceInCents, mustBeInStock } = notificationOptions;
-
-  const response = await fetch("/api/notifications/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productId,
-      variantId,
-      priceInCents,
-      mustBeInStock,
-    }),
-  });
-  return (await response.json()) as AddNotificationResponse;
 }
