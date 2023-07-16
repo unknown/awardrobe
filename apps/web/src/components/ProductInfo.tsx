@@ -1,12 +1,12 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
-import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
+import { ExtendedProduct, VariantWithNotification } from "@/app/(product)/product/[productId]/page";
 import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
@@ -15,33 +15,39 @@ import { AddNotificationDialog } from "./AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
-type ControlOptions = {
-  variantIndex: number;
-  attributes: Record<string, string>;
-  dateRange: DateRange;
-};
-
 export type ProductInfoProps = {
   product: ExtendedProduct;
+  variant: VariantWithNotification | null;
   productOptions: Record<string, string[]>;
-  initialOptions: ControlOptions;
+  initialAttributes: Record<string, string>;
 };
 
-export function ProductInfo({ product, productOptions, initialOptions }: ProductInfoProps) {
-  const router = useRouter();
+export function ProductInfo({
+  product,
+  variant,
+  productOptions,
+  initialAttributes,
+}: ProductInfoProps) {
   const { data: prices, fetchPrices, invalidateData } = usePrices();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [options, setOptions] = useState<ControlOptions>(initialOptions);
+  const [attributes, setAttributes] = useState(initialAttributes);
+  const [dateRange, setDateRange] = useState<DateRange>("7d");
 
   const loadPrices = useCallback(
-    async (options: { variantIndex: number; dateRange: DateRange; abortSignal?: AbortSignal }) => {
-      const variant = product.variants[options.variantIndex];
-      if (!variant) {
+    async (options: {
+      variant: VariantWithNotification | null;
+      dateRange: DateRange;
+      abortSignal?: AbortSignal;
+    }) => {
+      if (!options.variant) {
         invalidateData();
         return;
       }
       await fetchPrices({
-        variantId: variant.id,
+        variantId: options.variant.id,
         dateRange: options.dateRange,
         abortSignal: options.abortSignal,
       });
@@ -51,17 +57,17 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
 
   useEffect(() => {
     const abortController = new AbortController();
-    loadPrices({ ...initialOptions, abortSignal: abortController.signal });
+    loadPrices({ variant, dateRange, abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
-  }, [initialOptions, loadPrices]);
-
-  const variant = product.variants[options.variantIndex];
+  }, [variant, dateRange, loadPrices]);
 
   const getPillText = () => {
     const lastPrice = prices?.at(-1)?.priceInCents;
-    if (prices === null) {
+    if (!variant?.productUrl) {
+      return "Not available";
+    } else if (prices === null) {
       return "Loading...";
     } else if (lastPrice === undefined) {
       return "See price";
@@ -118,23 +124,24 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
           <h1 className="text-3xl font-medium">{product.name}</h1>
           <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
             <VariantControls
-              attributes={options.attributes}
+              attributes={attributes}
               productOptions={productOptions}
-              onAttributesChange={(newAttributes) => {
-                const newIndex = product.variants.findIndex((variant) => {
-                  const attributes = variant.attributes as VariantAttribute[];
-                  if (attributes.length !== Object.keys(newAttributes).length) return false;
-                  return attributes.every((attribute) => {
+              onAttributeChange={(name, value) => {
+                const newAttributes = { ...attributes, [name]: value };
+                setAttributes(newAttributes);
+
+                const newVariant = product.variants.find((variant) => {
+                  const variantAttributes = variant.attributes as VariantAttribute[];
+                  if (variantAttributes.length !== Object.keys(newAttributes).length) return false;
+                  return variantAttributes.every((attribute) => {
                     return newAttributes[attribute.name] === attribute.value;
                   });
                 });
-                const newOptions: ControlOptions = {
-                  ...options,
-                  variantIndex: newIndex,
-                  attributes: newAttributes,
-                };
-                setOptions(newOptions);
-                loadPrices(newOptions);
+                if (newVariant?.id === variant?.id) return;
+
+                const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
+                params.set("variantId", newVariant?.id ?? "null");
+                router.replace(`${pathname}?${params.toString()}`);
               }}
             />
             <div className="col-span-2">
@@ -142,7 +149,6 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
             </div>
           </div>
         </div>
-        {/* TODO: hide this pill if product url doesn't exist? */}
         <a href={variant?.productUrl} target="_blank" rel="noopener noreferrer">
           <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
             {getPillText()}
@@ -153,11 +159,10 @@ export function ProductInfo({ product, productOptions, initialOptions }: Product
         <h2 className="text-xl font-medium">Price History</h2>
         <div className="flex flex-col justify-between gap-2 pb-2 sm:flex-row">
           <DateRangeControl
-            dateRange={options.dateRange}
-            onDateRangeChange={(newDateRange) => {
-              const newOptions: ControlOptions = { ...options, dateRange: newDateRange };
-              setOptions(newOptions);
-              loadPrices(newOptions);
+            dateRange={dateRange}
+            onDateRangeChange={(dateRange) => {
+              loadPrices({ variant, dateRange });
+              setDateRange(dateRange);
             }}
           />
           <div className="flex flex-row flex-wrap gap-4 text-sm">

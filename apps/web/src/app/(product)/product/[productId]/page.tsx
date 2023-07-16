@@ -23,9 +23,10 @@ export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
 type ProductPageProps = {
   params: { productId: string };
+  searchParams: { variantId?: string };
 };
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user.id;
 
@@ -53,22 +54,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const productOptions: Record<string, string[]> = {};
   product.variants.forEach((variant) => {
-    // TODO: better types?
     const attributes = variant.attributes as VariantAttribute[];
     attributes.forEach(({ name, value }) => {
       const values = productOptions[name] ?? [];
-      if (!values.includes(value)) {
-        values.push(value);
-      }
+      if (!values.includes(value)) values.push(value);
       productOptions[name] = values;
     });
   });
 
-  const initialVariant = product.variants[0];
+  const variant =
+    (searchParams.variantId
+      ? product.variants.find((variant) => variant.id === searchParams.variantId)
+      : product.variants[0]) ?? null;
+
   const initialAttributes: Record<string, string> = {};
-  if (initialVariant) {
-    const attributes = initialVariant.attributes as VariantAttribute[];
-    attributes.forEach(({ name, value }) => {
+  if (variant) {
+    const variantOptions = variant.attributes as VariantAttribute[];
+    variantOptions.forEach(({ name, value }) => {
       initialAttributes[name] = value;
     });
   }
@@ -76,12 +78,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <ProductInfo
       product={product}
+      variant={variant}
       productOptions={productOptions}
-      initialOptions={{
-        variantIndex: 0,
-        attributes: initialAttributes,
-        dateRange: "7d",
-      }}
+      initialAttributes={initialAttributes}
     />
   );
 }

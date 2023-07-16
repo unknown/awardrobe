@@ -58,16 +58,10 @@ export function usePrices() {
 async function getPrices(variantId: string, startDate: Date, abortSignal?: AbortSignal) {
   const response = await fetch("/api/products/prices", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      variantId,
-      startDate,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variantId, startDate }),
     signal: abortSignal,
   });
-
   return (await response.json()) as GetPricesResponse;
 }
 

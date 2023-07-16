@@ -15,13 +15,13 @@ import { cn } from "@/utils/utils";
 export type VariantControlsProps = {
   productOptions: Record<string, string[]>;
   attributes: Record<string, string>;
-  onAttributesChange: (attributes: Record<string, string>) => void;
+  onAttributeChange: (name: string, value: string) => void;
 };
 
 export function VariantControls({
   productOptions,
   attributes,
-  onAttributesChange,
+  onAttributeChange,
 }: VariantControlsProps) {
   return (
     <Fragment>
@@ -34,9 +34,8 @@ export function VariantControls({
             </label>
             <Select
               value={selectedValue}
-              onValueChange={(newValue) => {
-                const newAttributes = { ...attributes, [name]: newValue };
-                onAttributesChange(newAttributes);
+              onValueChange={(value) => {
+                onAttributeChange(name, value);
               }}
             >
               <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
