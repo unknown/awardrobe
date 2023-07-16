@@ -21,7 +21,7 @@ async function getProducts(limit?: number, useProxy = false) {
 
   const increment = 100;
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-    const params = { start: offset, rows: Math.min(total - offset, increment) };
+    const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
     const httpsAgent = getHttpsProxyAgent(useProxy);
     const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
@@ -77,6 +77,7 @@ async function getProductCode(url: string, useProxy = false) {
   return collectionId;
 }
 
+// TODO: investigate why the endpoint returns false inventory data sometimes
 async function getProductDetails(productCode: string, useProxy = false) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
   const httpsAgent = getHttpsProxyAgent(useProxy);

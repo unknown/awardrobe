@@ -14,7 +14,7 @@ export const itemSchema = z.object({
       valueSequence: z.number(),
     }),
   ),
-  inventory: z.object({ inventory: z.number() }),
+  inventory: z.object({ inventory: z.number(), published: z.boolean() }),
 });
 export type Item = z.infer<typeof itemSchema>;
 
