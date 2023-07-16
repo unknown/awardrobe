@@ -24,7 +24,7 @@ export function NotificationList({ initialNotifications }: NotificationListProps
 
         return (
           <div key={id}>
-            <Link href={`/product/${productVariant.product.id}`}>
+            <Link href={`/product/${productVariant.product.id}?variantId=${productVariant.id}`}>
               <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
             </Link>
             <p className="text-muted-foreground text-sm">{description}</p>
@@ -52,12 +52,8 @@ export function NotificationList({ initialNotifications }: NotificationListProps
 async function deleteNotification(notificationId: string) {
   const response = await fetch("/api/notifications/delete", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      notificationId,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notificationId }),
   });
   return (await response.json()) as DeleteNotificationResponse;
 }
