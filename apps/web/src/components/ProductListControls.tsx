@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
@@ -9,12 +9,18 @@ import { AddProductDialog } from "@/components/AddProductDialog";
 
 export function ProductListControls() {
   const router = useRouter();
-  const handleChange = useCallback(
-    debounce((e: ChangeEvent<HTMLInputElement>) => {
-      router.push(`/browse?search=${e.target.value}`);
-    }, 1000),
-    [],
-  );
+
+  const debouncedSearch = useRef(
+    debounce(async (query) => {
+      router.push(`/browse?search=${query}`);
+    }, 500),
+  ).current;
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   return (
     <div className="flex gap-2">
@@ -22,7 +28,7 @@ export function ProductListControls() {
         type="search"
         className="flex-1"
         placeholder="Product or store name..."
-        onChange={handleChange}
+        onChange={(event) => debouncedSearch(event.target.value)}
       />
       <AddProductDialog
         onAddProduct={({ id }) => {
