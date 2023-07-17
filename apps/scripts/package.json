@@ -1,18 +1,20 @@
 {
-  "name": "@awardrobe/scrapers",
+  "name": "@awardrobe/scripts",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "scrapers:run": "npm run with-env -- ts-node -r tsconfig-paths/register --transpile-only src/index.ts"
+    "db:seed": "npm run with-env -- ts-node -r tsconfig-paths/register --transpile-only src/seed.ts",
+    "scraper": "npm run with-env -- ts-node -r tsconfig-paths/register --transpile-only src/scraper.ts"
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
     "@awardrobe/prisma-types": "*",
     "@awardrobe/tsconfig": "*",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "meilisearch": "^0.33.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",

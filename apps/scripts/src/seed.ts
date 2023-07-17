@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 import { AbercrombieUS, UniqloUS, VariantInfo } from "@awardrobe/adapters";
 
+import meilisearch from "./utils/meilisearch";
+
 const prisma = new PrismaClient();
 
 async function seedUniqloUS() {
@@ -52,9 +54,28 @@ async function seedAbercrombieUS() {
   }
 }
 
+async function populateMeilisearch() {
+  console.log("Populating Meilisearch");
+
+  const products = await prisma.product.findMany({
+    include: { store: true },
+  });
+
+  await meilisearch.index("products").deleteAllDocuments();
+  await meilisearch.index("products").addDocuments(
+    products.map(({ id, name, store }) => ({
+      id,
+      name,
+      storeName: store.name,
+    })),
+    { primaryKey: "id" },
+  );
+}
+
 async function main() {
   await seedUniqloUS();
   await seedAbercrombieUS();
+  await populateMeilisearch();
 }
 
 async function addProduct(
@@ -63,10 +84,9 @@ async function addProduct(
   productDetails: { name: string; variants: VariantInfo[] },
 ) {
   const { name, variants } = productDetails;
+
   await prisma.product.upsert({
-    where: {
-      storeId_productCode: { storeId, productCode },
-    },
+    where: { storeId_productCode: { storeId, productCode } },
     update: {},
     create: {
       productCode,

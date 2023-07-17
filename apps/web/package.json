@@ -39,6 +39,8 @@
     "d3-array": "^3.2.4",
     "eslint": "8.44.0",
     "eslint-config-next": "^13.4.9",
+    "lodash.debounce": "^4.0.8",
+    "meilisearch": "^0.33.0",
     "next": "^13.4.10",
     "next-auth": "^4.22.1",
     "nodemailer": "^6.9.3",
@@ -49,6 +51,7 @@
   },
   "devDependencies": {
     "@types/d3-array": "^3.0.5",
+    "@types/lodash.debounce": "^4.0.7",
     "autoprefixer": "^10.4.13",
     "dotenv-cli": "^7.2.1",
     "encoding": "^0.1.13",

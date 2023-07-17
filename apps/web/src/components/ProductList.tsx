@@ -1,25 +1,17 @@
-"use client";
-
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import Link from "next/link";
 
-import { Product } from "@awardrobe/prisma-types";
-
-import { AddProductDialog } from "./AddProductDialog";
+import { ProductListControls } from "@/components/ProductListControls";
 
 export type ProductListProps = {
-  initialProducts: Product[];
+  products: { id: string; name: string }[];
 };
 
-export function ProductList({ initialProducts }: ProductListProps) {
-  const [products, setProducts] = useState(initialProducts);
-
+export function ProductList({ products }: ProductListProps) {
   return (
     <Fragment>
-      <AddProductDialog
-        onAddProduct={(newProduct) => setProducts((products) => [...products, newProduct])}
-      />
       <div className="flex flex-col gap-1">
+        <ProductListControls />
         {products.map((product) => {
           return (
             <Link key={product.id} href={`/product/${product.id}`}>

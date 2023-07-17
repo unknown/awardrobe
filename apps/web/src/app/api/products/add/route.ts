@@ -5,6 +5,7 @@ import { getAdapterFromUrl } from "@awardrobe/adapters";
 import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
+import meilisearch from "@/utils/meilisearch";
 import { prisma } from "@/utils/prisma";
 
 type AddProductRequest = {
@@ -57,6 +58,10 @@ export async function POST(req: Request) {
         },
       },
     });
+
+    await meilisearch
+      .index("products")
+      .addDocuments([{ id: product.id, name, storeName: store.name }]);
 
     return NextResponse.json<AddProductResponse>({
       status: "success",

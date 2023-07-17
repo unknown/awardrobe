@@ -1,13 +1,23 @@
 import { ProductList } from "@/components/ProductList";
-import { prisma } from "@/utils/prisma";
+import meilisearch from "@/utils/meilisearch";
 
-export default async function ProductsPage() {
-  const products = await prisma.product.findMany();
+type BrowsePageProps = {
+  searchParams: { search?: string };
+};
+
+export default async function BrowsePage({ searchParams }: BrowsePageProps) {
+  const { search } = searchParams;
+
+  // TODO: fix cache not invalidating
+  const response = await meilisearch.index("products").search(search ?? "");
+
+  // TODO: better types
+  const products = response.hits as { id: string; name: string }[];
 
   return (
     <section className="container max-w-4xl space-y-2">
       <h1 className="text-xl font-bold">Products</h1>
-      <ProductList initialProducts={products} />
+      <ProductList products={products} />
     </section>
   );
 }

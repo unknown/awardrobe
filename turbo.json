@@ -31,13 +31,16 @@
     "db:push": {
       "cache": false
     },
+    "db:seed": {
+      "cache": false
+    },
+    "scraper:run": {
+      "dependsOn": ["^build", "^db:generate"],
+      "cache": false
+    },
     "emails:preview": {
       "cache": false,
       "persistent": true
-    },
-    "scrapers:run": {
-      "dependsOn": ["^build", "^db:generate"],
-      "cache": false
     }
   }
 }
