@@ -28,7 +28,7 @@ export function ProductInfo({
   initialAttributes,
   initialVariantId,
 }: ProductInfoProps) {
-  const { data: prices, fetchPrices, invalidateData } = usePrices();
+  const { data: prices, fetchPrices, invalidateData, loading } = usePrices();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -149,7 +149,7 @@ export function ProductInfo({
 
                 const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
                 params.set("variantId", variantId ?? "null");
-                router.replace(`${pathname}?${params.toString()}`);
+                router.replace(`${pathname}?${params.toString()}`); // TODO: shallow replace
               }}
             />
             <div className="col-span-2">
@@ -188,11 +188,43 @@ export function ProductInfo({
             number of data points.
           </div>
         ) : null}
-        <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
+        <div className="relative h-[20rem] sm:h-[24rem] md:h-[28rem]">
+          {prices === null || loading ? (
+            <ChartOverlay type="loading" />
+          ) : prices.length === 0 ? (
+            <ChartOverlay type="no-prices" />
+          ) : null}
           <ProductChart prices={prices} />
         </div>
       </section>
     </Fragment>
+  );
+}
+
+type ChartOverlayProps = {
+  type: "loading" | "no-prices";
+};
+function ChartOverlay({ type }: ChartOverlayProps) {
+  function getContent() {
+    switch (type) {
+      case "loading":
+        return <p className="text-muted-foreground">Loading...</p>;
+      case "no-prices":
+        return (
+          <div className="bg-gradient-radial from-background to-transparent p-16 text-center">
+            <h2 className="text-xl font-medium">No price history</h2>
+            <p className="text-muted-foreground">
+              Hang tight, we&apos;ll fetch the prices for you soon.
+            </p>
+          </div>
+        );
+    }
+  }
+
+  return (
+    <div className="absolute z-10 flex h-full w-full items-center justify-center">
+      {getContent()}
+    </div>
   );
 }
 

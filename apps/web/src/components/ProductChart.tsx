@@ -41,77 +41,64 @@ const stockAccessor = (d: ChartUnit) => d.stock;
 const defaultMargin = { top: 10, right: 0, bottom: 35, left: 60 };
 
 export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
-  if (consumerPrices === null) {
-    return (
-      <div className="relative h-full w-full">
-        <p className="text-muted-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          Loading...
-        </p>
-      </div>
-    );
-  }
-
-  const lastPrice = consumerPrices[consumerPrices.length - 1];
-  if (!lastPrice) {
-    const lineProps = {
-      stroke: "#e0e0e0",
-      strokeWidth: 1,
-      shapeRendering: "crispEdges",
-    };
-
-    return (
-      <div className="relative flex h-full w-full items-center justify-center">
-        <svg className="absolute -z-10 h-full w-full overflow-visible">
-          <g {...lineProps}>
-            <line x1="0%" x2="100%" y1="0%" y2="0%" />
-            <line x1="0%" x2="100%" y1="10%" y2="10%" />
-            <line x1="0%" x2="100%" y1="20%" y2="20%" />
-            <line x1="0%" x2="100%" y1="30%" y2="30%" />
-            <line x1="0%" x2="100%" y1="40%" y2="40%" />
-            <line x1="0%" x2="100%" y1="50%" y2="50%" />
-            <line x1="0%" x2="100%" y1="60%" y2="60%" />
-            <line x1="0%" x2="100%" y1="70%" y2="70%" />
-            <line x1="0%" x2="100%" y1="80%" y2="80%" />
-            <line x1="0%" x2="100%" y1="90%" y2="90%" />
-            <line x1="0%" x2="100%" y1="100%" y2="100%" />
-          </g>
-          <g {...lineProps}>
-            <line x1="0%" x2="0%" y1="0%" y2="100%" />
-            <line x1="20%" x2="20%" y1="0%" y2="100%" />
-            <line x1="40%" x2="40%" y1="0%" y2="100%" />
-            <line x1="60%" x2="60%" y1="0%" y2="100%" />
-            <line x1="80%" x2="80%" y1="0%" y2="100%" />
-            <line x1="100%" x2="100%" y1="0%" y2="100%" />
-          </g>
-          <g {...lineProps} strokeWidth={2}>
-            <line x1="0%" x2="100%" y1="0%" y2="0%" />
-            <line x1="0%" x2="100%" y1="100%" y2="100%" />
-            <line x1="0%" x2="0%" y1="0%" y2="100%" />
-            <line x1="100%" x2="100%" y1="0%" y2="100%" />
-          </g>
-        </svg>
-        <div className="bg-gradient-radial from-background to-transparent p-16 text-center">
-          <h2 className="text-xl font-medium">No price history</h2>
-          <p className="text-muted-foreground">
-            Hang tight, we&apos;ll fetch the prices for you soon.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const prices = [...consumerPrices, { ...lastPrice, timestamp: new Date().toISOString() }].map(
-    (price) => ({
-      date: price.timestamp.toString(),
-      price: price.priceInCents,
-      stock: price.inStock ? 1 : 0,
-    }),
-  );
+  const lastPrice = consumerPrices?.at(-1);
+  const prices =
+    consumerPrices !== null && lastPrice
+      ? [...consumerPrices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
+          date: price.timestamp.toString(),
+          price: price.priceInCents,
+          stock: price.inStock ? 1 : 0,
+        }))
+      : [];
 
   return (
     <ParentSize className="relative">
-      {({ width, height }) => <ChartComponent prices={prices} width={width} height={height} />}
+      {({ width, height }) => {
+        if (!consumerPrices || !lastPrice) {
+          return <PlaceholderChart />;
+        }
+        return <ChartComponent prices={prices} width={width} height={height} />;
+      }}
     </ParentSize>
+  );
+}
+
+function PlaceholderChart() {
+  return (
+    <svg
+      className="h-full w-full overflow-visible"
+      stroke="#e0e0e0"
+      strokeWidth={1}
+      shapeRendering="crispEdges"
+    >
+      <g>
+        <line x1="0%" x2="100%" y1="0%" y2="0%" />
+        <line x1="0%" x2="100%" y1="10%" y2="10%" />
+        <line x1="0%" x2="100%" y1="20%" y2="20%" />
+        <line x1="0%" x2="100%" y1="30%" y2="30%" />
+        <line x1="0%" x2="100%" y1="40%" y2="40%" />
+        <line x1="0%" x2="100%" y1="50%" y2="50%" />
+        <line x1="0%" x2="100%" y1="60%" y2="60%" />
+        <line x1="0%" x2="100%" y1="70%" y2="70%" />
+        <line x1="0%" x2="100%" y1="80%" y2="80%" />
+        <line x1="0%" x2="100%" y1="90%" y2="90%" />
+        <line x1="0%" x2="100%" y1="100%" y2="100%" />
+      </g>
+      <g>
+        <line x1="0%" x2="0%" y1="0%" y2="100%" />
+        <line x1="20%" x2="20%" y1="0%" y2="100%" />
+        <line x1="40%" x2="40%" y1="0%" y2="100%" />
+        <line x1="60%" x2="60%" y1="0%" y2="100%" />
+        <line x1="80%" x2="80%" y1="0%" y2="100%" />
+        <line x1="100%" x2="100%" y1="0%" y2="100%" />
+      </g>
+      <g strokeWidth={2}>
+        <line x1="0%" x2="100%" y1="0%" y2="0%" />
+        <line x1="0%" x2="100%" y1="100%" y2="100%" />
+        <line x1="0%" x2="0%" y1="0%" y2="100%" />
+        <line x1="100%" x2="100%" y1="0%" y2="100%" />
+      </g>
+    </svg>
   );
 }
 
