@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
-import { ExtendedProduct, VariantWithNotification } from "@/app/(product)/product/[productId]/page";
+import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
 import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
 import { formatCurrency } from "@/utils/utils";
@@ -17,16 +17,16 @@ import { DateRangeControl, VariantControls } from "./ProductControls";
 
 export type ProductInfoProps = {
   product: ExtendedProduct;
-  variant: VariantWithNotification | null;
   productOptions: Record<string, string[]>;
   initialAttributes: Record<string, string>;
+  initialVariantId: string | null;
 };
 
 export function ProductInfo({
   product,
-  variant,
   productOptions,
   initialAttributes,
+  initialVariantId,
 }: ProductInfoProps) {
   const { data: prices, fetchPrices, invalidateData } = usePrices();
   const router = useRouter();
@@ -34,20 +34,24 @@ export function ProductInfo({
   const searchParams = useSearchParams();
 
   const [attributes, setAttributes] = useState(initialAttributes);
+  const [variantId, setVariantId] = useState(initialVariantId);
   const [dateRange, setDateRange] = useState<DateRange>("7d");
+
+  const initialFetchOptions = useRef({ variantId, dateRange });
+  const variant = product.variants.find((variant) => variant.id === variantId) ?? null;
 
   const loadPrices = useCallback(
     async (options: {
-      variant: VariantWithNotification | null;
+      variantId: string | null;
       dateRange: DateRange;
       abortSignal?: AbortSignal;
     }) => {
-      if (!options.variant) {
+      if (!options.variantId) {
         invalidateData();
         return;
       }
       await fetchPrices({
-        variantId: options.variant.id,
+        variantId: options.variantId,
         dateRange: options.dateRange,
         abortSignal: options.abortSignal,
       });
@@ -56,12 +60,13 @@ export function ProductInfo({
   );
 
   useEffect(() => {
+    const { variantId, dateRange } = initialFetchOptions.current;
     const abortController = new AbortController();
-    loadPrices({ variant, dateRange, abortSignal: abortController.signal });
+    loadPrices({ variantId, dateRange, abortSignal: abortController.signal });
     return () => {
       abortController.abort();
     };
-  }, [variant, dateRange, loadPrices]);
+  }, [loadPrices]);
 
   const getPillText = () => {
     const lastPrice = prices?.at(-1)?.priceInCents;
@@ -130,17 +135,20 @@ export function ProductInfo({
                 const newAttributes = { ...attributes, [name]: value };
                 setAttributes(newAttributes);
 
-                const newVariant = product.variants.find((variant) => {
+                const variant = product.variants.find((variant) => {
                   const variantAttributes = variant.attributes as VariantAttribute[];
                   if (variantAttributes.length !== Object.keys(newAttributes).length) return false;
-                  return variantAttributes.every((attribute) => {
-                    return newAttributes[attribute.name] === attribute.value;
-                  });
+                  return variantAttributes.every(
+                    (attribute) => newAttributes[attribute.name] === attribute.value,
+                  );
                 });
-                if (newVariant?.id === variant?.id) return;
+                const variantId = variant?.id ?? null;
+                setVariantId(variantId);
+
+                loadPrices({ variantId, dateRange });
 
                 const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
-                params.set("variantId", newVariant?.id ?? "null");
+                params.set("variantId", variantId ?? "null");
                 router.replace(`${pathname}?${params.toString()}`);
               }}
             />
@@ -161,7 +169,7 @@ export function ProductInfo({
           <DateRangeControl
             dateRange={dateRange}
             onDateRangeChange={(dateRange) => {
-              loadPrices({ variant, dateRange });
+              loadPrices({ variantId, dateRange });
               setDateRange(dateRange);
             }}
           />

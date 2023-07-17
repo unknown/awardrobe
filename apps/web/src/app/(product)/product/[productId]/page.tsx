@@ -78,9 +78,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   return (
     <ProductInfo
       product={product}
-      variant={variant}
       productOptions={productOptions}
       initialAttributes={initialAttributes}
+      initialVariantId={variant?.id ?? null}
     />
   );
 }
