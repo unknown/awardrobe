@@ -1,22 +1,28 @@
+import { Fragment } from "react";
 import Link from "next/link";
+
+import { Product } from "@awardrobe/meilisearch-types";
 
 import { ProductListControls } from "@/components/product/ProductListControls";
 
 export type ProductListProps = {
-  products: { id: string; name: string }[];
+  products: Product[];
 };
 
 export function ProductList({ products }: ProductListProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <Fragment>
       <ProductListControls />
-      {products.map((product) => {
-        return (
-          <Link key={product.id} href={`/product/${product.id}`}>
-            {product.name}
-          </Link>
-        );
-      })}
-    </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+        {products.map((product) => {
+          return (
+            <div key={product.id} className="rounded-md border p-3">
+              <p className="text-muted-foreground text-sm">{product.storeName}</p>
+              <Link href={`/product/${product.id}`}>{product.name}</Link>
+            </div>
+          );
+        })}
+      </div>
+    </Fragment>
   );
 }
