@@ -34,6 +34,7 @@ export function ProductListControls() {
       />
       <AddProductDialog
         onAddProduct={({ id }) => {
+          router.refresh();
           router.push(`/product/${id}`);
         }}
       />

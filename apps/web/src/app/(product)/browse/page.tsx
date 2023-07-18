@@ -5,12 +5,9 @@ type BrowsePageProps = {
   searchParams: { search?: string };
 };
 
-export const revalidate = 3600;
-
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const { search } = searchParams;
 
-  // TODO: fix cache not invalidating
   const response = await meilisearch.index("products").search(search ?? "");
 
   // TODO: better types
