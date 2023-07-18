@@ -5,6 +5,8 @@ type BrowsePageProps = {
   searchParams: { search?: string };
 };
 
+export const revalidate = 3600;
+
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const { search } = searchParams;
 
