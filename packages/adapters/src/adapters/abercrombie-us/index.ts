@@ -1,9 +1,10 @@
 import axios from "axios";
+import parse from "node-html-parser";
 
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { getHttpsProxyAgent } from "../../utils/proxy";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
-import { collectionSchema, Item, listSchema, Product, searchSchema } from "./schemas";
+import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 const AbercrombieUS: StoreAdapter = {
   urlPrefixes: ["abercrombie.com/shop/us/"],
@@ -42,7 +43,7 @@ async function getProducts(limit?: number, useProxy = false) {
 }
 
 async function getProductCode(url: string, useProxy = false) {
-  const productCodeRegex = /\/p\/[a-zA-Z-]+([0-9]+)/;
+  const productCodeRegex = /\/p\/([a-zA-Z0-9-]+)/;
   const matches = url.match(productCodeRegex);
 
   const productCode = matches?.[1];
@@ -50,25 +51,20 @@ async function getProductCode(url: string, useProxy = false) {
     throw new Error(`Failed to get product code from ${url}`);
   }
 
-  const listEndpoint = "https://www.abercrombie.com/api/search/a-us/product/list/";
-  const params = { productIds: productCode };
+  const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
   const httpsAgent = getHttpsProxyAgent(useProxy);
-  const listResponse = await axios.get(listEndpoint, { params, httpsAgent });
+  const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
-  if (listResponse.status !== 200) {
+  if (productResponse.status !== 200) {
     throw new Error(
-      `Failed to search for product ${productCode}. Status code: ${listResponse.status}`,
+      `Failed to search for product ${productCode}. Status code: ${productResponse.status}`,
     );
   }
 
-  const { products } = listSchema.parse(listResponse.data);
-
-  let collectionId: string | undefined;
-  products.forEach((product) => {
-    if (product.productId === productCode) {
-      collectionId = product.collection;
-    }
-  });
+  const root = parse(productResponse.data);
+  const collectionId = root
+    .querySelector("meta[name=branch:deeplink:collectionID]")
+    ?.getAttribute("content");
 
   if (!collectionId) {
     throw new Error(`Failed to get product code from ${url}`);

@@ -34,7 +34,7 @@
     "db:seed": {
       "cache": false
     },
-    "scraper:run": {
+    "scraper": {
       "dependsOn": ["^build", "^db:generate"],
       "cache": false
     },
