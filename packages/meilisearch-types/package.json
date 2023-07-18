@@ -1,5 +1,5 @@
 {
-  "name": "@awardrobe/prisma-types",
+  "name": "@awardrobe/meilisearch-types",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -7,13 +7,11 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "db:generate": "npm run with-env -- prisma generate",
-    "db:push": "npm run with-env -- prisma db push --skip-generate",
-    "dev": "npm run with-env -- prisma studio --browser none",
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
-    "@prisma/client": "^5.0.0"
+    "meilisearch": "^0.33.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "*",

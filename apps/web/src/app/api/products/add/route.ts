@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
+import { meilisearch, Product as ProductDocument } from "@awardrobe/meilisearch-types";
 import { Prisma, prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
-import meilisearch from "@/utils/meilisearch";
 
 type AddProductRequest = {
   productUrl: string;
@@ -59,9 +59,8 @@ export async function POST(req: Request) {
       },
     });
 
-    await meilisearch
-      .index("products")
-      .addDocuments([{ id: product.id, name, storeName: store.name }]);
+    const productDocument: ProductDocument = { id: product.id, name, storeName: store.name };
+    await meilisearch.index("products").addDocuments([productDocument], { primaryKey: "id" });
 
     revalidatePath("/(product)/browse");
 
