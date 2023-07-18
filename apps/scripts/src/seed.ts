@@ -1,10 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-
 import { AbercrombieUS, UniqloUS, VariantInfo } from "@awardrobe/adapters";
+import { prisma } from "@awardrobe/prisma-types";
 
 import meilisearch from "./utils/meilisearch";
-
-const prisma = new PrismaClient();
 
 async function seedUniqloUS() {
   console.log("Seeding Uniqlo US");

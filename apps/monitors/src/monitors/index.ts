@@ -3,8 +3,8 @@ import pLimit from "p-limit";
 
 import { getAdapter, VariantAttribute } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
+import { prisma } from "@awardrobe/prisma-types";
 
-import prisma from "../utils/database";
 import emailTransporter from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
 import { ExtendedProduct, ExtendedVariantInfo } from "./types";

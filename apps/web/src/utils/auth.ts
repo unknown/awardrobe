@@ -5,8 +5,7 @@ import EmailProvider from "next-auth/providers/email";
 import { createTransport } from "nodemailer";
 
 import { SignInEmail } from "@awardrobe/emails";
-
-import { prisma } from "@/utils/prisma";
+import { prisma } from "@awardrobe/prisma-types";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),

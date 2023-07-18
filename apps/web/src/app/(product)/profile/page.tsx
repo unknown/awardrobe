@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
-import { Prisma } from "@awardrobe/prisma-types";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 import { NotificationList } from "@/components/notification/NotificationsList";
 import { authOptions } from "@/utils/auth";
-import { prisma } from "@/utils/prisma";
 
 const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
   include: { productVariant: { include: { product: true } } },

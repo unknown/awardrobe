@@ -3,11 +3,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
-import { Prisma, Product } from "@awardrobe/prisma-types";
+import { Prisma, prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 import meilisearch from "@/utils/meilisearch";
-import { prisma } from "@/utils/prisma";
 
 type AddProductRequest = {
   productUrl: string;

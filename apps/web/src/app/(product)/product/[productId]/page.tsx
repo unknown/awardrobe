@@ -3,11 +3,10 @@ import { Button } from "@ui/Button";
 import { getServerSession } from "next-auth";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { Prisma } from "@awardrobe/prisma-types";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { authOptions } from "@/utils/auth";
-import { prisma } from "@/utils/prisma";
 
 const variantWithNotification = Prisma.validator<Prisma.ProductVariantArgs>()({
   include: { notifications: true },
