@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { VariantAttribute } from "@awardrobe/adapters";
 import { Prisma } from "@awardrobe/prisma-types";
 
-import { ProductInfo } from "@/components/ProductInfo";
+import { ProductInfo } from "@/components/product/ProductInfo";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 

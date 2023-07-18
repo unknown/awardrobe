@@ -3,7 +3,7 @@ import Link from "next/link";
 import { VariantAttribute } from "@awardrobe/adapters";
 
 import { ExtendedNotification } from "@/app/(product)/profile/page";
-import { DeleteNotificationButton } from "@/components/DeleteNotificationButton";
+import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
 
 export type NotificationListProps = {
   notifications: ExtendedNotification[];

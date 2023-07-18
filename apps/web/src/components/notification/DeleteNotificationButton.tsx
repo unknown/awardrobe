@@ -13,7 +13,6 @@ export function DeleteNotificationButton({ id }: DeleteNotificationButtonProps) 
   const router = useRouter();
   return (
     <Button
-      className="mt-1"
       onClick={async () => {
         const result = await deleteNotification(id);
         if (result.status === "success") {

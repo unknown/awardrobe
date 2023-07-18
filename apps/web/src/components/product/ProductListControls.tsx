@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
 
-import { AddProductDialog } from "@/components/AddProductDialog";
+import { AddProductDialog } from "@/components/product/AddProductDialog";
 
 export function ProductListControls() {
   const router = useRouter();

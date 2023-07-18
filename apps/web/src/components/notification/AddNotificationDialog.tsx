@@ -1,9 +1,12 @@
 import { Fragment, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 import { Input } from "@ui/Input";
+
+import { AddNotificationResponse } from "@/app/api/notifications/create/route";
 
 export type NotificationOptions = {
   mustBeInStock: boolean;
@@ -11,14 +14,18 @@ export type NotificationOptions = {
 };
 
 export type AddNotificationDialogProps = {
+  productId: string;
+  variantId: string;
   defaultOptions: NotificationOptions;
-  onAddNotification: (options: NotificationOptions) => Promise<void>;
 };
 
 export function AddNotificationDialog({
+  productId,
+  variantId,
   defaultOptions,
-  onAddNotification,
 }: AddNotificationDialogProps) {
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,9 +55,19 @@ export function AddNotificationDialog({
             onSubmit={async (event) => {
               event.preventDefault();
               setIsLoading(true);
-              await onAddNotification(options);
+
+              const result = await createNotification(
+                productId,
+                variantId,
+                options.mustBeInStock,
+                options.priceInCents,
+              );
+              if (result.status === "success") {
+                router.refresh();
+                setOpen(false);
+              }
+
               setIsLoading(false);
-              setOpen(false);
             }}
           >
             <label className="text-primary text-sm font-medium" htmlFor="price">
@@ -104,4 +121,18 @@ export function AddNotificationDialog({
       </Dialog>
     </Fragment>
   );
+}
+
+async function createNotification(
+  productId: string,
+  variantId: string,
+  mustBeInStock: boolean,
+  priceInCents?: number,
+) {
+  const response = await fetch("/api/notifications/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, variantId, priceInCents, mustBeInStock }),
+  });
+  return (await response.json()) as AddNotificationResponse;
 }

@@ -1,4 +1,4 @@
-import { ProductList } from "@/components/ProductList";
+import { ProductList } from "@/components/product/ProductList";
 import meilisearch from "@/utils/meilisearch";
 
 type BrowsePageProps = {

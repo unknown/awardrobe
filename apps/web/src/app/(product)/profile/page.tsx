@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 
 import { Prisma } from "@awardrobe/prisma-types";
 
-import { NotificationList } from "@/components/NotificationsList";
+import { NotificationList } from "@/components/notification/NotificationsList";
 import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 

@@ -2,16 +2,14 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
 import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
-import { AddNotificationResponse } from "@/app/api/notifications/create/route";
-import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
+import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
 import { formatCurrency } from "@/utils/utils";
-import { DateRange, usePrices } from "../hooks/usePrices";
-import { AddNotificationDialog } from "./AddNotificationDialog";
+import { DateRange, usePrices } from "../../hooks/usePrices";
+import { AddNotificationDialog } from "../notification/AddNotificationDialog";
 import { ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
@@ -38,7 +36,9 @@ export function ProductInfo({
   const [dateRange, setDateRange] = useState<DateRange>("7d");
 
   const initialFetchOptions = useRef({ variantId, dateRange });
-  const variant = product.variants.find((variant) => variant.id === variantId) ?? null;
+  const variant = variantId
+    ? product.variants.find((variant) => variant.id === variantId) ?? null
+    : null;
 
   const loadPrices = useCallback(
     async (options: {
@@ -85,37 +85,15 @@ export function ProductInfo({
     if (!variant) return null;
 
     const notification = variant.notifications[0];
-    if (notification) {
-      return (
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            const result = await deleteNotification(notification.id);
-            if (result.status === "success") {
-              router.refresh();
-            }
-          }}
-        >
-          Delete notification
-        </Button>
-      );
-    }
-    return (
+    return notification ? (
+      <DeleteNotificationButton id={notification.id} />
+    ) : (
       <AddNotificationDialog
+        productId={product.id}
+        variantId={variant.id}
         defaultOptions={{
           mustBeInStock: false,
-          priceInCents: prices && prices[0] ? prices[0].priceInCents : undefined,
-        }}
-        onAddNotification={async ({ mustBeInStock, priceInCents }) => {
-          const result = await createNotification(
-            product.id,
-            variant.id,
-            mustBeInStock,
-            priceInCents,
-          );
-          if (result.status === "success") {
-            router.refresh();
-          }
+          priceInCents: prices?.at(-1)?.priceInCents,
         }}
       />
     );
@@ -157,8 +135,13 @@ export function ProductInfo({
             </div>
           </div>
         </div>
-        <a href={variant?.productUrl} target="_blank" rel="noopener noreferrer">
-          <div className="text-md mt-5 inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
+        <a
+          className="mt-5 inline-block"
+          href={variant?.productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div className="text-md rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
             {getPillText()}
           </div>
         </a>
@@ -178,7 +161,7 @@ export function ProductInfo({
               <div className="h-3 w-3 border border-[#398739] bg-[#edffea]" /> In Stock
             </span>
             <span className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-[#2b8bad]" /> Uniqlo US
+              <div className="h-3 w-3 rounded-full bg-[#2b8bad]" /> {product.store.name}
             </span>
           </div>
         </div>
@@ -226,27 +209,4 @@ function ChartOverlay({ type }: ChartOverlayProps) {
       {getContent()}
     </div>
   );
-}
-
-async function createNotification(
-  productId: string,
-  variantId: string,
-  mustBeInStock: boolean,
-  priceInCents?: number,
-) {
-  const response = await fetch("/api/notifications/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, variantId, priceInCents, mustBeInStock }),
-  });
-  return (await response.json()) as AddNotificationResponse;
-}
-
-async function deleteNotification(notificationId: string) {
-  const response = await fetch("/api/notifications/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ notificationId }),
-  });
-  return (await response.json()) as DeleteNotificationResponse;
 }
