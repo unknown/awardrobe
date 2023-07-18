@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
@@ -62,6 +63,8 @@ export async function POST(req: Request) {
     await meilisearch
       .index("products")
       .addDocuments([{ id: product.id, name, storeName: store.name }]);
+
+    revalidatePath("/(product)/browse");
 
     return NextResponse.json<AddProductResponse>({
       status: "success",
