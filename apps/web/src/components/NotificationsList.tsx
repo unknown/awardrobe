@@ -1,20 +1,15 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@ui/Button";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
 import { ExtendedNotification } from "@/app/(product)/profile/page";
-import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
+import { DeleteNotificationButton } from "@/components/DeleteNotificationButton";
 
 export type NotificationListProps = {
-  initialNotifications: ExtendedNotification[];
+  notifications: ExtendedNotification[];
 };
-export function NotificationList({ initialNotifications }: NotificationListProps) {
-  const [notifications, setNotifications] = useState(initialNotifications);
 
+export function NotificationList({ notifications }: NotificationListProps) {
   return (
     <div className="space-y-4">
       {notifications.map(({ id, productVariant }) => {
@@ -28,32 +23,10 @@ export function NotificationList({ initialNotifications }: NotificationListProps
               <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
             </Link>
             <p className="text-muted-foreground text-sm">{description}</p>
-            <Button
-              className="mt-1"
-              onClick={async () => {
-                const result = await deleteNotification(id);
-                if (result.status === "success") {
-                  setNotifications((notifications) =>
-                    [...notifications].filter((n) => n.id !== id),
-                  );
-                }
-              }}
-            >
-              Remove notification
-            </Button>
+            <DeleteNotificationButton id={id} />
           </div>
         );
       })}
     </div>
   );
-}
-
-// TODO: extract this somehow
-async function deleteNotification(notificationId: string) {
-  const response = await fetch("/api/notifications/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ notificationId }),
-  });
-  return (await response.json()) as DeleteNotificationResponse;
 }

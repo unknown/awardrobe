@@ -8,13 +8,7 @@ import { authOptions } from "@/utils/auth";
 import { prisma } from "@/utils/prisma";
 
 const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
-  include: {
-    productVariant: {
-      include: {
-        product: true,
-      },
-    },
-  },
+  include: { productVariant: { include: { product: true } } },
 });
 export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
   typeof extendedNotification
@@ -41,7 +35,7 @@ export default async function ProfilePage() {
       </section>
       <section className="space-y-2">
         <h2 className="text-xl font-bold">Notifications</h2>
-        <NotificationList initialNotifications={notifications} />
+        <NotificationList notifications={notifications} />
       </section>
     </section>
   );
