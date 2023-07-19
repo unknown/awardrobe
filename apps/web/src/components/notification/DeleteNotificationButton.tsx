@@ -13,6 +13,7 @@ export function DeleteNotificationButton({ id }: DeleteNotificationButtonProps) 
   const router = useRouter();
   return (
     <Button
+      variant="destructiveOutline"
       onClick={async () => {
         const result = await deleteNotification(id);
         if (result.status === "success") {
