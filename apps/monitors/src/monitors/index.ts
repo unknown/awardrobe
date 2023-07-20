@@ -136,33 +136,32 @@ async function updateOutdatedPrices(
 }
 
 async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant) {
-  const { productVariant, attributes, priceInCents, inStock } = variant;
+  const { productVariant, attributes, priceInCents } = variant;
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
+  const emailHtml = render(
+    PriceNotificationEmail({
+      productName: product.name,
+      description,
+      priceInCents,
+      productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+    }),
+  );
+
   const notifications = await prisma.productNotification.findMany({
     where: {
-      mustBeInStock: inStock ? undefined : false,
+      priceDrop: true,
       OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: productVariant.id },
     },
-    include: {
-      user: true,
-    },
+    include: { user: true },
   });
 
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-      const emailHtml = render(
-        PriceNotificationEmail({
-          productName: product.name,
-          description,
-          priceInCents,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-        }),
-      );
       emailTransporter.sendMail({
         to: notification.user.email,
         subject: "Price drop",
@@ -178,27 +177,27 @@ async function handleRestock(product: Product, variant: VariantInfoWithVariant) 
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
 
+  const emailHtml = render(
+    StockNotificationEmail({
+      productName: product.name,
+      description,
+      priceInCents,
+      productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+    }),
+  );
+
   const notifications = await prisma.productNotification.findMany({
     where: {
+      restock: true,
       OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: productVariant.id },
     },
-    include: {
-      user: true,
-    },
+    include: { user: true },
   });
 
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-      const emailHtml = render(
-        StockNotificationEmail({
-          productName: product.name,
-          description,
-          priceInCents,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-        }),
-      );
       emailTransporter.sendMail({
         to: notification.user.email,
         subject: "Item back in stock",

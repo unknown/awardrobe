@@ -112,7 +112,8 @@ model ProductNotification {
   userId           String
   productVariantId String
   priceInCents     Int?
-  mustBeInStock    Boolean
+  restock          Boolean @default(true)
+  priceDrop        Boolean @default(true)
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)

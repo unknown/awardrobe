@@ -6,28 +6,27 @@ import { Checkbox } from "@ui/Checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 import { Input } from "@ui/Input";
 
-import { AddNotificationResponse } from "@/app/api/notifications/create/route";
+import {
+  AddNotificationRequest,
+  AddNotificationResponse,
+} from "@/app/api/notifications/create/route";
 
 export type NotificationOptions = {
-  mustBeInStock: boolean;
-  priceInCents?: number;
+  priceInCents: number | null;
+  priceDrop: boolean;
+  restock: boolean;
 };
 
 export type AddNotificationDialogProps = {
-  productId: string;
   variantId: string;
   defaultOptions: NotificationOptions;
 };
 
-export function AddNotificationDialog({
-  productId,
-  variantId,
-  defaultOptions,
-}: AddNotificationDialogProps) {
+export function AddNotificationDialog({ variantId, defaultOptions }: AddNotificationDialogProps) {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [options, setOptions] = useState<NotificationOptions>(defaultOptions);
 
@@ -54,20 +53,19 @@ export function AddNotificationDialog({
           <form
             onSubmit={async (event) => {
               event.preventDefault();
-              setIsLoading(true);
+              setLoading(true);
 
-              const result = await createNotification(
-                productId,
-                variantId,
-                options.mustBeInStock,
-                options.priceInCents,
-              );
+              const result = await createNotification(variantId, {
+                priceInCents: options.priceInCents,
+                priceDrop: options.priceDrop,
+                restock: options.restock,
+              });
               if (result.status === "success") {
                 router.refresh();
                 setOpen(false);
               }
 
-              setIsLoading(false);
+              setLoading(false);
             }}
           >
             <label className="text-primary text-sm font-medium" htmlFor="price">
@@ -75,12 +73,12 @@ export function AddNotificationDialog({
             </label>
             <Input
               id="price"
-              value={options.priceInCents !== undefined ? options.priceInCents : ""}
+              value={options.priceInCents ?? ""}
               onChange={(event) => {
                 const value = Math.max(1, parseInt(event.target.value.slice(-8)));
                 setOptions((options) => ({
                   ...options,
-                  priceInCents: isNaN(value) ? undefined : value,
+                  priceInCents: isNaN(value) ? null : value,
                 }));
               }}
               onBlur={(event) => {
@@ -91,28 +89,40 @@ export function AddNotificationDialog({
                   }));
                 }
               }}
+              disabled={loading}
             />
             <div className="flex items-center space-x-2 py-2">
               <Checkbox
-                id="stock"
-                checked={options.mustBeInStock}
+                id="price-drop"
+                checked={options.priceDrop}
                 onCheckedChange={(checked) =>
-                  setOptions({
-                    ...options,
-                    mustBeInStock: checked === true ? true : false,
-                  })
+                  setOptions({ ...options, priceDrop: checked === true })
                 }
-                disabled={isLoading}
+                disabled={loading}
               />
               <label
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                htmlFor="stock"
+                htmlFor="price-drop"
               >
-                Must be in stock
+                Notify for price drops
+              </label>
+            </div>
+            <div className="flex items-center space-x-2 py-2">
+              <Checkbox
+                id="restock"
+                checked={options.restock}
+                onCheckedChange={(checked) => setOptions({ ...options, restock: checked === true })}
+                disabled={loading}
+              />
+              <label
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                htmlFor="restock"
+              >
+                Notify for restocks
               </label>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={loading}>
                 Create notification
               </Button>
             </div>
@@ -123,16 +133,18 @@ export function AddNotificationDialog({
   );
 }
 
-async function createNotification(
-  productId: string,
-  variantId: string,
-  mustBeInStock: boolean,
-  priceInCents?: number,
-) {
+async function createNotification(variantId: string, options: NotificationOptions) {
+  const body: AddNotificationRequest = {
+    variantId,
+    priceInCents: options.priceInCents ?? undefined,
+    priceDrop: options.priceDrop,
+    restock: options.restock,
+  };
+
   const response = await fetch("/api/notifications/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, variantId, priceInCents, mustBeInStock }),
+    body: JSON.stringify(body),
   });
   return (await response.json()) as AddNotificationResponse;
 }

@@ -89,11 +89,11 @@ export function ProductInfo({
       <DeleteNotificationButton id={notification.id} />
     ) : (
       <AddNotificationDialog
-        productId={product.id}
         variantId={variant.id}
         defaultOptions={{
-          mustBeInStock: false,
-          priceInCents: prices?.at(-1)?.priceInCents,
+          priceInCents: prices?.at(-1)?.priceInCents ?? null,
+          priceDrop: true,
+          restock: true,
         }}
       />
     );
