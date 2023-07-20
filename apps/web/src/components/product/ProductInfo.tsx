@@ -10,7 +10,7 @@ import { DeleteNotificationButton } from "@/components/notification/DeleteNotifi
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
 import { AddNotificationDialog } from "../notification/AddNotificationDialog";
-import { ProductChart } from "./ProductChart";
+import { ChartUnit, ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 export type ProductInfoProps = {
@@ -68,8 +68,17 @@ export function ProductInfo({
     };
   }, [loadPrices]);
 
+  const lastPrice = prices?.at(-1);
+  const chartPrices: ChartUnit[] | null =
+    prices !== null && lastPrice
+      ? [...prices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
+          date: price.timestamp.toString(),
+          price: price.priceInCents,
+          stock: price.inStock ? 1 : 0,
+        }))
+      : null;
+
   const getPillText = () => {
-    const lastPrice = prices?.at(-1)?.priceInCents;
     if (!variant?.productUrl) {
       return "Not available";
     } else if (prices === null) {
@@ -77,7 +86,9 @@ export function ProductInfo({
     } else if (lastPrice === undefined) {
       return "See price";
     } else {
-      return `${formatCurrency(lastPrice)} on ${product.store.shortenedName ?? product.store.name}`;
+      return `${formatCurrency(lastPrice.priceInCents)} on ${
+        product.store.shortenedName ?? product.store.name
+      }`;
     }
   };
 
@@ -91,7 +102,7 @@ export function ProductInfo({
       <AddNotificationDialog
         variantId={variant.id}
         defaultOptions={{
-          priceInCents: prices?.at(-1)?.priceInCents ?? null,
+          priceInCents: lastPrice?.priceInCents ?? null,
           priceDrop: true,
           restock: true,
         }}
@@ -177,7 +188,7 @@ export function ProductInfo({
           ) : prices.length === 0 ? (
             <ChartOverlay type="no-prices" />
           ) : null}
-          <ProductChart prices={prices} />
+          <ProductChart prices={chartPrices} />
         </div>
       </section>
     </Fragment>

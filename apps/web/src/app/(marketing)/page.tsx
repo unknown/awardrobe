@@ -3,6 +3,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
+import { ChartUnit, ProductChart } from "@/components/product/ProductChart";
+
+const mockPrices: ChartUnit[] = [
+  {
+    date: "2023-07-21T12:00:00.000Z",
+    price: 2000,
+    stock: 1,
+  },
+  {
+    date: "2023-07-21T12:45:00.000Z",
+    price: 2000,
+    stock: 0,
+  },
+  {
+    date: "2023-07-21T14:30:00.000Z",
+    price: 1500,
+    stock: 0,
+  },
+  {
+    date: "2023-07-21T15:00:00.000Z",
+    price: 1500,
+    stock: 1,
+  },
+  {
+    date: "2023-07-21T15:45:00.000Z",
+    price: 1500,
+    stock: 0,
+  },
+  {
+    date: "2023-07-21T16:45:00.000Z",
+    price: 1500,
+    stock: 1,
+  },
+  {
+    date: "2023-07-21T18:00:00.000Z",
+    price: 1500,
+    stock: 1,
+  },
+];
+
 export default async function IndexPage() {
   return (
     <Fragment>
@@ -43,7 +83,13 @@ export default async function IndexPage() {
               <p className="text-muted-foreground mb-6">
                 See how prices have changed over time to get the best deals.
               </p>
-              <MockChart />
+              <div className="relative aspect-video">
+                <ProductChart
+                  prices={mockPrices}
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                  showAxes={false}
+                />
+              </div>
             </div>
           </div>
           <p className="text-muted-foreground mb-6 text-center md:text-lg">
@@ -54,71 +100,3 @@ export default async function IndexPage() {
     </Fragment>
   );
 }
-
-const MockChart = () => {
-  return (
-    <svg
-      viewBox="0 0 1000 618"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      stroke="#E2E8F0"
-      strokeWidth="1"
-      shapeRendering="crispEdges"
-    >
-      <path
-        d="M823.703 617V1H999V617H823.703Z"
-        fill="url(#linear)"
-        stroke="#398739"
-        vectorEffect="non-scaling-stroke"
-      />
-      <path
-        d="M1.99597 617V1H126.497V617H1.99597Z"
-        fill="url(#linear)"
-        stroke="#398739"
-        vectorEffect="non-scaling-stroke"
-      />
-      <path
-        d="M537.848 617V1H662.349V617H537.848Z"
-        fill="url(#linear)"
-        stroke="#398739"
-        vectorEffect="non-scaling-stroke"
-      />
-      <path d="M1.99609 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M201.198 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M400.399 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M599.601 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M798.802 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M998.004 1V617" vectorEffect="non-scaling-stroke" />
-      <path d="M1 615.773H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 554.418H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 493.063H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 431.709H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 370.354H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 309H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 247.645H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 186.291H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 124.936H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 63.5818H999" vectorEffect="non-scaling-stroke" />
-      <path d="M1 2.22705H999" vectorEffect="non-scaling-stroke" />
-      <path
-        d="M999 388.761H824.123H418.164V229.239H1"
-        stroke="#2B8BAD"
-        strokeWidth="2"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-      <path
-        d="M999 1H1V617H999V1Z"
-        stroke="#E2E8F0"
-        strokeWidth="2"
-        vectorEffect="non-scaling-stroke"
-      />
-      <defs>
-        <linearGradient id="linear" x1="0" y1="1" x2="0" y2="617" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#EDFFEA" />
-          <stop offset="1" stop-color="#EDFFEA" stop-opacity="0.1" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-};

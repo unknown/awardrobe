@@ -1,3 +1,5 @@
+"use client";
+
 import { Fragment } from "react";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
@@ -11,25 +13,26 @@ import { AreaClosed, Bar, Line, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
-import { Price } from "@awardrobe/prisma-types";
-
 import { formatCurrency, formatDate } from "@/utils/utils";
 
-export type PricesChartProps = {
-  prices: Price[] | null;
-};
-
-type ChartComponentProps = {
-  prices: ChartUnit[];
-  width: number;
-  height: number;
-  margin?: { top: number; right: number; bottom: number; left: number };
-};
-
-type ChartUnit = {
+export type ChartUnit = {
   date: string;
   price: number;
   stock: number;
+};
+
+export type PricesChartProps = {
+  prices: ChartUnit[] | null;
+  margin?: { top: number; right: number; bottom: number; left: number };
+  showAxes?: boolean;
+};
+
+type VisxChartProps = {
+  prices: ChartUnit[];
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  showAxes: boolean;
 };
 
 // accessors
@@ -40,24 +43,26 @@ const stockAccessor = (d: ChartUnit) => d.stock;
 
 const defaultMargin = { top: 10, right: 0, bottom: 35, left: 60 };
 
-export function ProductChart({ prices: consumerPrices }: PricesChartProps) {
-  const lastPrice = consumerPrices?.at(-1);
-  const prices =
-    consumerPrices !== null && lastPrice
-      ? [...consumerPrices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
-          date: price.timestamp.toString(),
-          price: price.priceInCents,
-          stock: price.inStock ? 1 : 0,
-        }))
-      : [];
-
+export function ProductChart({
+  prices,
+  margin = defaultMargin,
+  showAxes = true,
+}: PricesChartProps) {
   return (
     <ParentSize className="relative">
       {({ width, height }) => {
-        if (!consumerPrices || !lastPrice) {
+        if (!prices) {
           return <PlaceholderChart />;
         }
-        return <ChartComponent prices={prices} width={width} height={height} />;
+        return (
+          <VisxChart
+            prices={prices}
+            width={width}
+            height={height}
+            margin={margin}
+            showAxes={showAxes}
+          />
+        );
       }}
     </ParentSize>
   );
@@ -102,7 +107,7 @@ function PlaceholderChart() {
   );
 }
 
-function ChartComponent({ prices, width, height, margin = defaultMargin }: ChartComponentProps) {
+function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) {
   const { tooltipData, tooltipLeft, tooltipTop, tooltipOpen, showTooltip, hideTooltip } =
     useTooltip<ChartUnit>();
 
@@ -161,21 +166,25 @@ function ChartComponent({ prices, width, height, margin = defaultMargin }: Chart
             stroke="#398739"
             fill="url(#area-gradient)"
           />
-          <AxisLeft
-            scale={priceScale}
-            tickLabelProps={{ className: "font-sans text-xs" }}
-            tickFormat={(value) => formatCurrency(value.valueOf())}
-            hideTicks
-            hideAxisLine
-          />
-          <AxisBottom
-            top={innerHeight}
-            scale={timeScale}
-            tickLabelProps={{ className: "font-sans text-xs" }}
-            numTicks={Math.min(10, innerWidth / 80)}
-            hideTicks
-            hideAxisLine
-          />
+          {showAxes ? (
+            <Fragment>
+              <AxisLeft
+                scale={priceScale}
+                tickLabelProps={{ className: "font-sans text-xs tabular-nums" }}
+                tickFormat={(value) => formatCurrency(value.valueOf())}
+                hideTicks
+                hideAxisLine
+              />
+              <AxisBottom
+                top={innerHeight}
+                scale={timeScale}
+                tickLabelProps={{ className: "font-sans text-xs tabular-nums" }}
+                numTicks={Math.min(10, innerWidth / 80)}
+                hideTicks
+                hideAxisLine
+              />
+            </Fragment>
+          ) : null}
           <GridRows scale={priceScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
           <GridColumns scale={timeScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
           <LinePath<ChartUnit>
@@ -223,8 +232,13 @@ function ChartComponent({ prices, width, height, margin = defaultMargin }: Chart
           {!stockAccessor(tooltipData) ? (
             <p className="text-sm font-bold">Out of stock</p>
           ) : undefined}
-          <p className="text-sm">Price: {formatCurrency(priceAccessor(tooltipData))}</p>
-          <p className="text-[12px]">{formatDate(new Date(dateAccessor(tooltipData)))}</p>
+          <p className="text-sm">
+            Price:{" "}
+            <span className="tabular-nums">{formatCurrency(priceAccessor(tooltipData))}</span>
+          </p>
+          <p className="text-[12px] tabular-nums">
+            {formatDate(new Date(dateAccessor(tooltipData)))}
+          </p>
         </TooltipWithBounds>
       )}
     </Fragment>
