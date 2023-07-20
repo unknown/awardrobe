@@ -40,7 +40,7 @@ const NavBarButton = async () => {
   return session ? <ProfileButton /> : <LoginButton />;
 };
 
-const ProfileButton = () => {
+function ProfileButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -61,12 +61,12 @@ const ProfileButton = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}
 
-const LoginButton = () => {
+function LoginButton() {
   return (
     <Link href="/login">
       <Button>Login</Button>
     </Link>
   );
-};
+}

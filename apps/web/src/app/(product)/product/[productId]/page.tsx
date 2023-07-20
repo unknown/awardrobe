@@ -8,15 +8,8 @@ import { Prisma, prisma } from "@awardrobe/prisma-types";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { authOptions } from "@/utils/auth";
 
-const variantWithNotification = Prisma.validator<Prisma.ProductVariantArgs>()({
-  include: { notifications: true },
-});
-export type VariantWithNotification = Prisma.ProductVariantGetPayload<
-  typeof variantWithNotification
->;
-
 const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: variantWithNotification, store: true },
+  include: { variants: { include: { notifications: true } }, store: true },
 });
 export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
