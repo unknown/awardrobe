@@ -79,6 +79,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
   const httpsAgent = getHttpsProxyAgent(useProxy);
 
   const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
+  const timestamp = new Date();
 
   if (collectionResponse.status !== 200) {
     throw new Error(
@@ -133,6 +134,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
       );
 
       variants.push({
+        timestamp,
         productUrl: getProductUrl(product, item),
         attributes,
         inStock: item.inventory.inventory > 0,

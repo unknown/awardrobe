@@ -4,6 +4,7 @@ export type VariantAttribute = {
 };
 
 export type VariantInfo = {
+  timestamp: Date;
   productUrl: string;
   attributes: VariantAttribute[];
   priceInCents: number;

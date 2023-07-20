@@ -79,6 +79,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
     axios.get(l2sEndpoint, { httpsAgent }),
     axios.get(detailsEndpoint, { httpsAgent }),
   ]);
+  const timestamp = new Date();
 
   if (l2sResponse?.status !== 200 || detailsResponse?.status !== 200) {
     throw new Error(
@@ -129,6 +130,7 @@ async function getProductDetails(productCode: string, useProxy = false) {
     }
 
     variants.push({
+      timestamp,
       productUrl: getProductUrl(productCode, { color, size, pld }),
       attributes,
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
