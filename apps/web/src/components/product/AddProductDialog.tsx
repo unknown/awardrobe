@@ -51,9 +51,12 @@ export function AddProductDialog({ onAddProduct }: AddProductDialogProps) {
               setIsLoading(false);
             }}
           >
+            <label className="text-primary text-sm font-medium" htmlFor="product">
+              Product url
+            </label>
             <Input
               id="product"
-              placeholder="Product url"
+              placeholder="https://example.com/"
               type="url"
               autoCapitalize="none"
               autoCorrect="off"

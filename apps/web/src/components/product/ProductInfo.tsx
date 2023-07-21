@@ -141,21 +141,19 @@ export function ProductInfo({
                 router.replace(`${pathname}?${params.toString()}`); // TODO: shallow replace
               }}
             />
-            <div className="col-span-2">
-              <NotificationButton />
-            </div>
           </div>
         </div>
-        <a
-          className="mt-5 inline-block"
-          href={variant?.productUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div className="text-md rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600">
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+            className="text-md inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600"
+            href={variant?.productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {getPillText()}
-          </div>
-        </a>
+          </a>
+          <NotificationButton />
+        </div>
       </section>
       <section className="container max-w-4xl space-y-2 py-6">
         <h2 className="text-xl font-medium">Price History</h2>
