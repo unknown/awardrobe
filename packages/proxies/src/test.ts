@@ -1,33 +1,16 @@
 import axios from "axios";
-import { HttpsProxyAgent } from "https-proxy-agent";
 import { z } from "zod";
 
-const ipifySchema = z.object({
-  ip: z.string(),
-});
+import { getHttpsProxyAgent, proxies } from "./proxies";
 
-const proxies = process.env.PROXIES?.split(",") ?? [];
+const ipifySchema = z.object({ ip: z.string() });
 
-const agents = proxies.map((proxy) => new HttpsProxyAgent(proxy));
+type ProxyTestResult = { success: true } | { success: false; error: string };
 
-export function getHttpsProxyAgent() {
-  const randomIndex = Math.floor(Math.random() * proxies.length);
-  return agents[randomIndex];
-}
-
-type ProxyTestResult =
-  | {
-      success: true;
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-export async function testProxy(): Promise<ProxyTestResult> {
+export async function testProxy(proxy: string): Promise<ProxyTestResult> {
   const endpoint = "https://api.ipify.org?format=json";
   const [withProxy, withoutProxy] = await axios.all([
-    axios.get(endpoint, { httpsAgent: getHttpsProxyAgent() }),
+    axios.get(endpoint, { httpsAgent: getHttpsProxyAgent(proxy) }),
     axios.get(endpoint),
   ]);
 
@@ -44,4 +27,13 @@ export async function testProxy(): Promise<ProxyTestResult> {
   }
 
   return { success: true };
+}
+
+export async function testProxies() {
+  const results = await Promise.all(proxies.map((proxy) => testProxy(proxy)));
+
+  const numSuccesses = results.filter((result) => result.success).length;
+  const numFailures = results.length - numSuccesses;
+
+  return { numSuccesses, numFailures };
 }

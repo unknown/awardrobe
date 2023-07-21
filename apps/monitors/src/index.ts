@@ -2,8 +2,8 @@ import "dotenv/config";
 
 import cron from "node-cron";
 
-import { testProxy } from "@awardrobe/adapters";
 import { prisma } from "@awardrobe/prisma-types";
+import { testProxies } from "@awardrobe/proxies";
 
 import { updateProducts } from "./monitors";
 import { ExtendedProduct, PartialPrice } from "./monitors/types";
@@ -71,12 +71,11 @@ async function setupMonitors() {
 }
 
 async function main() {
-  const result = await testProxy();
-  if (result.success) {
-    console.log("Proxy is working");
-  } else {
-    console.warn(`Proxy is not working: ${result.error}`);
-  }
+  const { numSuccesses, numFailures } = await testProxies().catch((error) => {
+    console.error(`Error testing proxies\n${error}`);
+    return { numSuccesses: 0, numFailures: 0 };
+  });
+  console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
   await setupMonitors().catch((error) => {
     console.error(`Error setting up monitors\n${error}`);

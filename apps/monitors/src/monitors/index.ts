@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
 import { prisma, Product } from "@awardrobe/prisma-types";
+import { proxies } from "@awardrobe/proxies";
 
 import emailTransporter from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
@@ -13,7 +14,8 @@ export async function updateProducts(
   products: ExtendedProduct[],
   priceFromVariant: Map<string, PartialPrice>,
 ) {
-  const limit = pLimit(25);
+  // TODO: switch out for p-throttle?
+  const limit = pLimit(proxies.length * 20);
   await Promise.all(
     products.map((product) => {
       return limit(async () => {

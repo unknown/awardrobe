@@ -1,8 +1,9 @@
 import axios from "axios";
 import parse from "node-html-parser";
 
+import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
+
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { getHttpsProxyAgent } from "../../utils/proxy";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
@@ -23,7 +24,7 @@ async function getProducts(limit?: number) {
   const increment = 100;
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
-    const httpsAgent = getHttpsProxyAgent();
+    const httpsAgent = getRandomHttpsProxyAgent();
     const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
     if (searchResponse.status !== 200) {
@@ -52,7 +53,7 @@ async function getProductCode(url: string) {
   }
 
   const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-  const httpsAgent = getHttpsProxyAgent();
+  const httpsAgent = getRandomHttpsProxyAgent();
   const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
   if (productResponse.status !== 200) {
@@ -76,7 +77,7 @@ async function getProductCode(url: string) {
 // TODO: investigate why the endpoint returns false inventory data sometimes
 async function getProductDetails(productCode: string) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-  const httpsAgent = getHttpsProxyAgent();
+  const httpsAgent = getRandomHttpsProxyAgent();
   const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
   const timestamp = new Date();
 

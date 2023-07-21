@@ -1,5 +1,5 @@
 {
-  "name": "@awardrobe/adapters",
+  "name": "@awardrobe/proxies",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -10,10 +10,8 @@
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
-    "@awardrobe/proxies": "*",
     "axios": "^1.4.0",
     "https-proxy-agent": "^7.0.1",
-    "node-html-parser": "^6.1.5",
     "zod": "^3.21.4"
   },
   "devDependencies": {

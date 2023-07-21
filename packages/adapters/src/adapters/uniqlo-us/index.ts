@@ -1,7 +1,8 @@
 import axios from "axios";
 
+import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
+
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { getHttpsProxyAgent } from "../../utils/proxy";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../../utils/types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -22,7 +23,7 @@ async function getProducts(limit?: number) {
 
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
-    const httpsAgent = getHttpsProxyAgent();
+    const httpsAgent = getRandomHttpsProxyAgent();
     const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
 
     if (productsResponse.status !== 200) {
@@ -55,7 +56,7 @@ async function getProductCode(url: string) {
   }
 
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const httpsAgent = getHttpsProxyAgent();
+  const httpsAgent = getRandomHttpsProxyAgent();
   const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
 
   if (searchResponse.status !== 200) {
@@ -74,7 +75,7 @@ async function getProductDetails(productCode: string) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
 
-  const httpsAgent = getHttpsProxyAgent();
+  const httpsAgent = getRandomHttpsProxyAgent();
   const [l2sResponse, detailsResponse] = await axios.all([
     axios.get(l2sEndpoint, { httpsAgent }),
     axios.get(detailsEndpoint, { httpsAgent }),

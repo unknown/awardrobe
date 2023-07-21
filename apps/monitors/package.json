@@ -13,6 +13,7 @@
     "@awardrobe/adapters": "*",
     "@awardrobe/emails": "*",
     "@awardrobe/prisma-types": "*",
+    "@awardrobe/proxies": "*",
     "@awardrobe/tsconfig": "*",
     "@react-email/render": "^0.0.7",
     "dotenv": "^16.0.3",
