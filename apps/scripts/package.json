@@ -12,6 +12,7 @@
     "@awardrobe/adapters": "*",
     "@awardrobe/meilisearch-types": "*",
     "@awardrobe/prisma-types": "*",
+    "@awardrobe/proxies": "*",
     "@awardrobe/tsconfig": "*",
     "dotenv": "^16.0.3",
     "express": "^4.18.2"
