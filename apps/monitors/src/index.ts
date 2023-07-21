@@ -14,13 +14,17 @@ async function getExtendedProducts(offset?: number) {
     skip: offset,
   });
 
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const variants = await prisma.productVariant.findMany({
     where: {
       id: { in: products.flatMap((product) => product.variants.map((variant) => variant.id)) },
     },
-    include: { prices: { orderBy: { timestamp: "desc" }, take: 1 } },
+    include: {
+      prices: { take: 1, orderBy: { timestamp: "desc" }, where: { timestamp: { gte: yesterday } } },
+    },
   });
 
+  // TODO: store most recent prices in a redis store?
   const priceFromVariant = new Map<string, PartialPrice>();
   variants.forEach((variant) => {
     const price = variant.prices[0];
@@ -53,9 +57,13 @@ async function setupMonitors() {
         console.log(`Monitoring ${products.length} products`);
       }
 
+      const start = Date.now();
       console.log(`Updating ${products.length} products`);
+
       await updateProducts(products, priceFromVariant);
-      console.log("Finished updating products");
+
+      const elapsed = (Date.now() - start) / 1000;
+      console.log(`Finished updating products in ${elapsed} seconds`);
     } catch (error) {
       console.error(`Error pinging products\n${error}`);
     }
