@@ -14,7 +14,7 @@ const UniqloUS: StoreAdapter = {
 };
 export default UniqloUS;
 
-async function getProducts(limit?: number, useProxy = false) {
+async function getProducts(limit?: number) {
   const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
   const productCodes: string[] = [];
 
@@ -22,7 +22,7 @@ async function getProducts(limit?: number, useProxy = false) {
 
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
-    const httpsAgent = getHttpsProxyAgent(useProxy);
+    const httpsAgent = getHttpsProxyAgent();
     const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
 
     if (productsResponse.status !== 200) {
@@ -45,7 +45,7 @@ async function getProducts(limit?: number, useProxy = false) {
   return productCodes;
 }
 
-async function getProductCode(url: string, useProxy = false) {
+async function getProductCode(url: string) {
   const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/;
   const matches = url.match(productCodeRegex);
 
@@ -55,9 +55,9 @@ async function getProductCode(url: string, useProxy = false) {
   }
 
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const httpsAgent = getHttpsProxyAgent(useProxy);
-
+  const httpsAgent = getHttpsProxyAgent();
   const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
+
   if (searchResponse.status !== 200) {
     throw new Error(`Failed to get product code from ${url}`);
   }
@@ -70,11 +70,11 @@ async function getProductCode(url: string, useProxy = false) {
   return productCode;
 }
 
-async function getProductDetails(productCode: string, useProxy = false) {
+async function getProductDetails(productCode: string) {
   const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-  const httpsAgent = getHttpsProxyAgent(useProxy);
 
+  const httpsAgent = getHttpsProxyAgent();
   const [l2sResponse, detailsResponse] = await axios.all([
     axios.get(l2sEndpoint, { httpsAgent }),
     axios.get(detailsEndpoint, { httpsAgent }),

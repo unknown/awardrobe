@@ -56,7 +56,7 @@ export async function updateProducts(
 
 async function getProductVariantInfo(product: ExtendedProduct) {
   const adapter = getAdapter(product.store.handle);
-  const { variants } = await adapter.getProductDetails(product.productCode, true);
+  const { variants } = await adapter.getProductDetails(product.productCode);
   if (variants.length === 0) {
     console.warn(`Product ${product.productCode} has empty data`);
   }

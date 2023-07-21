@@ -39,8 +39,8 @@ export async function POST(req: Request) {
   // TODO: more descriptive errors
   try {
     const adapter = getAdapterFromUrl(productUrl);
-    const productCode = await adapter.getProductCode(productUrl, true);
-    const { name, variants } = await adapter.getProductDetails(productCode, true);
+    const productCode = await adapter.getProductCode(productUrl);
+    const { name, variants } = await adapter.getProductDetails(productCode);
 
     const store = await prisma.store.findUniqueOrThrow({
       where: { handle: adapter.storeHandle },

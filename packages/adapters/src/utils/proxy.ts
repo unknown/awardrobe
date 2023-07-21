@@ -10,11 +10,10 @@ const proxies = process.env.PROXIES?.split(",") ?? [];
 
 const agents = proxies.map((proxy) => new HttpsProxyAgent(proxy));
 
-export const getHttpsProxyAgent = (useProxy: boolean) => {
-  if (!useProxy) return undefined;
+export function getHttpsProxyAgent() {
   const randomIndex = Math.floor(Math.random() * proxies.length);
   return agents[randomIndex];
-};
+}
 
 type ProxyTestResult =
   | {
@@ -28,7 +27,7 @@ type ProxyTestResult =
 export async function testProxy(): Promise<ProxyTestResult> {
   const endpoint = "https://api.ipify.org?format=json";
   const [withProxy, withoutProxy] = await axios.all([
-    axios.get(endpoint, { httpsAgent: getHttpsProxyAgent(true) }),
+    axios.get(endpoint, { httpsAgent: getHttpsProxyAgent() }),
     axios.get(endpoint),
   ]);
 

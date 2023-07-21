@@ -11,17 +11,14 @@ export type VariantInfo = {
   inStock: boolean;
 };
 
-export type StoreAdapter = {
+export interface StoreAdapter {
   urlPrefixes: string[];
   storeHandle: string;
   // TODO: create pagination interface?
-  getProducts: (limit?: number, useProxy?: boolean) => Promise<string[]>;
-  getProductCode: (url: string, useProxy?: boolean) => Promise<string>;
-  getProductDetails: (
-    productCode: string,
-    useProxy?: boolean,
-  ) => Promise<{
+  getProducts: (limit?: number) => Promise<string[]>;
+  getProductCode: (url: string) => Promise<string>;
+  getProductDetails: (productCode: string) => Promise<{
     name: string;
     variants: VariantInfo[];
   }>;
-};
+}

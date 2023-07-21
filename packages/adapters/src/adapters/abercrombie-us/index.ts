@@ -15,7 +15,7 @@ const AbercrombieUS: StoreAdapter = {
 };
 export default AbercrombieUS;
 
-async function getProducts(limit?: number, useProxy = false) {
+async function getProducts(limit?: number) {
   // category 10000 represents all of A&F
   const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
   const productCodes: string[] = [];
@@ -23,7 +23,7 @@ async function getProducts(limit?: number, useProxy = false) {
   const increment = 100;
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
-    const httpsAgent = getHttpsProxyAgent(useProxy);
+    const httpsAgent = getHttpsProxyAgent();
     const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
     if (searchResponse.status !== 200) {
@@ -42,7 +42,7 @@ async function getProducts(limit?: number, useProxy = false) {
   return productCodes;
 }
 
-async function getProductCode(url: string, useProxy = false) {
+async function getProductCode(url: string) {
   const productCodeRegex = /\/p\/([a-zA-Z0-9-]+)/;
   const matches = url.match(productCodeRegex);
 
@@ -52,7 +52,7 @@ async function getProductCode(url: string, useProxy = false) {
   }
 
   const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-  const httpsAgent = getHttpsProxyAgent(useProxy);
+  const httpsAgent = getHttpsProxyAgent();
   const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
   if (productResponse.status !== 200) {
@@ -74,10 +74,9 @@ async function getProductCode(url: string, useProxy = false) {
 }
 
 // TODO: investigate why the endpoint returns false inventory data sometimes
-async function getProductDetails(productCode: string, useProxy = false) {
+async function getProductDetails(productCode: string) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-  const httpsAgent = getHttpsProxyAgent(useProxy);
-
+  const httpsAgent = getHttpsProxyAgent();
   const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
   const timestamp = new Date();
 
