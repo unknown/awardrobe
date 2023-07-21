@@ -71,10 +71,7 @@ async function setupMonitors() {
 }
 
 async function main() {
-  const { numSuccesses, numFailures } = await testProxies().catch((error) => {
-    console.error(`Error testing proxies\n${error}`);
-    return { numSuccesses: 0, numFailures: 0 };
-  });
+  const { numSuccesses, numFailures } = await testProxies();
   console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
   await setupMonitors().catch((error) => {
