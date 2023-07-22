@@ -167,7 +167,7 @@ export function ProductInfo({
           />
           <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
             <span className="flex items-center gap-2">
-              <div className="h-3 w-3 border border-[#398739] bg-[#edffea]" /> In Stock
+              <div className="h-3 w-3 border border-[#398739] bg-[#A8FF99]/[0.3]" /> In Stock
             </span>
             <span className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-[#2b8bad]" /> {product.store.name}

@@ -155,7 +155,13 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
     <Fragment>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
-          <LinearGradient id="area-gradient" from="#edffea" to="#edffea" toOpacity={0.1} />
+          <LinearGradient
+            id="area-gradient"
+            from="#A8FF99"
+            fromOpacity={0.3}
+            to="#A8FF99"
+            toOpacity={0.03}
+          />
           <AreaClosed<ChartUnit>
             data={prices}
             x={(d) => timeScale(dateAccessor(d))}
@@ -170,7 +176,10 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
             <Fragment>
               <AxisLeft
                 scale={priceScale}
-                tickLabelProps={{ className: "font-sans text-xs tabular-nums" }}
+                tickLabelProps={{
+                  className: "font-sans text-xs tabular-nums",
+                  fill: "hsl(var(--foreground))",
+                }}
                 tickFormat={(value) => formatCurrency(value.valueOf())}
                 hideTicks
                 hideAxisLine
@@ -178,7 +187,10 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
               <AxisBottom
                 top={innerHeight}
                 scale={timeScale}
-                tickLabelProps={{ className: "font-sans text-xs tabular-nums" }}
+                tickLabelProps={{
+                  className: "font-sans text-xs tabular-nums",
+                  fill: "hsl(var(--foreground))",
+                }}
                 numTicks={Math.min(10, innerWidth / 80)}
                 hideTicks
                 hideAxisLine
@@ -223,7 +235,7 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
       </svg>
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds
-          className="border-border absolute space-y-1 rounded-md border bg-white p-3 shadow-lg"
+          className="border-border bg-background absolute space-y-1 rounded-md border p-3 shadow-lg"
           style={{}}
           key={Math.random()}
           top={tooltipTop}
