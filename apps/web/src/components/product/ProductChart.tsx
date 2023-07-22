@@ -15,20 +15,20 @@ import { bisector, extent } from "d3-array";
 
 import { formatCurrency, formatDate } from "@/utils/utils";
 
-export type ChartUnit = {
+export type ChartPrice = {
   date: string;
   price: number;
   stock: number;
 };
 
 export type PricesChartProps = {
-  prices: ChartUnit[] | null;
+  prices: ChartPrice[] | null;
   margin?: { top: number; right: number; bottom: number; left: number };
   showAxes?: boolean;
 };
 
 type VisxChartProps = {
-  prices: ChartUnit[];
+  prices: ChartPrice[];
   width: number;
   height: number;
   margin: { top: number; right: number; bottom: number; left: number };
@@ -36,10 +36,10 @@ type VisxChartProps = {
 };
 
 // accessors
-const dateBisector = bisector<ChartUnit, Date>((d) => new Date(d.date)).left;
-const dateAccessor = (d: ChartUnit) => new Date(d.date);
-const priceAccessor = (d: ChartUnit) => d.price;
-const stockAccessor = (d: ChartUnit) => d.stock;
+const dateBisector = bisector<ChartPrice, Date>((d) => new Date(d.date)).left;
+const dateAccessor = (d: ChartPrice) => new Date(d.date);
+const priceAccessor = (d: ChartPrice) => d.price;
+const stockAccessor = (d: ChartPrice) => d.stock;
 
 const defaultMargin = { top: 10, right: 0, bottom: 35, left: 60 };
 
@@ -109,7 +109,7 @@ function PlaceholderChart() {
 
 function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) {
   const { tooltipData, tooltipLeft, tooltipTop, tooltipOpen, showTooltip, hideTooltip } =
-    useTooltip<ChartUnit>();
+    useTooltip<ChartPrice>();
 
   if (width <= 0 || height <= 0) return null;
 
@@ -162,7 +162,7 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
             to="#A8FF99"
             toOpacity={0.03}
           />
-          <AreaClosed<ChartUnit>
+          <AreaClosed<ChartPrice>
             data={prices}
             x={(d) => timeScale(dateAccessor(d))}
             y={(d) => stockScale(stockAccessor(d))}
@@ -199,7 +199,7 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
           ) : null}
           <GridRows scale={priceScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
           <GridColumns scale={timeScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
-          <LinePath<ChartUnit>
+          <LinePath<ChartPrice>
             data={prices}
             x={(d) => timeScale(dateAccessor(d))}
             y={(d) => priceScale(priceAccessor(d))}
@@ -241,12 +241,10 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
           top={tooltipTop}
           left={tooltipLeft}
         >
-          {!stockAccessor(tooltipData) ? (
-            <p className="text-sm font-bold">Out of stock</p>
-          ) : undefined}
           <p className="text-sm">
             Price:{" "}
             <span className="tabular-nums">{formatCurrency(priceAccessor(tooltipData))}</span>
+            {!stockAccessor(tooltipData) ? "*" : undefined}
           </p>
           <p className="text-[12px] tabular-nums">
             {formatDate(new Date(dateAccessor(tooltipData)))}

@@ -3,36 +3,36 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
-import { ChartUnit, ProductChart } from "@/components/product/ProductChart";
+import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
 
-const mockPrices: ChartUnit[] = [
+const mockPrices: ChartPrice[] = [
   {
     date: "2023-07-21T12:00:00.000Z",
     price: 2000,
     stock: 1,
   },
   {
-    date: "2023-07-21T12:45:00.000Z",
+    date: "2023-07-21T12:40:00.000Z",
     price: 2000,
     stock: 0,
   },
   {
-    date: "2023-07-21T14:30:00.000Z",
+    date: "2023-07-21T14:10:00.000Z",
     price: 1500,
     stock: 0,
   },
   {
-    date: "2023-07-21T15:00:00.000Z",
+    date: "2023-07-21T14:50:00.000Z",
     price: 1500,
     stock: 1,
   },
   {
-    date: "2023-07-21T15:45:00.000Z",
+    date: "2023-07-21T15:50:00.000Z",
     price: 1500,
     stock: 0,
   },
   {
-    date: "2023-07-21T16:45:00.000Z",
+    date: "2023-07-21T16:40:00.000Z",
     price: 1500,
     stock: 1,
   },
