@@ -1,5 +1,5 @@
 import { render } from "@react-email/render";
-import pLimit from "p-limit";
+import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
@@ -14,46 +14,43 @@ export async function updateProducts(
   products: ExtendedProduct[],
   priceFromVariant: Map<string, PartialPrice>,
 ) {
-  // TODO: switch out for p-throttle?
-  const limit = pLimit(proxies.length * 20);
-  await Promise.all(
-    products.map((product) => {
-      return limit(async () => {
-        try {
-          const variants = await getProductVariantInfo(product);
-          const outdatedVariants: VariantInfoWithVariant[] = [];
-          const priceDroppedVariants: VariantInfoWithVariant[] = [];
-          const restockedVariants: VariantInfoWithVariant[] = [];
+  const throttle = pThrottle({ limit: proxies.length, interval: 250 });
+  const throttledUpdate = throttle(async (product: ExtendedProduct) => {
+    try {
+      const variants = await getProductVariantInfo(product);
+      const outdatedVariants: VariantInfoWithVariant[] = [];
+      const priceDroppedVariants: VariantInfoWithVariant[] = [];
+      const restockedVariants: VariantInfoWithVariant[] = [];
 
-          await Promise.all(
-            variants.map(async (variantInfo) => {
-              const variant = await getVariant(product, variantInfo);
-              const variantInfoWithVariant: VariantInfoWithVariant = {
-                ...variantInfo,
-                productVariant: variant,
-              };
+      await Promise.all(
+        variants.map(async (variantInfo) => {
+          const variant = await getVariant(product, variantInfo);
+          const variantInfoWithVariant: VariantInfoWithVariant = {
+            ...variantInfo,
+            productVariant: variant,
+          };
 
-              const oldPrice = priceFromVariant.get(variant.id) ?? null;
-              const flags = getFlags(variantInfoWithVariant, oldPrice);
+          const oldPrice = priceFromVariant.get(variant.id) ?? null;
+          const flags = getFlags(variantInfoWithVariant, oldPrice);
 
-              if (flags.isOutdated) outdatedVariants.push(variantInfoWithVariant);
-              if (flags.hasPriceDropped) priceDroppedVariants.push(variantInfoWithVariant);
-              if (flags.hasRestocked) restockedVariants.push(variantInfoWithVariant);
-            }),
-          );
+          if (flags.isOutdated) outdatedVariants.push(variantInfoWithVariant);
+          if (flags.hasPriceDropped) priceDroppedVariants.push(variantInfoWithVariant);
+          if (flags.hasRestocked) restockedVariants.push(variantInfoWithVariant);
+        }),
+      );
 
-          await updateOutdatedPrices(outdatedVariants, priceFromVariant);
+      await updateOutdatedPrices(outdatedVariants, priceFromVariant);
 
-          await Promise.all([
-            ...priceDroppedVariants.map((variant) => handlePriceDrop(product, variant)),
-            ...restockedVariants.map((variant) => handleRestock(product, variant)),
-          ]);
-        } catch (error) {
-          console.error(`Error updating ${product.name}\n${error}`);
-        }
-      });
-    }),
-  );
+      await Promise.all([
+        ...priceDroppedVariants.map((variant) => handlePriceDrop(product, variant)),
+        ...restockedVariants.map((variant) => handleRestock(product, variant)),
+      ]);
+    } catch (error) {
+      console.error(`Error updating ${product.name}\n${error}`);
+    }
+  });
+
+  await Promise.all(products.map(throttledUpdate));
 }
 
 async function getProductVariantInfo(product: ExtendedProduct) {
