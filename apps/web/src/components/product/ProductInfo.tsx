@@ -157,7 +157,7 @@ export function ProductInfo({
       </section>
       <section className="container max-w-4xl space-y-2 py-6">
         <h2 className="text-xl font-medium">Price History</h2>
-        <div className="flex flex-col justify-between gap-2 pb-2 sm:flex-row">
+        <div className="flex flex-wrap justify-between gap-4 pb-2">
           <DateRangeControl
             dateRange={dateRange}
             onDateRangeChange={(dateRange) => {
@@ -165,7 +165,7 @@ export function ProductInfo({
               setDateRange(dateRange);
             }}
           />
-          <div className="flex flex-row flex-wrap gap-4 text-sm">
+          <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
             <span className="flex items-center gap-2">
               <div className="h-3 w-3 border border-[#398739] bg-[#edffea]" /> In Stock
             </span>
