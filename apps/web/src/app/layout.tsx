@@ -8,9 +8,16 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Price Monitor",
-  description:
-    "A small-scale tool to help users keep track of the online goods they've been eyeing.",
+  title: "Awardrobe",
+  description: "Track prices and set alerts while building your wardrobe.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://getawardrobe.com",
+    title: "Awardrobe — Shopping for clothes made simple",
+    description: "Track prices and set alerts while building your wardrobe.",
+    siteName: "Awardrobe",
+  },
 };
 
 type RootLayoutProps = {
@@ -20,6 +27,7 @@ type RootLayoutProps = {
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={inter.variable}>
+      <head />
       <body className="bg-background min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
