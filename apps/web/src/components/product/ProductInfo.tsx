@@ -10,7 +10,7 @@ import { DeleteNotificationButton } from "@/components/notification/DeleteNotifi
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
 import { AddNotificationDialog } from "../notification/AddNotificationDialog";
-import { ChartUnit, ProductChart } from "./ProductChart";
+import { ChartPrice, ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 export type ProductInfoProps = {
@@ -69,7 +69,7 @@ export function ProductInfo({
   }, [loadPrices]);
 
   const lastPrice = prices?.at(-1);
-  const chartPrices: ChartUnit[] | null =
+  const chartPrices: ChartPrice[] | null =
     prices !== null && lastPrice
       ? [...prices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
           date: price.timestamp.toString(),
