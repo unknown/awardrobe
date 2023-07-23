@@ -25,7 +25,7 @@ export default async function ProductLayout({ children }: ProductLayout) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="container">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex h-16 items-center justify-between py-4">
           <NavBar />
           <Suspense>
             <NavBarButton />
