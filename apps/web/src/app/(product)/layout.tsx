@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { User } from "@icons/User";
+import { Avatar, AvatarFallback } from "@ui/Avatar";
 import { Button } from "@ui/Button";
 import {
   DropdownMenu,
@@ -43,8 +45,12 @@ const NavBarButton = async () => {
 function ProfileButton() {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">Account</Button>
+      <DropdownMenuTrigger>
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
