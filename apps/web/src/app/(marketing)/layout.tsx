@@ -11,7 +11,7 @@ export default async function MarketingLayout({ children }: MarketingLayout) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="container">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex h-20 items-center justify-between py-4">
           <NavBar />
           <Link href="/login">
             <Button variant="secondary">Login</Button>
