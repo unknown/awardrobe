@@ -36,7 +36,7 @@
     "@visx/scale": "^3.3.0",
     "@visx/shape": "^3.3.0",
     "@visx/tooltip": "^3.3.0",
-    "class-variance-authority": "^0.6.1",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^1.2.1",
     "d3-array": "^3.2.4",
     "eslint": "8.44.0",
