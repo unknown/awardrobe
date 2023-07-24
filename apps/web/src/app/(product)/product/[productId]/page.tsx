@@ -9,7 +9,7 @@ import { ProductInfo } from "@/components/product/ProductInfo";
 import { authOptions } from "@/utils/auth";
 
 const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
-  include: { variants: { include: { notifications: true } }, store: true },
+  include: { variants: true, store: true },
 });
 export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 

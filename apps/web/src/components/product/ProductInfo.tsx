@@ -7,6 +7,7 @@ import { VariantAttribute } from "@awardrobe/adapters";
 
 import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
 import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
+import { useNotifications } from "@/hooks/useNotifications";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
 import { AddNotificationDialog } from "../notification/AddNotificationDialog";
@@ -26,7 +27,9 @@ export function ProductInfo({
   initialAttributes,
   initialVariantId,
 }: ProductInfoProps) {
-  const { data: prices, fetchPrices, invalidateData, loading } = usePrices();
+  const { data: prices, fetchPrices, invalidateData: invalidatePrices, loading } = usePrices();
+  const { data: notifications, fetchNotifications } = useNotifications();
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,10 +38,8 @@ export function ProductInfo({
   const [variantId, setVariantId] = useState(initialVariantId);
   const [dateRange, setDateRange] = useState<DateRange>("7d");
 
-  const initialFetchOptions = useRef({ variantId, dateRange });
-  const variant = variantId
-    ? product.variants.find((variant) => variant.id === variantId) ?? null
-    : null;
+  const initialFetchOptions = useRef({ productId: product.id, variantId, dateRange });
+  const variant = product.variants.find((variant) => variant.id === variantId) ?? null;
 
   const loadPrices = useCallback(
     async (options: {
@@ -47,7 +48,7 @@ export function ProductInfo({
       abortSignal?: AbortSignal;
     }) => {
       if (!options.variantId) {
-        invalidateData();
+        invalidatePrices();
         return;
       }
       await fetchPrices({
@@ -56,17 +57,21 @@ export function ProductInfo({
         abortSignal: options.abortSignal,
       });
     },
-    [fetchPrices, invalidateData],
+    [fetchPrices, invalidatePrices],
   );
 
   useEffect(() => {
-    const { variantId, dateRange } = initialFetchOptions.current;
+    const { productId, variantId, dateRange } = initialFetchOptions.current;
     const abortController = new AbortController();
-    loadPrices({ variantId, dateRange, abortSignal: abortController.signal });
+    const abortSignal = abortController.signal;
+
+    loadPrices({ variantId, dateRange, abortSignal });
+    fetchNotifications({ productId, abortSignal });
+
     return () => {
       abortController.abort();
     };
-  }, [loadPrices]);
+  }, [loadPrices, fetchNotifications]);
 
   const lastPrice = prices?.at(-1);
   const chartPrices: ChartPrice[] | null =
@@ -95,7 +100,9 @@ export function ProductInfo({
   const NotificationButton = () => {
     if (!variant) return null;
 
-    const notification = variant.notifications[0];
+    const notification = notifications?.find(
+      (notification) => notification.productVariantId === variant.id,
+    );
     return notification ? (
       <DeleteNotificationButton id={notification.id} />
     ) : (
