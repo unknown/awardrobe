@@ -1,34 +1,43 @@
 import { Fragment, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 import { Input } from "@ui/Input";
 
-import {
-  AddNotificationRequest,
-  AddNotificationResponse,
-} from "@/app/api/notifications/create/route";
+import { VariantAttribute } from "@awardrobe/adapters";
+import { ProductVariant } from "@awardrobe/prisma-types";
 
-export type NotificationOptions = {
+import { VariantControls } from "@/components/product/ProductControls";
+import { CreateNotificationOptions } from "@/hooks/useNotifications";
+
+export type AddNotificationDialogProps = {
+  variants: ProductVariant[];
+  productOptions: Record<string, string[]>;
+  onNotificationCreate: (options: CreateNotificationOptions) => Promise<boolean>;
+};
+
+type AddNotificationOptions = {
   priceInCents: number | null;
   priceDrop: boolean;
   restock: boolean;
 };
 
-export type AddNotificationDialogProps = {
-  variantId: string;
-  defaultOptions: NotificationOptions;
+const defaultOptions: AddNotificationOptions = {
+  priceInCents: 5000,
+  priceDrop: true,
+  restock: true,
 };
 
-export function AddNotificationDialog({ variantId, defaultOptions }: AddNotificationDialogProps) {
-  const router = useRouter();
-
+export function AddNotificationDialog({
+  variants,
+  productOptions,
+  onNotificationCreate,
+}: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const [options, setOptions] = useState<NotificationOptions>(defaultOptions);
+  const [options, setOptions] = useState<AddNotificationOptions>(defaultOptions);
+  const [attributes, setAttributes] = useState<Record<string, string>>({});
 
   return (
     <Fragment>
@@ -36,7 +45,6 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
         open={open}
         onOpenChange={(open) => {
           setOpen(open);
-          setOptions(defaultOptions);
         }}
       >
         <DialogTrigger asChild>
@@ -53,21 +61,37 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
           <form
             onSubmit={async (event) => {
               event.preventDefault();
-              setLoading(true);
 
-              const result = await createNotification(variantId, {
+              const variant = variants.find((variant) => {
+                const variantAttributes = variant.attributes as VariantAttribute[];
+                if (variantAttributes.length !== Object.keys(attributes).length) return false;
+                return variantAttributes.every(
+                  (attribute) => attributes[attribute.name] === attribute.value,
+                );
+              });
+
+              // TODO: handle this better
+              if (!variant) return;
+
+              const success = await onNotificationCreate({
+                variantId: variant.id,
                 priceInCents: options.priceInCents,
                 priceDrop: options.priceDrop,
                 restock: options.restock,
               });
-              if (result.status === "success") {
-                router.refresh();
+
+              if (success) {
                 setOpen(false);
               }
-
-              setLoading(false);
             }}
           >
+            <VariantControls
+              productOptions={productOptions}
+              attributes={attributes}
+              onAttributeChange={(name, value) => {
+                setAttributes((attributes) => ({ ...attributes, [name]: value }));
+              }}
+            />
             <label className="text-primary text-sm font-medium" htmlFor="price">
               Price Threshold (In Cents)
             </label>
@@ -89,7 +113,6 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
                   }));
                 }
               }}
-              disabled={loading}
             />
             <div className="flex items-center space-x-2 py-2">
               <Checkbox
@@ -98,7 +121,6 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
                 onCheckedChange={(checked) =>
                   setOptions({ ...options, priceDrop: checked === true })
                 }
-                disabled={loading}
               />
               <label
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -112,7 +134,6 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
                 id="restock"
                 checked={options.restock}
                 onCheckedChange={(checked) => setOptions({ ...options, restock: checked === true })}
-                disabled={loading}
               />
               <label
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -122,29 +143,11 @@ export function AddNotificationDialog({ variantId, defaultOptions }: AddNotifica
               </label>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button type="submit" disabled={loading}>
-                Create notification
-              </Button>
+              <Button type="submit">Create notification</Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
     </Fragment>
   );
-}
-
-async function createNotification(variantId: string, options: NotificationOptions) {
-  const body: AddNotificationRequest = {
-    variantId,
-    priceInCents: options.priceInCents ?? undefined,
-    priceDrop: options.priceDrop,
-    restock: options.restock,
-  };
-
-  const response = await fetch("/api/notifications/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  return (await response.json()) as AddNotificationResponse;
 }
