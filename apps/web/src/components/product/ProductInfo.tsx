@@ -6,11 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { VariantAttribute } from "@awardrobe/adapters";
 
 import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
-import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
-import { useNotifications } from "@/hooks/useNotifications";
+import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
-import { AddNotificationDialog } from "../notification/AddNotificationDialog";
 import { ChartPrice, ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
@@ -28,7 +26,6 @@ export function ProductInfo({
   initialVariantId,
 }: ProductInfoProps) {
   const { data: prices, fetchPrices, invalidateData: invalidatePrices, loading } = usePrices();
-  const { data: notifications, fetchNotifications } = useNotifications();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -38,7 +35,7 @@ export function ProductInfo({
   const [variantId, setVariantId] = useState(initialVariantId);
   const [dateRange, setDateRange] = useState<DateRange>("7d");
 
-  const initialFetchOptions = useRef({ productId: product.id, variantId, dateRange });
+  const initialFetchOptions = useRef({ variantId, dateRange });
   const variant = product.variants.find((variant) => variant.id === variantId) ?? null;
 
   const loadPrices = useCallback(
@@ -61,17 +58,16 @@ export function ProductInfo({
   );
 
   useEffect(() => {
-    const { productId, variantId, dateRange } = initialFetchOptions.current;
+    const { variantId, dateRange } = initialFetchOptions.current;
     const abortController = new AbortController();
     const abortSignal = abortController.signal;
 
     loadPrices({ variantId, dateRange, abortSignal });
-    fetchNotifications({ productId, abortSignal });
 
     return () => {
       abortController.abort();
     };
-  }, [loadPrices, fetchNotifications]);
+  }, [loadPrices]);
 
   const lastPrice = prices?.at(-1);
   const chartPrices: ChartPrice[] | null =
@@ -95,26 +91,6 @@ export function ProductInfo({
         product.store.shortenedName ?? product.store.name
       }`;
     }
-  };
-
-  const NotificationButton = () => {
-    if (!variant) return null;
-
-    const notification = notifications?.find(
-      (notification) => notification.productVariantId === variant.id,
-    );
-    return notification ? (
-      <DeleteNotificationButton id={notification.id} />
-    ) : (
-      <AddNotificationDialog
-        variantId={variant.id}
-        defaultOptions={{
-          priceInCents: lastPrice?.priceInCents ?? null,
-          priceDrop: true,
-          restock: true,
-        }}
-      />
-    );
   };
 
   return (
@@ -159,7 +135,11 @@ export function ProductInfo({
           >
             {getPillText()}
           </a>
-          <NotificationButton />
+          <NotificationPopover
+            productId={product.id}
+            productOptions={productOptions}
+            variants={product.variants}
+          />
         </div>
       </section>
       <section className="container max-w-4xl space-y-2 py-6">

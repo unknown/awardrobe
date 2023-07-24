@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { prisma, ProductNotification } from "@awardrobe/prisma-types";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
+
+const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
+  include: { productVariant: true },
+});
+export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
+  typeof extendedNotification
+>;
 
 type GetNotificationsRequest = {
   productId: string;
@@ -11,7 +18,7 @@ type GetNotificationsRequest = {
 
 type GetNotificationsSuccess = {
   status: "success";
-  notifications: ProductNotification[];
+  notifications: ExtendedNotification[];
 };
 
 type GetNotificationsError = {
@@ -38,6 +45,7 @@ export async function POST(req: Request) {
       include: {
         productNotifications: {
           where: { productVariant: { productId } },
+          include: { productVariant: true },
         },
       },
     });

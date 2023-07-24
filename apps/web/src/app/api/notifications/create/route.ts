@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { Prisma, prisma, ProductNotification } from "@awardrobe/prisma-types";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
+import { ExtendedNotification } from "@/app/api/notifications/route";
 import { authOptions } from "@/utils/auth";
 
 export type AddNotificationRequest = {
@@ -14,7 +15,7 @@ export type AddNotificationRequest = {
 
 type AddNotificationSuccess = {
   status: "success";
-  notification: ProductNotification;
+  notification: ExtendedNotification;
 };
 
 type AddNotificationError = {
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
         restock,
         user: { connect: { id: session.user.id } },
       },
+      include: { productVariant: true },
     });
     return NextResponse.json<AddNotificationSuccess>({ status: "success", notification });
   } catch (e) {
