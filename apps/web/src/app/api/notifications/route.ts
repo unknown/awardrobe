@@ -6,7 +6,7 @@ import { Prisma, prisma } from "@awardrobe/prisma-types";
 import { authOptions } from "@/utils/auth";
 
 const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
-  include: { productVariant: true },
+  include: { productVariant: { include: { product: true } } },
 });
 export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
   typeof extendedNotification
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       include: {
         productNotifications: {
           where: { productVariant: { productId } },
-          include: { productVariant: true },
+          include: { productVariant: { include: { product: true } } },
         },
       },
     });

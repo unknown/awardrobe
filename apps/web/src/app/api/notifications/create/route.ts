@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         restock,
         user: { connect: { id: session.user.id } },
       },
-      include: { productVariant: true },
+      include: { productVariant: { include: { product: true } } },
     });
     return NextResponse.json<AddNotificationSuccess>({ status: "success", notification });
   } catch (e) {
