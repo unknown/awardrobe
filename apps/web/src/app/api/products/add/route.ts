@@ -34,35 +34,36 @@ export async function POST(req: Request) {
     );
   }
 
-  const { productUrl }: AddProductRequest = await req.json();
-
   // TODO: more descriptive errors
   try {
+    const { productUrl }: AddProductRequest = await req.json();
+
     const adapter = getAdapterFromUrl(productUrl);
     const productCode = await adapter.getProductCode(productUrl);
     const { name, variants } = await adapter.getProductDetails(productCode);
-
-    const store = await prisma.store.findUniqueOrThrow({
-      where: { handle: adapter.storeHandle },
-    });
 
     const product = await prisma.product.create({
       data: {
         productCode,
         name,
-        storeId: store.id,
+        store: { connect: { handle: adapter.storeHandle } },
         variants: {
           createMany: {
             data: variants.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
           },
         },
       },
+      include: { store: true },
     });
 
-    const productDocument: ProductDocument = { id: product.id, name, storeName: store.name };
+    const productDocument: ProductDocument = {
+      id: product.id,
+      name,
+      storeName: product.store.name,
+    };
     await meilisearch.index("products").addDocuments([productDocument], { primaryKey: "id" });
 
-    revalidatePath("/(product)/browse");
+    revalidatePath("/(app)/browse");
 
     return NextResponse.json<AddProductResponse>({
       status: "success",

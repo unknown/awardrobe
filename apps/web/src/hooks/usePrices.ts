@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import { Price } from "@awardrobe/prisma-types";
 
-import { GetPricesResponse } from "@/app/api/products/prices/route";
+import { GetPricesResponse } from "@/app/api/prices/route";
 
 export const DateRanges = ["7d", "1m", "3m", "6m", "1y", "All"] as const;
 export type DateRange = (typeof DateRanges)[number];
@@ -56,7 +56,7 @@ export function usePrices() {
 }
 
 async function getPrices(variantId: string, startDate: Date, abortSignal?: AbortSignal) {
-  const response = await fetch("/api/products/prices", {
+  const response = await fetch("/api/prices", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ variantId, startDate }),

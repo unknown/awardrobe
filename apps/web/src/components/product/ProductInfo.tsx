@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
-import { ExtendedProduct } from "@/app/(product)/product/[productId]/page";
+import { ExtendedProduct } from "@/app/(app)/product/[productId]/page";
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
