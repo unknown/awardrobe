@@ -35,6 +35,7 @@ export function AddNotificationDialog({
   onNotificationCreate,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [options, setOptions] = useState<AddNotificationOptions>(defaultOptions);
   const [attributes, setAttributes] = useState<Record<string, string>>({});
@@ -73,12 +74,14 @@ export function AddNotificationDialog({
               // TODO: handle this better
               if (!variant) return;
 
+              setLoading(true);
               const success = await onNotificationCreate({
                 variantId: variant.id,
                 priceInCents: options.priceInCents,
                 priceDrop: options.priceDrop,
                 restock: options.restock,
               });
+              setLoading(false);
 
               if (success) {
                 setOpen(false);
@@ -143,7 +146,9 @@ export function AddNotificationDialog({
               </label>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button type="submit">Create notification</Button>
+              <Button type="submit" disabled={loading}>
+                Create notification
+              </Button>
             </div>
           </form>
         </DialogContent>
