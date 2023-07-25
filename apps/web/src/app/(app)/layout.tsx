@@ -39,10 +39,12 @@ export default async function ProductLayout({ children }: ProductLayout) {
 
 const NavBarButton = async () => {
   const session = await getServerSession(authOptions);
-  return session ? <ProfileButton /> : <LoginButton />;
+  return session ? <ProfileButton email={session.user.email ?? null} /> : <LoginButton />;
 };
 
-function ProfileButton() {
+type ProfileButtonProps = { email: string | null };
+
+function ProfileButton({ email }: ProfileButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -53,11 +55,11 @@ function ProfileButton() {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        {email ? <DropdownMenuLabel>{email}</DropdownMenuLabel> : null}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/profile">Profile</Link>
+            <Link href="/settings">Settings</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
