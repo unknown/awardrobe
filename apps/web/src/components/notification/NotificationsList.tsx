@@ -38,7 +38,7 @@ export function NotificationList() {
             </div>
             <DeleteNotificationButton
               onNotificationDelete={() => {
-                removeNotification({ notificationId: id });
+                return removeNotification({ notificationId: id });
               }}
             />
           </div>
