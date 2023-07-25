@@ -139,6 +139,8 @@ export function ProductInfo({
             productId={product.id}
             productOptions={productOptions}
             variants={product.variants}
+            attributes={attributes}
+            priceInCents={lastPrice?.priceInCents ?? null}
           />
         </div>
       </section>
