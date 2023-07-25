@@ -17,7 +17,7 @@
     "dotenv-cli": "^7.2.1",
     "prettier": "^2.8.8",
     "prettier-plugin-tailwindcss": "^0.4.1",
-    "turbo": "^1.10.9"
+    "turbo": "^1.10.11"
   },
   "dependencies": {
     "react-hot-toast": "^2.4.1"
