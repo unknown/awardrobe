@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@ui/Popover";
@@ -51,17 +51,14 @@ export function NotificationPopover({
             <h4 className="font-medium leading-none">Notifications</h4>
             <p className="text-muted-foreground text-sm">Manage your product alerts.</p>
           </div>
-          <div className="flex flex-col gap-2">
-            {notifications === null && "Loading..."}
-            {notifications?.length === 0 && "No notifications"}
+          {notifications === null && "Loading..."}
+          {notifications?.length === 0 && "No notifications"}
+          <div className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2">
             {notifications?.map((notification) => {
               const attributes = notification.productVariant.attributes as VariantAttribute[];
               const description = attributes.map(({ value }) => value).join(" - ");
               return (
-                <div
-                  key={notification.id}
-                  className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2"
-                >
+                <Fragment key={notification.id}>
                   <p>{description}</p>
                   <p>{formatCurrency(notification.priceInCents ?? 0)}</p>
                   <DeleteNotificationButton
@@ -69,17 +66,17 @@ export function NotificationPopover({
                       return removeNotification({ notificationId: notification.id });
                     }}
                   />
-                </div>
+                </Fragment>
               );
             })}
-            <AddNotificationDialog
-              productOptions={productOptions}
-              variants={variants}
-              onNotificationCreate={(options) => {
-                return addNotification(options);
-              }}
-            />
           </div>
+          <AddNotificationDialog
+            productOptions={productOptions}
+            variants={variants}
+            onNotificationCreate={(options) => {
+              return addNotification(options);
+            }}
+          />
         </div>
       </PopoverContent>
     </Popover>
