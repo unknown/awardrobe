@@ -15,12 +15,16 @@ type NotificationPopoverProps = {
   productId: string;
   productOptions: Record<string, string[]>;
   variants: ProductVariant[];
+  attributes: Record<string, string>;
+  priceInCents: number | null;
 };
 
 export function NotificationPopover({
   productId,
   productOptions,
   variants,
+  attributes,
+  priceInCents,
 }: NotificationPopoverProps) {
   const {
     data: notifications,
@@ -73,6 +77,8 @@ export function NotificationPopover({
           <AddNotificationDialog
             productOptions={productOptions}
             variants={variants}
+            attributes={attributes}
+            priceInCents={priceInCents}
             onNotificationCreate={(options) => {
               return addNotification(options);
             }}

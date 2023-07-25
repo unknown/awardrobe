@@ -15,6 +15,8 @@ export type AddNotificationDialogProps = {
   variants: ProductVariant[];
   productOptions: Record<string, string[]>;
   onNotificationCreate: (options: CreateNotificationOptions) => Promise<boolean>;
+  attributes: Record<string, string>;
+  priceInCents: number | null;
 };
 
 type AddNotificationOptions = {
@@ -23,22 +25,22 @@ type AddNotificationOptions = {
   restock: boolean;
 };
 
-const defaultOptions: AddNotificationOptions = {
-  priceInCents: 5000,
-  priceDrop: true,
-  restock: true,
-};
-
 export function AddNotificationDialog({
   variants,
   productOptions,
   onNotificationCreate,
+  attributes: parentAttributes,
+  priceInCents: parentPriceInCents,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [options, setOptions] = useState<AddNotificationOptions>(defaultOptions);
-  const [attributes, setAttributes] = useState<Record<string, string>>({});
+  const [options, setOptions] = useState<AddNotificationOptions>({
+    priceInCents: parentPriceInCents ?? 5000,
+    priceDrop: true,
+    restock: true,
+  });
+  const [attributes, setAttributes] = useState<Record<string, string>>(parentAttributes);
 
   return (
     <Fragment>
@@ -112,7 +114,7 @@ export function AddNotificationDialog({
                 if (event.target.value === "") {
                   setOptions((options) => ({
                     ...options,
-                    priceInCents: defaultOptions.priceInCents,
+                    priceInCents: parentPriceInCents ?? 5000,
                   }));
                 }
               }}

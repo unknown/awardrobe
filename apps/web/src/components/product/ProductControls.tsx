@@ -26,7 +26,7 @@ export function VariantControls({
   return (
     <Fragment>
       {Object.entries(productOptions).map(([name, values]) => {
-        const selectedValue = attributes[name] ?? "";
+        const selectedValue = attributes[name]; // TODO: handle undefined
         return (
           <Fragment key={name}>
             <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
