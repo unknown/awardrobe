@@ -62,7 +62,7 @@ export function NotificationPopover({
                   <p>{description}</p>
                   <p>{formatCurrency(notification.priceInCents ?? 0)}</p>
                   <DeleteNotificationButton
-                    onNotificationDelete={async () => {
+                    onNotificationDelete={() => {
                       return removeNotification({ notificationId: notification.id });
                     }}
                   />
