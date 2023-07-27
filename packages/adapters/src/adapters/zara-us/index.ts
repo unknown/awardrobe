@@ -3,6 +3,7 @@ import parse from "node-html-parser";
 
 import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
 
+import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { productSchema } from "./schemas";
 
@@ -77,9 +78,9 @@ async function getProductDetails(productCode: string) {
 
   const { name, detail, seo } = productSchema.parse(productResponse.data);
   // TODO: per variant product urls
-  const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.keyword}.html`;
 
   const variants: VariantInfo[] = detail.colors.flatMap((color) => {
+    const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.seoProductId}.html?v1=${color.productId}`;
     return color.sizes.map((size) => ({
       timestamp,
       productUrl,
@@ -93,7 +94,7 @@ async function getProductDetails(productCode: string) {
   });
 
   return {
-    name,
     variants,
+    name: toTitleCase(name),
   };
 }
