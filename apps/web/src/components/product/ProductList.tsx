@@ -17,7 +17,7 @@ export function ProductList({ products }: ProductListProps) {
         {products.map((product) => {
           return (
             <Link key={product.id} href={`/product/${product.id}`}>
-              <div className="h-full rounded-md border p-3">
+              <div className="h-full rounded-md border p-4 md:p-3">
                 <p className="text-muted-foreground text-sm">{product.storeName}</p>
                 <p>{product.name}</p>
               </div>

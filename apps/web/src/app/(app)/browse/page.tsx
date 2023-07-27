@@ -19,10 +19,10 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const products = response.hits as Product[];
 
   return (
-    <section className="container max-w-4xl space-y-2">
+    <section className="container max-w-4xl space-y-4">
       <h1 className="text-xl font-bold">Products</h1>
       <ProductList products={products} />
-      <div className="flex gap-2">
+      <div className="flex justify-center gap-2">
         {response.totalPages > 1
           ? [...Array(response.totalPages).keys()].map((index) => {
               const page = index + 1;
