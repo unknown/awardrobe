@@ -27,6 +27,7 @@ export const productSchema = z.object({
       z.object({
         id: z.string(),
         name: z.string(),
+        productId: z.number(),
         sizes: z.array(
           z.object({
             availability: z.union([
