@@ -21,7 +21,6 @@ async function getProducts(_?: number) {
   return [];
 }
 
-// TODO: fix this
 async function getProductCode(url: string) {
   const httpsAgent = getRandomHttpsProxyAgent();
   const headers = {
@@ -47,7 +46,7 @@ async function getProductCode(url: string) {
   }
   const challengeUrl = `https://www.zara.com${challengeRoute}`;
 
-  const productResponse = await axios.get(challengeUrl, { headers });
+  const productResponse = await axios.get(challengeUrl, { httpsAgent, headers });
   const root = parse(productResponse.data);
 
   const htmlId = root.querySelector("html")?.getAttribute("id");
