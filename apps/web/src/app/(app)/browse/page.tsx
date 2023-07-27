@@ -9,7 +9,7 @@ type BrowsePageProps = {
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const { search } = searchParams;
 
-  const response = await meilisearch.index("products").search(search ?? "");
+  const response = await meilisearch.index("products").search(search ?? "", { limit: 100 });
   const products = response.hits as Product[];
 
   return (
