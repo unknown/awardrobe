@@ -26,14 +26,29 @@ async function getProductCode(url: string) {
   const headers = {
     "User-Agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    Connection: "keep-alive",
   };
-  const productResponse = await axios.get(url, { httpsAgent, headers });
+  const initialResponse = await axios.get(url, { httpsAgent, headers });
 
-  if (productResponse.status !== 200) {
-    throw new Error(`Failed to search for product ${url}. Status code: ${productResponse.status}`);
+  if (initialResponse.status !== 200) {
+    throw new Error(`Failed to search for product ${url}. Status code: ${initialResponse.status}`);
   }
 
+  const initialRoot = parse(initialResponse.data);
+  const challengeRegex = /URL='(.*)'/;
+  const challengeRoute = initialRoot
+    .querySelector('meta[http-equiv="refresh"]')
+    ?.getAttribute("content")
+    ?.match(challengeRegex)?.[1];
+
+  if (!challengeRoute) {
+    throw new Error(`Failed to get product code from ${url}`);
+  }
+  const challengeUrl = `https://www.zara.com${challengeRoute}`;
+
+  const productResponse = await axios.get(challengeUrl, { headers });
   const root = parse(productResponse.data);
+
   const htmlId = root.querySelector("html")?.getAttribute("id");
   const productId = htmlId?.split("-").pop();
 
