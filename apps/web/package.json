@@ -60,6 +60,7 @@
     "dotenv-cli": "^7.2.1",
     "encoding": "^0.1.13",
     "postcss": "^8.4.27",
-    "tailwindcss": "^3.3.3"
+    "tailwindcss": "^3.3.3",
+    "tailwindcss-animate": "^1.0.6"
   }
 }
