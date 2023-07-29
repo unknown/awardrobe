@@ -14,7 +14,7 @@ export function DeleteNotificationButton({
   return (
     <Button
       {...props}
-      variant="destructiveOutline"
+      variant="destructive"
       onClick={async () => {
         setLoading(true);
         await onNotificationDelete();
