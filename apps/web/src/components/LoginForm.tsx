@@ -17,6 +17,8 @@ export const LoginForm = ({ className, ...props }: LoginFormProps) => {
     <div className={className} {...props}>
       <form
         onSubmit={async (e) => {
+          return;
+
           e.preventDefault();
 
           setIsLoading(true);
