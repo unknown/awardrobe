@@ -1,7 +1,8 @@
-/** @typedef  {import("@ianvs/prettier-plugin-sort-imports").PluginConfig} SortImportsConfig*/
 /** @typedef  {import("prettier").Config} PrettierConfig*/
+/** @typedef  {import("@ianvs/prettier-plugin-sort-imports").PluginConfig} SortImportsConfig*/
+/** @typedef  {import("prettier-plugin-tailwindcss").PluginOptions} TailwindPluginConfig*/
 
-/** @type { PrettierConfig | SortImportsConfig } */
+/** @type { PrettierConfig | SortImportsConfig | TailwindPluginConfig } */
 const config = {
   printWidth: 100,
   singleQuote: false,
@@ -19,6 +20,7 @@ const config = {
     "^@/(.*)$",
     "^[./]",
   ],
+  tailwindFunctions: ["cva"],
 };
 
 module.exports = config;
