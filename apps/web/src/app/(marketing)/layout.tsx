@@ -10,8 +10,8 @@ interface MarketingLayout {
 export default async function MarketingLayout({ children }: MarketingLayout) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="container">
-        <div className="flex h-20 items-center justify-between py-4">
+      <header className="bg-background z-10">
+        <div className="container flex h-20 items-center justify-between py-4">
           <NavBar />
           <Link href="/login">
             <Button variant="secondary">Login</Button>
