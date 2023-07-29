@@ -5,6 +5,7 @@ import { Button } from "@ui/Button";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 
 import { ProductList } from "@/components/product/ProductList";
+import { ProductListControls } from "@/components/product/ProductListControls";
 
 type BrowsePageProps = {
   searchParams: {
@@ -25,6 +26,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <section className="container max-w-4xl space-y-4">
       <h1 className="text-xl font-bold">Products</h1>
+      <ProductListControls />
       <ProductList products={products} />
       <div className="flex justify-center gap-2">
         {searchResponse.totalPages > 1
