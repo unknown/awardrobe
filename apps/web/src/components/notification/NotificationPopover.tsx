@@ -45,7 +45,7 @@ export function NotificationPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="secondary" size="icon">
           <Bell />
         </Button>
       </PopoverTrigger>
