@@ -7,9 +7,12 @@ import { signIn } from "next-auth/react";
 
 export type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
-export const LoginForm = ({ className, ...props }: LoginFormProps) => {
+type LoginStatus = "success" | "error";
+
+export function LoginForm({ className, ...props }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [formMessage, setFormMessage] = useState<string>("");
+  const [status, setStatus] = useState<LoginStatus | null>(null);
+
   const emailInputRef = useRef<HTMLInputElement>(null);
 
   // TODO: use zod to validate email?
@@ -20,19 +23,19 @@ export const LoginForm = ({ className, ...props }: LoginFormProps) => {
           e.preventDefault();
 
           setIsLoading(true);
-
+          const email = emailInputRef.current?.value.toLowerCase() ?? "";
           const signInResult = await signIn("email", {
-            email: emailInputRef.current?.value.toLowerCase() ?? "",
+            email,
             redirect: false,
             callbackUrl: "/browse",
           });
-
-          if (!signInResult?.ok) {
-            setFormMessage("Something went wrong! Please try again later.");
-          }
-
           setIsLoading(false);
-          setFormMessage("A sign in link has been sent to your email address.");
+
+          if (!signInResult?.ok || signInResult?.error) {
+            setStatus("error");
+          } else {
+            setStatus("success");
+          }
         }}
       >
         <div className="flex flex-col gap-2">
@@ -47,9 +50,24 @@ export const LoginForm = ({ className, ...props }: LoginFormProps) => {
             ref={emailInputRef}
           />
           <Button disabled={isLoading}>Continue with Email</Button>
-          {formMessage && <p className="text-sm">{formMessage}</p>}
+          {!isLoading && status ? <LoginStatusText status={status} /> : null}
         </div>
       </form>
     </div>
   );
-};
+}
+
+function LoginStatusText({ status }: { status: LoginStatus }) {
+  switch (status) {
+    case "success":
+      return (
+        <p className="text-sm text-blue-500">A sign in link has been sent to your email address.</p>
+      );
+    case "error":
+      return (
+        <p className="text-destructive text-sm">Something went wrong! Please try again later.</p>
+      );
+    default:
+      return null;
+  }
+}
