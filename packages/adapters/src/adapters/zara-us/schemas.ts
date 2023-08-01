@@ -34,6 +34,7 @@ export const productSchema = z.object({
               z.literal("in_stock"),
               z.literal("low_on_stock"),
               z.literal("out_of_stock"),
+              z.literal("coming_soon"),
             ]),
             id: z.number(),
             name: z.string(),
