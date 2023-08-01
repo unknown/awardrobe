@@ -8,9 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
+import { twMerge } from "tailwind-merge";
 
 import { DateRange, DateRanges } from "@/hooks/usePrices";
-import { cn } from "@/utils/utils";
 
 export type VariantControlsProps = {
   productOptions: Record<string, string[]>;
@@ -80,7 +80,7 @@ export function DateRangeControl({ dateRange, onDateRangeChange }: DateRangeCont
                 onDateRangeChange(range);
               }
             }}
-            className={cn(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
+            className={twMerge(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
           >
             {range}
           </Button>
