@@ -4,8 +4,7 @@ import { ComponentPropsWithoutRef, ElementRef, forwardRef } from "react";
 import { Check } from "@icons/Check";
 import { ChevronDown } from "@icons/ChevronDown";
 import * as SelectPrimitive from "@radix-ui/react-select";
-
-import { cn } from "@/utils/utils";
+import { twMerge } from "tailwind-merge";
 
 const Select = SelectPrimitive.Root;
 
@@ -19,7 +18,7 @@ const SelectTrigger = forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn(
+    className={twMerge(
       "border-input ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
@@ -40,7 +39,7 @@ const SelectContent = forwardRef<
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
-      className={cn(
+      className={twMerge(
         "bg-popover text-popover-foreground animate-in fade-in-80 relative z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md",
         position === "popper" && "translate-y-1",
         className,
@@ -49,7 +48,7 @@ const SelectContent = forwardRef<
       {...props}
     >
       <SelectPrimitive.Viewport
-        className={cn(
+        className={twMerge(
           "p-1",
           position === "popper" &&
             "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
@@ -68,7 +67,7 @@ const SelectLabel = forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("py-1.5 pl-8 pr-2 font-semibold", className)}
+    className={twMerge("py-1.5 pl-8 pr-2 font-semibold", className)}
     {...props}
   />
 ));
@@ -80,7 +79,7 @@ const SelectItem = forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
-    className={cn(
+    className={twMerge(
       "focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
@@ -103,7 +102,7 @@ const SelectSeparator = forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("bg-muted -mx-1 my-1 h-px", className)}
+    className={twMerge("bg-muted -mx-1 my-1 h-px", className)}
     {...props}
   />
 ));
