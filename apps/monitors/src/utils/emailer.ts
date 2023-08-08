@@ -1,5 +1,7 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const emailTransporter = nodemailer.createTransport(process.env.EMAIL_SERVER!);
+const globalForResend = globalThis as { resend?: Resend };
 
-export default emailTransporter;
+export const resend: Resend = globalForResend.resend || new Resend(process.env.RESEND_API_KEY);
+
+if (process.env.NODE_ENV !== "production") globalForResend.resend = resend;

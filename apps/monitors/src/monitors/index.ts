@@ -6,7 +6,7 @@ import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/email
 import { prisma, Product } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
-import emailTransporter from "../utils/emailer";
+import { resend } from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
 import { ExtendedProduct, PartialPrice, VariantInfoWithVariant } from "./types";
 
@@ -161,8 +161,9 @@ async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-      emailTransporter.sendMail({
-        to: notification.user.email,
+      await resend.emails.send({
+        to: [notification.user.email],
+        from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Price drop",
         html: emailHtml,
       });
@@ -197,8 +198,9 @@ async function handleRestock(product: Product, variant: VariantInfoWithVariant) 
   await Promise.all(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
-      emailTransporter.sendMail({
-        to: notification.user.email,
+      await resend.emails.send({
+        to: [notification.user.email],
+        from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Item back in stock",
         html: emailHtml,
       });
