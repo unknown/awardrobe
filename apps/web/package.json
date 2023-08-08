@@ -45,7 +45,7 @@
     "lodash.debounce": "^4.0.8",
     "meilisearch": "^0.33.0",
     "next": "^13.4.12",
-    "next-auth": "^4.22.3",
+    "next-auth": "^4.22.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resend": "^0.17.2",
