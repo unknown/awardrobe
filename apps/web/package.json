@@ -44,7 +44,7 @@
     "eslint-config-next": "^13.4.13",
     "lodash.debounce": "^4.0.8",
     "meilisearch": "^0.34.1",
-    "next": "^13.4.12",
+    "next": "^13.4.13",
     "next-auth": "^4.22.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
