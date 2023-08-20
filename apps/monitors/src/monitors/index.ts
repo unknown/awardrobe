@@ -73,7 +73,6 @@ async function getVariant(product: ExtendedProduct, variant: VariantInfo) {
       });
     });
   });
-
   if (!productVariant) {
     console.error(`Creating new variant: ${JSON.stringify(variant.attributes)}`);
     productVariant = await prisma.productVariant.create({
@@ -84,6 +83,7 @@ async function getVariant(product: ExtendedProduct, variant: VariantInfo) {
       },
       include: { prices: true },
     });
+    product.variants.push(productVariant);
   }
   return productVariant;
 }
