@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "meilisearch": "^0.34.1",
-    "zod": "^3.21.4"
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
