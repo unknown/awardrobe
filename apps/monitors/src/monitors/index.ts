@@ -17,14 +17,20 @@ export async function updateProducts(
   const throttle = pThrottle({ limit: proxies.length, interval: 250 });
   const throttledUpdate = throttle(async (product: ExtendedProduct) => {
     try {
-      const variants = await getProductVariantInfo(product);
+      const adapter = getAdapter(product.store.handle);
+      const { variants } = await adapter.getProductDetails(product.productCode);
+      if (variants.length === 0) {
+        console.warn(`Product ${product.productCode} has empty data`);
+        return;
+      }
+
       const outdatedVariants: VariantInfoWithVariant[] = [];
       const priceDroppedVariants: VariantInfoWithVariant[] = [];
       const restockedVariants: VariantInfoWithVariant[] = [];
 
       await Promise.all(
         variants.map(async (variantInfo) => {
-          const variant = await getVariant(product, variantInfo);
+          const variant = await getProductVariant(product, variantInfo);
           const variantInfoWithVariant: VariantInfoWithVariant = {
             ...variantInfo,
             productVariant: variant,
@@ -53,44 +59,40 @@ export async function updateProducts(
   await Promise.all(products.map(throttledUpdate));
 }
 
-async function getProductVariantInfo(product: ExtendedProduct) {
-  const adapter = getAdapter(product.store.handle);
-  const { variants } = await adapter.getProductDetails(product.productCode);
-  if (variants.length === 0) {
-    console.warn(`Product ${product.productCode} has empty data`);
-  }
-  return variants;
-}
-
-async function getVariant(product: ExtendedProduct, variant: VariantInfo) {
-  let productVariant = product.variants.find((productVariant) => {
-    const attributes = productVariant.attributes as VariantAttribute[];
-    if (attributes.length !== variant.attributes.length) return false;
-    // TODO: use a map?
-    return attributes.every((attribute) => {
-      return variant.attributes.some((priceAttribute) => {
-        return shallowEquals(attribute, priceAttribute);
-      });
-    });
+async function getProductVariant(product: ExtendedProduct, variantInfo: VariantInfo) {
+  const { productUrl, attributes } = variantInfo;
+  const inputAttributeMap = attributesToMap(attributes);
+  const existingVariant = product.variants.find((productVariant) => {
+    const variantAttributes = productVariant.attributes as VariantAttribute[];
+    const variantAttributeMap = attributesToMap(variantAttributes);
+    return shallowEquals(inputAttributeMap, variantAttributeMap);
   });
-  if (!productVariant) {
-    console.error(`Creating new variant: ${JSON.stringify(variant.attributes)}`);
-    productVariant = await prisma.productVariant.create({
+
+  if (!existingVariant) {
+    console.warn(`Creating new variant: ${JSON.stringify(attributes)}`);
+    const productVariant = await prisma.productVariant.create({
       data: {
+        attributes,
+        productUrl,
         productId: product.id,
-        attributes: variant.attributes,
-        productUrl: variant.productUrl,
       },
       include: { prices: true },
     });
     product.variants.push(productVariant);
+    return productVariant;
   }
-  return productVariant;
+  return existingVariant;
+}
+
+function attributesToMap(attributes: VariantAttribute[]) {
+  return attributes.reduce((acc, attribute) => {
+    acc[attribute.name] = attribute.value;
+    return acc;
+  }, {} as Record<string, string>);
 }
 
 function getFlags(variantInfo: VariantInfoWithVariant, oldPrice: PartialPrice | null) {
   if (!oldPrice) {
-    console.log(`No old price for ${variantInfo.productVariant.id}`);
     return {
       isOutdated: true,
       hasPriceDropped: false,
@@ -109,9 +111,9 @@ function getFlags(variantInfo: VariantInfoWithVariant, oldPrice: PartialPrice | 
   const hasRestocked = variantInfo.inStock && !oldPrice.inStock;
 
   return {
-    isOutdated: isStale || hasPriceChanged || hasStockChanged,
     hasPriceDropped,
     hasRestocked,
+    isOutdated: isStale || hasPriceChanged || hasStockChanged,
   };
 }
 
@@ -130,7 +132,6 @@ async function updateOutdatedPrices(
 
   outdatedVariants.forEach(({ productVariant, timestamp, priceInCents, inStock }) => {
     priceFromVariant.set(productVariant.id, { timestamp, priceInCents, inStock });
-    console.log(`Updated price for ${productVariant.id} to ${priceInCents}`);
   });
 }
 
