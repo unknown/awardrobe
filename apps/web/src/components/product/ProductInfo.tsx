@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
@@ -94,8 +94,8 @@ export function ProductInfo({
   };
 
   return (
-    <Fragment>
-      <section className="container max-w-4xl py-6">
+    <section className="space-y-12">
+      <div className="container max-w-4xl">
         <div className="flex flex-col gap-2">
           <p className="text-muted-foreground text-sm">{product.store.name}</p>
           <h1 className="text-3xl font-medium">{product.name}</h1>
@@ -143,8 +143,8 @@ export function ProductInfo({
             priceInCents={lastPrice?.priceInCents ?? null}
           />
         </div>
-      </section>
-      <section className="container max-w-4xl space-y-2 py-6">
+      </div>
+      <div className="container max-w-4xl space-y-2">
         <h2 className="text-xl font-medium">Price History</h2>
         <div className="flex flex-wrap justify-between gap-4 pb-2">
           <DateRangeControl
@@ -177,8 +177,8 @@ export function ProductInfo({
           ) : null}
           <ProductChart prices={chartPrices} />
         </div>
-      </section>
-    </Fragment>
+      </div>
+    </section>
   );
 }
 

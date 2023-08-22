@@ -28,33 +28,29 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
       <h1 className="text-xl font-bold">Products</h1>
       <ProductListControls />
       <ProductList products={products} />
-      <div className="flex justify-center gap-2">
-        {searchResponse.totalPages > 1
-          ? [...Array(searchResponse.totalPages).keys()].map((index) => {
-              const page = index + 1;
-              const isCurrentPage = page === searchResponse.page;
-              const pageButton = (
-                <Button
-                  className="tabular-nums"
-                  variant="outline"
-                  size="sm"
-                  disabled={isCurrentPage}
-                >
-                  {page}
-                </Button>
-              );
 
-              if (isCurrentPage) {
-                return <Fragment key={page}>{pageButton}</Fragment>;
-              }
-              return (
-                <Link key={page} href={`/browse?search=${search}&page=${page}`}>
-                  {pageButton}
-                </Link>
-              );
-            })
-          : null}
-      </div>
+      {searchResponse.totalPages > 1 ? (
+        <div className="flex justify-center gap-2">
+          {[...Array(searchResponse.totalPages).keys()].map((index) => {
+            const page = index + 1;
+            const isCurrentPage = page === searchResponse.page;
+            const pageButton = (
+              <Button className="tabular-nums" variant="outline" size="sm" disabled={isCurrentPage}>
+                {page}
+              </Button>
+            );
+
+            if (isCurrentPage) {
+              return <Fragment key={page}>{pageButton}</Fragment>;
+            }
+            return (
+              <Link key={page} href={`/browse?search=${search}&page=${page}`}>
+                {pageButton}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }
