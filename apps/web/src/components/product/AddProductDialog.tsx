@@ -20,14 +20,9 @@ export function AddProductDialog({ onAddProduct }: AddProductDialogProps) {
 
   return (
     <Fragment>
-      <Dialog
-        open={open}
-        onOpenChange={(open) => {
-          setOpen(open);
-        }}
-      >
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">
+          <Button variant="secondary">
             <Plus className="mr-2" />
             Add product
           </Button>
@@ -38,17 +33,17 @@ export function AddProductDialog({ onAddProduct }: AddProductDialogProps) {
           <form
             onSubmit={async (event) => {
               event.preventDefault();
-              setIsLoading(true);
 
+              setIsLoading(true);
               const result = await addProduct(productUrl);
+              setIsLoading(false);
+
               if (result.status === "success") {
                 onAddProduct(result.product);
                 setOpen(false);
               } else if (result.status === "error") {
                 toast.error(result.error);
               }
-
-              setIsLoading(false);
             }}
           >
             <label className="text-primary text-sm font-medium" htmlFor="product">
