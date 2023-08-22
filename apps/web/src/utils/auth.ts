@@ -1,5 +1,4 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { render } from "@react-email/render";
 import { NextAuthOptions, type DefaultSession } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
@@ -26,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           to: [identifier],
           from: "Awardrobe <notifications@getawardrobe.com>",
           subject: "Sign in to Awardrobe",
-          html: render(SignInEmail({ url })),
+          react: SignInEmail({ url }),
         });
       },
     }),

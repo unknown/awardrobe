@@ -1,4 +1,3 @@
-import { render } from "@react-email/render";
 import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
@@ -141,15 +140,6 @@ async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
-  const emailHtml = render(
-    PriceNotificationEmail({
-      productName: product.name,
-      description,
-      priceInCents,
-      productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-    }),
-  );
-
   const notifications = await prisma.productNotification.findMany({
     where: {
       priceDrop: true,
@@ -166,7 +156,12 @@ async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant
         to: [notification.user.email],
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Price drop",
-        html: emailHtml,
+        react: PriceNotificationEmail({
+          productName: product.name,
+          description,
+          priceInCents,
+          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+        }),
       });
     }),
   );
@@ -177,15 +172,6 @@ async function handleRestock(product: Product, variant: VariantInfoWithVariant) 
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
-
-  const emailHtml = render(
-    StockNotificationEmail({
-      productName: product.name,
-      description,
-      priceInCents,
-      productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-    }),
-  );
 
   const notifications = await prisma.productNotification.findMany({
     where: {
@@ -203,7 +189,12 @@ async function handleRestock(product: Product, variant: VariantInfoWithVariant) 
         to: [notification.user.email],
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Item back in stock",
-        html: emailHtml,
+        react: StockNotificationEmail({
+          productName: product.name,
+          description,
+          priceInCents,
+          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+        }),
       });
     }),
   );
