@@ -79,9 +79,7 @@ export function NotificationPopover({
             variants={variants}
             attributes={attributes}
             priceInCents={priceInCents}
-            onNotificationCreate={(options) => {
-              return addNotification(options);
-            }}
+            onNotificationCreate={addNotification}
           />
         </div>
       </PopoverContent>

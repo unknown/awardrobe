@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   AddNotificationRequest,
@@ -24,6 +25,8 @@ export type DeleteNotificationOptions = {
 };
 
 export function useNotifications() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [notificationsData, setNotificationsData] = useState<ExtendedNotification[] | null>(null);
 
@@ -45,6 +48,7 @@ export function useNotifications() {
     const result = await createNotification(options);
     if (result.status === "success") {
       setNotificationsData((notifications) => [...(notifications ?? []), result.notification]);
+      router.refresh();
       return true;
     }
     return false;
@@ -57,6 +61,7 @@ export function useNotifications() {
         (notifications) =>
           notifications?.filter((notification) => notification.id !== options.notificationId) ?? [],
       );
+      router.refresh();
       return true;
     }
     return false;
