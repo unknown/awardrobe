@@ -10,7 +10,7 @@ export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return notFound();
+    notFound();
   }
 
   const users = await prisma.user.findMany({

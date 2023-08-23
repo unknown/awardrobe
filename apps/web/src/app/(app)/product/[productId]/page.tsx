@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@ui/Button";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { VariantAttribute } from "@awardrobe/adapters";
@@ -31,17 +30,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   });
 
   if (!product) {
-    return (
-      <section className="container max-w-4xl space-y-2">
-        <h1 className="text-2xl font-medium">Product not found</h1>
-        <p>The product you&apos;re looking couldn&apos;t be found</p>
-        <div>
-          <Link href="/">
-            <Button>Go home</Button>
-          </Link>
-        </div>
-      </section>
-    );
+    notFound();
   }
 
   const productOptions: Record<string, string[]> = {};
