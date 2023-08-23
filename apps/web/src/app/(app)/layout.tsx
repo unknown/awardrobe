@@ -14,6 +14,7 @@ import {
 } from "@ui/DropdownMenu";
 import { getServerSession } from "next-auth";
 
+import { Footer } from "@/components/Footer";
 import { NavBar } from "@/components/NavBar";
 import { authOptions } from "@/utils/auth";
 
@@ -33,31 +34,7 @@ export default async function ProductLayout({ children }: ProductLayout) {
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="bg-background border-t">
-        <div className="container flex items-center justify-center py-8">
-          <p className="text-sm">
-            Made with care by{" "}
-            <a
-              className="underline underline-offset-4"
-              href="https://dmo.ooo"
-              target="_blank"
-              rel="noreferrer"
-            >
-              dmo
-            </a>
-            . Open source on{" "}
-            <a
-              className="underline underline-offset-4"
-              href="https://github.com/unknown/awardrobe"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>
-            .
-          </p>
-        </div>
-      </footer>
+      <Footer className="border-t" />
     </div>
   );
 }

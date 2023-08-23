@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
+import { Footer } from "@/components/Footer";
 import { NavBar } from "@/components/NavBar";
 
 interface MarketingLayout {
@@ -19,6 +20,7 @@ export default async function MarketingLayout({ children }: MarketingLayout) {
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      <Footer />
     </div>
   );
 }
