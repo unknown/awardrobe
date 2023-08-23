@@ -35,7 +35,7 @@ export async function ProductList({ products }: ProductListProps) {
         );
         return (
           <Link key={product.id} href={`/product/${product.id}`}>
-            <div className="relative h-full rounded-md border p-4 md:p-3">
+            <div className="relative flex h-full flex-col gap-1 rounded-md border p-4 md:p-3">
               {hasNotification ? (
                 <div className="absolute right-4 top-4 md:right-3 md:top-3">
                   <Bell className="h-4 w-4" strokeWidth={2} />

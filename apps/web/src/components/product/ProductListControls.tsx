@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
 
 import { AddProductDialog } from "@/components/product/AddProductDialog";
 
-export function ProductListControls() {
+type ProductListControlsProps = {
+  searchQuery: string;
+};
+
+export function ProductListControls({ searchQuery }: ProductListControlsProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const debouncedSearch = useRef(
     debounce(async (query) => {
@@ -28,8 +31,8 @@ export function ProductListControls() {
       <Input
         type="search"
         className="flex-1"
-        placeholder="Product or store name..."
-        defaultValue={searchParams.get("search") ?? undefined}
+        placeholder="Search"
+        defaultValue={searchQuery}
         onChange={(event) => debouncedSearch(event.target.value)}
       />
       <AddProductDialog

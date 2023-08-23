@@ -25,10 +25,9 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <section className="container max-w-4xl space-y-4">
-      <h1 className="text-xl font-bold">Products</h1>
-      <ProductListControls />
+      <h1 className="text-xl font-bold">Browse</h1>
+      <ProductListControls searchQuery={search} />
       <ProductList products={products} />
-
       {searchResponse.totalPages > 1 ? (
         <div className="flex justify-center gap-2">
           {[...Array(searchResponse.totalPages).keys()].map((index) => {
@@ -39,7 +38,6 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
                 {page}
               </Button>
             );
-
             if (isCurrentPage) {
               return <Fragment key={page}>{pageButton}</Fragment>;
             }
