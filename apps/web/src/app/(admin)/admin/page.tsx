@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
-import { formatTimeAgo } from "@/utils/utils";
+import { formatDate, formatTimeAgo } from "@/utils/utils";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -46,8 +46,11 @@ export default async function AdminPage() {
                 <tr key={user.id}>
                   <td className="border px-2">{obscureEmail(email)}</td>
                   <td className="border px-2">{user._count.productNotifications}</td>
-                  <td className="border px-2">
-                    {user.emailVerified ? formatTimeAgo(new Date(), user.emailVerified) : "n/a"}
+                  <td
+                    className="border px-2"
+                    title={user.emailVerified ? formatDate(user.emailVerified) : "n/a"}
+                  >
+                    {user.emailVerified ? formatTimeAgo(user.emailVerified) : "n/a"}
                   </td>
                 </tr>
               );

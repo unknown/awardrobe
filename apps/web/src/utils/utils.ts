@@ -14,7 +14,7 @@ export function formatTimeAgo(prev: Date, now: Date = new Date()) {
     return units < 0 ? Math.ceil(units) : Math.floor(units);
   }
 
-  let elapsedInUnits = (now.getTime() - prev.getTime()) / 1000;
+  let elapsedInUnits = (prev.getTime() - now.getTime()) / 1000;
   let roundedElapsed = rounded(elapsedInUnits);
 
   if (0 < elapsedInUnits && elapsedInUnits < 1) return "Just now";
