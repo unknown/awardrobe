@@ -6,8 +6,15 @@ const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
 });
 export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
-export type VariantInfoWithVariant = VariantInfo & {
+export type VariantFlags = {
+  isOutdated: boolean;
+  hasPriceDropped: boolean;
+  hasRestocked: boolean;
+};
+
+export type ExtendedVariantInfo = VariantInfo & {
   productVariant: ProductVariant;
+  flags: VariantFlags;
 };
 
 export type PartialPrice = {

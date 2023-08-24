@@ -7,7 +7,7 @@ import { proxies } from "@awardrobe/proxies";
 
 import { resend } from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
-import { ExtendedProduct, PartialPrice, VariantInfoWithVariant } from "./types";
+import { ExtendedProduct, ExtendedVariantInfo, PartialPrice } from "./types";
 
 export async function updateProducts(
   products: ExtendedProduct[],
@@ -23,33 +23,33 @@ export async function updateProducts(
         return;
       }
 
-      const outdatedVariants: VariantInfoWithVariant[] = [];
-      const priceDroppedVariants: VariantInfoWithVariant[] = [];
-      const restockedVariants: VariantInfoWithVariant[] = [];
-
-      await Promise.all(
+      const variantData: ExtendedVariantInfo[] = await Promise.all(
         variants.map(async (variantInfo) => {
           const variant = await getProductVariant(product, variantInfo);
-          const variantInfoWithVariant: VariantInfoWithVariant = {
+          const oldPrice = priceFromVariant.get(variant.id) ?? null;
+          return {
             ...variantInfo,
             productVariant: variant,
+            flags: getFlags(variantInfo, oldPrice),
           };
-
-          const oldPrice = priceFromVariant.get(variant.id) ?? null;
-          const flags = getFlags(variantInfoWithVariant, oldPrice);
-
-          if (flags.isOutdated) outdatedVariants.push(variantInfoWithVariant);
-          if (flags.hasPriceDropped) priceDroppedVariants.push(variantInfoWithVariant);
-          if (flags.hasRestocked) restockedVariants.push(variantInfoWithVariant);
         }),
       );
 
-      await updateOutdatedPrices(outdatedVariants, priceFromVariant);
+      await updateOutdatedPrices(
+        variantData.filter((variantInfo) => variantInfo.flags.isOutdated),
+        priceFromVariant,
+      );
 
-      await Promise.all([
-        ...priceDroppedVariants.map((variant) => handlePriceDrop(product, variant)),
-        ...restockedVariants.map((variant) => handleRestock(product, variant)),
-      ]);
+      await Promise.all(
+        variantData.map(async (variantInfo) => {
+          if (variantInfo.flags.hasPriceDropped) {
+            await handlePriceDrop(product, variantInfo);
+          }
+          if (variantInfo.flags.hasRestocked) {
+            await handleRestock(product, variantInfo);
+          }
+        }),
+      );
     } catch (error) {
       console.error(`Error updating ${product.name}\n${error}`);
     }
@@ -90,7 +90,7 @@ function attributesToMap(attributes: VariantAttribute[]) {
   }, {} as Record<string, string>);
 }
 
-function getFlags(variantInfo: VariantInfoWithVariant, oldPrice: PartialPrice | null) {
+function getFlags(variantInfo: VariantInfo, oldPrice: PartialPrice | null) {
   if (!oldPrice) {
     return {
       isOutdated: true,
@@ -117,7 +117,7 @@ function getFlags(variantInfo: VariantInfoWithVariant, oldPrice: PartialPrice | 
 }
 
 async function updateOutdatedPrices(
-  outdatedVariants: VariantInfoWithVariant[],
+  outdatedVariants: ExtendedVariantInfo[],
   priceFromVariant: Map<string, PartialPrice>,
 ) {
   await prisma.price.createMany({
@@ -134,7 +134,7 @@ async function updateOutdatedPrices(
   });
 }
 
-async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant) {
+async function handlePriceDrop(product: Product, variant: ExtendedVariantInfo) {
   const { productVariant, attributes, priceInCents } = variant;
   const description = attributes.map(({ value }) => value).join(" - ");
 
@@ -167,7 +167,7 @@ async function handlePriceDrop(product: Product, variant: VariantInfoWithVariant
   );
 }
 
-async function handleRestock(product: Product, variant: VariantInfoWithVariant) {
+async function handleRestock(product: Product, variant: ExtendedVariantInfo) {
   const { productVariant, attributes, priceInCents } = variant;
   const description = attributes.map(({ value }) => value).join(" - ");
 
