@@ -25,7 +25,14 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <section className="container max-w-4xl space-y-4">
-      <h1 className="text-xl font-bold">Browse</h1>
+      <div className="flex gap-3">
+        <h1 className="cursor-pointer text-lg font-medium underline underline-offset-2">
+          Browse All
+        </h1>
+        <Link href="/following" className="text-lg font-medium">
+          Following
+        </Link>
+      </div>
       <ProductListControls searchQuery={search} />
       <ProductList products={products} />
       {searchResponse.totalPages > 1 ? (
