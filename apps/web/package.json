@@ -26,7 +26,7 @@
     "@types/node": "^20.3.3",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
-    "@vercel/analytics": "^1.0.1",
+    "@vercel/analytics": "^1.0.2",
     "@visx/axis": "^3.3.0",
     "@visx/curve": "^3.3.0",
     "@visx/event": "^3.3.0",
