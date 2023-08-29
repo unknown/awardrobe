@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@awardrobe/proxies": "*",
-    "axios": "^1.4.0",
+    "axios": "^1.5.0",
     "https-proxy-agent": "^7.0.1",
     "node-html-parser": "^6.1.6",
     "zod": "^3.22.2"
