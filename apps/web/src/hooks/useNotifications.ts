@@ -44,28 +44,35 @@ export function useNotifications() {
     setLoading(false);
   }, []);
 
-  const addNotification = useCallback(async function (options: CreateNotificationOptions) {
-    const result = await createNotification(options);
-    if (result.status === "success") {
-      setNotificationsData((notifications) => [...(notifications ?? []), result.notification]);
-      router.refresh();
-      return true;
-    }
-    return false;
-  }, []);
+  const addNotification = useCallback(
+    async function (options: CreateNotificationOptions) {
+      const result = await createNotification(options);
+      if (result.status === "success") {
+        setNotificationsData((notifications) => [...(notifications ?? []), result.notification]);
+        router.refresh();
+        return true;
+      }
+      return false;
+    },
+    [router],
+  );
 
-  const removeNotification = useCallback(async function (options: DeleteNotificationOptions) {
-    const result = await deleteNotification(options);
-    if (result.status === "success") {
-      setNotificationsData(
-        (notifications) =>
-          notifications?.filter((notification) => notification.id !== options.notificationId) ?? [],
-      );
-      router.refresh();
-      return true;
-    }
-    return false;
-  }, []);
+  const removeNotification = useCallback(
+    async function (options: DeleteNotificationOptions) {
+      const result = await deleteNotification(options);
+      if (result.status === "success") {
+        setNotificationsData(
+          (notifications) =>
+            notifications?.filter((notification) => notification.id !== options.notificationId) ??
+            [],
+        );
+        router.refresh();
+        return true;
+      }
+      return false;
+    },
+    [router],
+  );
 
   const invalidateData = useCallback(() => {
     setNotificationsData([]);
