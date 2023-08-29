@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@types/node": "^20.3.1",
+    "@types/node": "^20.5.7",
     "dotenv-cli": "^7.3.0",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
