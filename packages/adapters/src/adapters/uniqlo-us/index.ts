@@ -101,13 +101,14 @@ async function getProductDetails(productCode: string) {
   const { name, ...options } = detailsData.result;
 
   const variants: VariantInfo[] = [];
-  let [hasColor, hasSize, hasLength] = [false, false, false];
   l2s.forEach((variant) => {
     const stocksEntry = stocks[variant.l2Id];
     const pricesEntry = prices[variant.l2Id];
     if (!pricesEntry || !stocksEntry) {
       return;
     }
+
+    const comingSoon = variant.flags.productFlags.some((flag) => flag.code === "comingSoon");
 
     const color = options.colors.find((color) => color.code === variant.color.code);
     const size = options.sizes.find((size) => size.code === variant.size.code);
@@ -119,34 +120,27 @@ async function getProductDetails(productCode: string) {
     const attributes: VariantAttribute[] = [];
     if (color.display.showFlag) {
       attributes.push({ name: "Color", value: toTitleCase(`${color.displayCode} ${color.name}`) });
-      hasColor = true;
     }
     if (size.display.showFlag) {
       attributes.push({ name: "Size", value: size.name });
-      hasSize = true;
     }
     if (pld.display.showFlag) {
       attributes.push({ name: "Length", value: pld.name });
-      hasLength = true;
     }
 
     variants.push({
       timestamp,
-      productUrl: getProductUrl(productCode, { color, size, pld }),
       attributes,
+      productUrl: getProductUrl(productCode, { color, size, pld }),
       priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
-      inStock: stocksEntry.quantity > 0,
+      inStock: comingSoon ? false : stocksEntry.quantity > 0,
     });
   });
 
   // filter variants that don't have all attributes
+  const totalNumAttributes = Math.max(...variants.map(({ attributes }) => attributes.length));
   const filteredVariants = variants.filter(({ attributes, inStock }) => {
-    const priceHasColor = attributes.some((attribute) => attribute.name === "Color");
-    const priceHasSize = attributes.some((attribute) => attribute.name === "Size");
-    const priceHasLength = attributes.some((attribute) => attribute.name === "Length");
-    const hasAllAttributes =
-      (priceHasColor || !hasColor) && (priceHasSize || !hasSize) && (priceHasLength || !hasLength);
-    return hasAllAttributes || inStock;
+    return attributes.length === totalNumAttributes || inStock;
   });
 
   return {

@@ -32,6 +32,13 @@ const okL2sSchema = z.object({
         color: partialOptionSchema,
         size: partialOptionSchema,
         pld: partialOptionSchema,
+        flags: z.object({
+          productFlags: z.array(
+            z.object({
+              code: z.string(),
+            }),
+          ),
+        }),
       }),
     ),
     stocks: z.record(z.string(), z.object({ quantity: z.number() })),
