@@ -49,7 +49,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
               return <Fragment key={page}>{pageButton}</Fragment>;
             }
             return (
-              <Link key={page} href={`/browse?search=${search}&page=${page}`}>
+              <Link key={page} href={`/browse?search=${search}&page=${page}`} prefetch={false}>
                 {pageButton}
               </Link>
             );
