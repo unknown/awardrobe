@@ -1,6 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@ui/Button";
+import { Skeleton } from "@ui/Skeleton";
 
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 
@@ -34,7 +35,22 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         </Link>
       </div>
       <ProductListControls searchQuery={search} />
-      <ProductList products={products} />
+      <Suspense
+        key={`${search}-${page}`}
+        fallback={
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+            <Skeleton className="h-[48px]" />
+          </div>
+        }
+      >
+        <ProductList products={products} />
+      </Suspense>
       {searchResponse.totalPages > 1 ? (
         <div className="flex justify-center gap-2">
           {[...Array(searchResponse.totalPages).keys()].map((index) => {
