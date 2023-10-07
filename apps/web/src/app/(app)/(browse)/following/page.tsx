@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { Skeleton } from "@ui/Skeleton";
 import { getServerSession } from "next-auth";
 
 import { prisma } from "@awardrobe/prisma-types";
@@ -20,15 +21,19 @@ export default async function FollowingPage() {
   });
 
   return (
-    <section className="container max-w-4xl space-y-4">
-      <div className="flex gap-3">
-        <Link href="/browse" className="text-lg font-medium">
-          Browse All
-        </Link>
-        <h1 className="cursor-pointer text-lg font-medium underline underline-offset-2">
-          Following
-        </h1>
-      </div>
+    <Suspense
+      fallback={
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+          <Skeleton className="h-[48px]" />
+        </div>
+      }
+    >
       <ProductList
         products={followingProducts.map(({ id, name, store }) => ({
           id,
@@ -36,6 +41,6 @@ export default async function FollowingPage() {
           storeName: store.name,
         }))}
       />
-    </section>
+    </Suspense>
   );
 }
