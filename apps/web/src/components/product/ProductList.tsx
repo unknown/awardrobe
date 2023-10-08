@@ -34,7 +34,7 @@ export async function ProductList({ products }: ProductListProps) {
           (notification) => notification.productVariant.productId === product.id,
         );
         return (
-          <Link key={product.id} href={`/product/${product.id}`}>
+          <Link key={product.id} href={`/product/${product.id}`} prefetch={false}>
             <div className="relative flex h-full flex-col gap-1 rounded-md border p-4 md:p-3">
               {hasNotification ? (
                 <div className="absolute right-4 top-4 md:right-3 md:top-3">
