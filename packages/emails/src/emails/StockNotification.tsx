@@ -43,6 +43,9 @@ export default function StockNotificationEmail({
           >
             View item
           </Button>
+          <Text className="text-sm text-[#6E748B]">
+            To prevent spam, this alert will be muted for the next 24 hours.
+          </Text>
         </Section>
       </Container>
     </BaseLayout>

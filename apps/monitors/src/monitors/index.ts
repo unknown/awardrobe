@@ -84,10 +84,13 @@ async function getProductVariant(product: ExtendedProduct, variantInfo: VariantI
 }
 
 function attributesToMap(attributes: VariantAttribute[]) {
-  return attributes.reduce((acc, attribute) => {
-    acc[attribute.name] = attribute.value;
-    return acc;
-  }, {} as Record<string, string>);
+  return attributes.reduce(
+    (acc, attribute) => {
+      acc[attribute.name] = attribute.value;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 }
 
 function getFlags(variantInfo: VariantInfo, oldPrice: PartialPrice | null) {
@@ -143,10 +146,23 @@ async function handlePriceDrop(product: Product, variant: ExtendedVariantInfo) {
   const notifications = await prisma.productNotification.findMany({
     where: {
       priceDrop: true,
-      OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: productVariant.id },
+      AND: [
+        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
+        {
+          OR: [
+            { lastPriceDropPing: null },
+            { lastPriceDropPing: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24) } },
+          ],
+        },
+      ],
     },
     include: { user: true },
+  });
+
+  await prisma.productNotification.updateMany({
+    where: { id: { in: notifications.map(({ id }) => id) } },
+    data: { lastPriceDropPing: new Date() },
   });
 
   await Promise.all(
@@ -176,10 +192,23 @@ async function handleRestock(product: Product, variant: ExtendedVariantInfo) {
   const notifications = await prisma.productNotification.findMany({
     where: {
       restock: true,
-      OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }],
       productVariant: { id: productVariant.id },
+      AND: [
+        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
+        {
+          OR: [
+            { lastRestockPing: null },
+            { lastRestockPing: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24) } },
+          ],
+        },
+      ],
     },
     include: { user: true },
+  });
+
+  await prisma.productNotification.updateMany({
+    where: { id: { in: notifications.map(({ id }) => id) } },
+    data: { lastRestockPing: new Date() },
   });
 
   await Promise.all(
