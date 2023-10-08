@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     };
     await meilisearch.index("products").addDocuments([productDocument], { primaryKey: "id" });
 
-    revalidatePath("/(app)/browse");
+    revalidatePath("/(app)/(browse)/browse", "page");
 
     return NextResponse.json<AddProductResponse>({
       status: "success",

@@ -24,6 +24,11 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     .search(search, { page, hitsPerPage: 24 });
   const products = searchResponse.hits as Product[];
 
+  const dateResponse = await fetch("http://worldtimeapi.org/api/timezone/America/New_York").then(
+    (res) => res.json(),
+  );
+  const lastDate = new Date(dateResponse.datetime);
+
   return (
     <Fragment>
       <ProductListControls searchQuery={search} />
@@ -64,6 +69,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           })}
         </div>
       ) : null}
+      <p className="text-muted-foreground text-center">Last updated: {lastDate.toLocaleString()}</p>
     </Fragment>
   );
 }
