@@ -108,12 +108,14 @@ model ProductVariant {
 }
 
 model ProductNotification {
-  id               String  @id @default(cuid())
-  userId           String
-  productVariantId String
-  priceInCents     Int?
-  restock          Boolean @default(true)
-  priceDrop        Boolean @default(true)
+  id                String    @id @default(cuid())
+  userId            String
+  productVariantId  String
+  priceInCents      Int?
+  restock           Boolean   @default(true)
+  priceDrop         Boolean   @default(true)
+  lastRestockPing   DateTime?
+  lastPriceDropPing DateTime?
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
