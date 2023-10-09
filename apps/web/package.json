@@ -39,7 +39,7 @@
     "@visx/tooltip": "^3.3.0",
     "class-variance-authority": "^0.7.0",
     "d3-array": "^3.2.4",
-    "eslint": "8.50.0",
+    "eslint": "8.51.0",
     "eslint-config-next": "^13.5.4",
     "lodash.debounce": "^4.0.8",
     "meilisearch": "^0.34.2",
