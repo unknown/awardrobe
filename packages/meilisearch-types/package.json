@@ -10,7 +10,7 @@
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
-    "meilisearch": "^0.34.2",
+    "meilisearch": "^0.35.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
