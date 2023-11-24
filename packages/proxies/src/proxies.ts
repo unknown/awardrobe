@@ -10,15 +10,18 @@ export function getRandomProxy() {
 }
 
 export function getHttpsProxyAgent(proxy: string) {
-  const agent = agentFromProxy.get(proxy) ?? new HttpsProxyAgent(proxy);
+  const existingAgent = agentFromProxy.get(proxy);
+  if (existingAgent) {
+    return existingAgent;
+  }
+
+  const agent = new HttpsProxyAgent(proxy, { keepAlive: true });
   agentFromProxy.set(proxy, agent);
+
   return agent;
 }
 
 export function getRandomHttpsProxyAgent() {
   const proxy = getRandomProxy();
-  if (!proxy) {
-    return null;
-  }
-  return getHttpsProxyAgent(proxy);
+  return proxy ? getHttpsProxyAgent(proxy) : null;
 }

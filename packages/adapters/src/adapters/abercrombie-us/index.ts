@@ -19,13 +19,18 @@ export default AbercrombieUS;
 async function getProducts(limit?: number) {
   // category 10000 represents all of A&F
   const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
-  const productCodes: string[] = [];
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
 
+  const productCodes: string[] = [];
   const increment = 100;
+
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
     const httpsAgent = getRandomHttpsProxyAgent();
-    const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
+    const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params, headers });
 
     if (searchResponse.status !== 200) {
       throw new Error(`Failed to get products. Status code: ${searchResponse.status}`);
@@ -54,7 +59,12 @@ async function getProductCode(url: string) {
 
   const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
   const httpsAgent = getRandomHttpsProxyAgent();
-  const productResponse = await axios.get(productEndpoint, { httpsAgent });
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
+
+  const productResponse = await axios.get(productEndpoint, { httpsAgent, headers });
 
   if (productResponse.status !== 200) {
     throw new Error(
@@ -78,7 +88,12 @@ async function getProductCode(url: string) {
 async function getProductDetails(productCode: string) {
   const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
   const httpsAgent = getRandomHttpsProxyAgent();
-  const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
+
+  const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent, headers });
   const timestamp = new Date();
 
   if (collectionResponse.status !== 200) {

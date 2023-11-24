@@ -17,17 +17,17 @@ export default UniqloUS;
 
 async function getProducts(limit?: number) {
   const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
-  const productCodes: string[] = [];
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
 
+  const productCodes: string[] = [];
   const increment = 100;
 
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
     const httpsAgent = getRandomHttpsProxyAgent();
     const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
-    const headers = {
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-    };
 
     const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params, headers });
 
