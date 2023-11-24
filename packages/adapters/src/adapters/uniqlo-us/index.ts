@@ -22,9 +22,14 @@ async function getProducts(limit?: number) {
   const increment = 100;
 
   for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-    const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
     const httpsAgent = getRandomHttpsProxyAgent();
-    const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
+    const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
+    const headers = {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    };
+
+    const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params, headers });
 
     if (productsResponse.status !== 200) {
       throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
@@ -57,7 +62,12 @@ async function getProductCode(url: string) {
 
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
   const httpsAgent = getRandomHttpsProxyAgent();
-  const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
+
+  const searchResponse = await axios.get(detailsEndpoint, { httpsAgent, headers });
 
   if (searchResponse.status !== 200) {
     throw new Error(`Failed to get product code from ${url}`);
@@ -76,9 +86,14 @@ async function getProductDetails(productCode: string) {
   const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
 
   const httpsAgent = getRandomHttpsProxyAgent();
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  };
+
   const [l2sResponse, detailsResponse] = await axios.all([
-    axios.get(l2sEndpoint, { httpsAgent }),
-    axios.get(detailsEndpoint, { httpsAgent }),
+    axios.get(l2sEndpoint, { httpsAgent, headers }),
+    axios.get(detailsEndpoint, { httpsAgent, headers }),
   ]);
   const timestamp = new Date();
 
