@@ -1,16 +1,11 @@
-import axios from "axios";
 import parse from "node-html-parser";
 
-import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
+import { getRandomProxy } from "@awardrobe/proxies";
 
+import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
-
-const headers = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-};
 
 function getProductUrl(product: Product, item: Item) {
   const productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
@@ -34,8 +29,8 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
       const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
-      const httpsAgent = getRandomHttpsProxyAgent();
-      const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params, headers });
+      const { httpsAgent } = getRandomProxy();
+      const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
       if (searchResponse.status !== 200) {
         throw new Error(`Failed to get products. Status code: ${searchResponse.status}`);
@@ -63,9 +58,9 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-    const httpsAgent = getRandomHttpsProxyAgent();
+    const { httpsAgent } = getRandomProxy();
 
-    const productResponse = await axios.get(productEndpoint, { httpsAgent, headers });
+    const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
     if (productResponse.status !== 200) {
       throw new Error(
@@ -88,9 +83,9 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
   // TODO: investigate why the endpoint returns false inventory data sometimes
   getProductDetails: async function getProductDetails(productCode: string) {
     const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-    const httpsAgent = getRandomHttpsProxyAgent();
+    const { httpsAgent } = getRandomProxy();
 
-    const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent, headers });
+    const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
     const timestamp = new Date();
 
     if (collectionResponse.status !== 200) {

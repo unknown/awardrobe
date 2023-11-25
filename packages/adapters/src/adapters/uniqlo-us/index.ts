@@ -1,7 +1,6 @@
-import axios from "axios";
+import { getRandomProxy } from "@awardrobe/proxies";
 
-import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
-
+import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../../utils/types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
@@ -36,7 +35,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     const increment = 100;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-      const httpsAgent = getRandomHttpsProxyAgent();
+      const { httpsAgent } = getRandomProxy();
       const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
 
       const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params, headers });
@@ -71,7 +70,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-    const httpsAgent = getRandomHttpsProxyAgent();
+    const { httpsAgent } = getRandomProxy();
 
     const searchResponse = await axios.get(detailsEndpoint, { httpsAgent, headers });
 
@@ -86,13 +85,13 @@ export const UniqloUS: StoreAdapter = Object.freeze({
 
     return productCode;
   },
+
   getProductDetails: async function getProductDetails(productCode: string) {
     const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+    const { httpsAgent } = getRandomProxy();
 
-    const httpsAgent = getRandomHttpsProxyAgent();
-
-    const [l2sResponse, detailsResponse] = await axios.all([
+    const [l2sResponse, detailsResponse] = await Promise.all([
       axios.get(l2sEndpoint, { httpsAgent, headers }),
       axios.get(detailsEndpoint, { httpsAgent, headers }),
     ]);

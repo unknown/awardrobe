@@ -1,7 +1,6 @@
-import axios from "axios";
+import { getRandomProxy } from "@awardrobe/proxies";
 
-import { getRandomHttpsProxyAgent } from "@awardrobe/proxies";
-
+import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { productInfoSchema } from "./schemas";
@@ -33,7 +32,7 @@ export const JCrewUS: StoreAdapter = Object.freeze({
 
   getProductDetails: async function getProductDetails(productCode: string) {
     const productEndpoint = `https://app.jcrew.com/browse/products/${productCode}`;
-    const httpsAgent = getRandomHttpsProxyAgent();
+    const { httpsAgent } = getRandomProxy();
     const params = {
       "country-code": "US",
       display: "standard",
