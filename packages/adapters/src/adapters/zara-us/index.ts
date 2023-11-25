@@ -4,11 +4,11 @@ import { getRandomProxy } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { toTitleCase } from "../../utils/formatter";
-import { StoreAdapter, VariantInfo } from "../../utils/types";
+import { StoreAdapter, VariantInfo } from "../types";
 import { productSchema } from "./schemas";
 
 export const ZaraUS: StoreAdapter = Object.freeze({
-  urlPrefixes: ["zara.com/us/"],
+  urlRegex: /^zara\.com\/us/,
   storeHandle: "zara-us",
 
   getProducts: async function getProducts(_?: number) {

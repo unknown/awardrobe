@@ -2,7 +2,7 @@ import { getRandomProxy } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { StoreAdapter, VariantAttribute, VariantInfo } from "../../utils/types";
+import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
 function getProductUrl(
@@ -20,7 +20,7 @@ function getProductUrl(
 }
 
 export const UniqloUS: StoreAdapter = Object.freeze({
-  urlPrefixes: ["uniqlo.com/us/"],
+  urlRegex: /^uniqlo.com\/us\//,
   storeHandle: "uniqlo-us",
 
   getProducts: async function getProducts(limit?: number) {

@@ -12,7 +12,7 @@ export type VariantInfo = {
 };
 
 export interface StoreAdapter {
-  urlPrefixes: string[];
+  urlRegex: RegExp;
   storeHandle: string;
   // TODO: create pagination interface?
   getProducts: (limit?: number) => Promise<string[]>;

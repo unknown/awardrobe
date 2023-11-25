@@ -2,7 +2,7 @@ import { getRandomProxy } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { StoreAdapter, VariantInfo } from "../../utils/types";
+import { StoreAdapter, VariantInfo } from "../types";
 import { productInfoSchema } from "./schemas";
 
 const headers = {
@@ -10,7 +10,7 @@ const headers = {
 };
 
 export const JCrewUS: StoreAdapter = Object.freeze({
-  urlPrefixes: ["jcrew.com"],
+  urlRegex: /^jcrew.com/,
   storeHandle: "jcrew-us",
 
   getProducts: async function getProducts(_?: number) {

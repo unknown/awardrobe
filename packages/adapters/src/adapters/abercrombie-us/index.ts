@@ -4,7 +4,7 @@ import { getRandomProxy } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { StoreAdapter, VariantInfo } from "../../utils/types";
+import { StoreAdapter, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
@@ -17,7 +17,7 @@ function getProductUrl(product: Product, item: Item) {
 }
 
 export const AbercrombieUS: StoreAdapter = Object.freeze({
-  urlPrefixes: ["abercrombie.com/shop/us/"],
+  urlRegex: /abercrombie.com\/shop\/us\//,
   storeHandle: "abercrombie-us",
 
   getProducts: async function getProducts(limit?: number) {
