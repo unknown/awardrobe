@@ -1,17 +1,17 @@
 import axios from "axios";
 import { z } from "zod";
 
-import { getHttpsProxyAgent, proxies } from "./proxies";
+import { proxies, Proxy } from "./proxies";
 
 const ipifySchema = z.object({ ip: z.string() });
 
 type ProxyTestResult = { success: true } | { success: false; error: string };
 
-export async function testProxy(proxy: string): Promise<ProxyTestResult> {
+export async function testProxy({ httpsAgent }: Proxy): Promise<ProxyTestResult> {
   const endpoint = "https://api.ipify.org?format=json";
-  const [withProxy, withoutProxy] = await axios.all([
-    axios.get(endpoint, { httpsAgent: getHttpsProxyAgent(proxy) }),
-    axios.get(endpoint),
+  const [withProxy, withoutProxy] = await Promise.all([
+    axios.get(endpoint, { httpsAgent, timeout: 30000 }),
+    axios.get(endpoint, { timeout: 30000 }),
   ]);
 
   if (!withProxy || !withoutProxy) {

@@ -1,8 +1,8 @@
 import { StoreAdapter } from "../utils/types";
-import AbercrombieUS from "./abercrombie-us";
-import JCrewUS from "./jcrew-us";
-import UniqloUS from "./uniqlo-us";
-import ZaraUS from "./zara-us";
+import { AbercrombieUS } from "./abercrombie-us";
+import { JCrewUS } from "./jcrew-us";
+import { UniqloUS } from "./uniqlo-us";
+import { ZaraUS } from "./zara-us";
 
 export { AbercrombieUS, JCrewUS, UniqloUS, ZaraUS };
 

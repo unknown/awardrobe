@@ -1,27 +1,28 @@
 import { HttpsProxyAgent } from "https-proxy-agent";
 
-export const proxies = process.env.PROXIES?.split(",") ?? [];
+function initializeHttpsAgent(proxy: string) {
+  return new HttpsProxyAgent(proxy, { keepAlive: true });
+}
 
-const agentFromProxy: Map<string, HttpsProxyAgent<string>> = new Map();
+const envProxies = process.env.PROXIES?.split(",") ?? [];
+
+export type Proxy = {
+  proxy: string;
+  httpsAgent: HttpsProxyAgent<string>;
+};
+
+export const proxies: Proxy[] = envProxies.map((proxy) => ({
+  proxy,
+  httpsAgent: initializeHttpsAgent(proxy),
+}));
 
 export function getRandomProxy() {
   const randomIndex = Math.floor(Math.random() * proxies.length);
-  return proxies[randomIndex] ?? null;
-}
+  const randomProxy = proxies[randomIndex] ?? null;
 
-export function getHttpsProxyAgent(proxy: string) {
-  const existingAgent = agentFromProxy.get(proxy);
-  if (existingAgent) {
-    return existingAgent;
+  if (!randomProxy) {
+    throw new Error("No proxies available");
   }
 
-  const agent = new HttpsProxyAgent(proxy, { keepAlive: true });
-  agentFromProxy.set(proxy, agent);
-
-  return agent;
-}
-
-export function getRandomHttpsProxyAgent() {
-  const proxy = getRandomProxy();
-  return proxy ? getHttpsProxyAgent(proxy) : null;
+  return randomProxy;
 }
