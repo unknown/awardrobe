@@ -25,7 +25,7 @@ function getProductUrl(
   return productUrl.href;
 }
 
-export const UniqloUS: StoreAdapter = {
+export const UniqloUS: StoreAdapter = Object.freeze({
   urlPrefixes: ["uniqlo.com/us/"],
   storeHandle: "uniqlo-us",
 
@@ -167,4 +167,4 @@ export const UniqloUS: StoreAdapter = {
       variants: filteredVariants,
     };
   },
-};
+});

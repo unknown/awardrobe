@@ -21,7 +21,7 @@ function getProductUrl(product: Product, item: Item) {
   return productUrl.href;
 }
 
-export const AbercrombieUS: StoreAdapter = {
+export const AbercrombieUS: StoreAdapter = Object.freeze({
   urlPrefixes: ["abercrombie.com/shop/us/"],
   storeHandle: "abercrombie-us",
 
@@ -161,4 +161,4 @@ export const AbercrombieUS: StoreAdapter = {
       variants,
     };
   },
-};
+});

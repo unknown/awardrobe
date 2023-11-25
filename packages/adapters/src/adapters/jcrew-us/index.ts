@@ -10,7 +10,7 @@ const headers = {
   "User-Agent": "JCrew/1.0.8 (com.jcrew.jcrew; build:686; iOS 16.5.1) Alamofire/5.7.1",
 };
 
-export const JCrewUS: StoreAdapter = {
+export const JCrewUS: StoreAdapter = Object.freeze({
   urlPrefixes: ["jcrew.com"],
   storeHandle: "jcrew-us",
 
@@ -74,4 +74,4 @@ export const JCrewUS: StoreAdapter = {
       name: productInfo.name,
     };
   },
-};
+});
