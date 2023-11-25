@@ -1,13 +1,13 @@
 import parse from "node-html-parser";
 
-import { getRandomProxy } from "@awardrobe/proxies";
+import { proxies } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
 import { productSchema } from "./schemas";
 
-export const ZaraUS: StoreAdapter = Object.freeze({
+export const ZaraUS: StoreAdapter = {
   urlRegex: /^zara\.com\/us/,
   storeHandle: "zara-us",
 
@@ -17,7 +17,7 @@ export const ZaraUS: StoreAdapter = Object.freeze({
   },
 
   getProductCode: async function getProductCode(url: string) {
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
     const initialResponse = await axios.get(url, { httpsAgent });
 
     if (initialResponse.status !== 200) {
@@ -53,7 +53,7 @@ export const ZaraUS: StoreAdapter = Object.freeze({
 
   getProductDetails: async function getProductDetails(productCode: string) {
     const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
     const params = { locale: "en_US" };
     const productResponse = await axios.get(productEndpoint, { httpsAgent, params });
     const timestamp = new Date();
@@ -86,4 +86,4 @@ export const ZaraUS: StoreAdapter = Object.freeze({
       name: toTitleCase(name),
     };
   },
-});
+};

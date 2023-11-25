@@ -13,7 +13,7 @@ export async function updateProducts(
   products: ExtendedProduct[],
   priceFromVariant: Map<string, PartialPrice>,
 ) {
-  const throttle = pThrottle({ limit: proxies.length, interval: 250 });
+  const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
   const throttledUpdate = throttle(async (product: ExtendedProduct) => {
     try {
       const adapter = getAdapter(product.store.handle);

@@ -1,4 +1,4 @@
-import { getRandomProxy } from "@awardrobe/proxies";
+import { proxies } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
@@ -9,7 +9,7 @@ const headers = {
   "User-Agent": "JCrew/1.0.8 (com.jcrew.jcrew; build:686; iOS 16.5.1) Alamofire/5.7.1",
 };
 
-export const JCrewUS: StoreAdapter = Object.freeze({
+export const JCrewUS: StoreAdapter = {
   urlRegex: /^jcrew.com/,
   storeHandle: "jcrew-us",
 
@@ -32,7 +32,7 @@ export const JCrewUS: StoreAdapter = Object.freeze({
 
   getProductDetails: async function getProductDetails(productCode: string) {
     const productEndpoint = `https://app.jcrew.com/browse/products/${productCode}`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
     const params = {
       "country-code": "US",
       display: "standard",
@@ -73,4 +73,4 @@ export const JCrewUS: StoreAdapter = Object.freeze({
       name: productInfo.name,
     };
   },
-});
+};

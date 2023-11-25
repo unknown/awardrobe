@@ -1,4 +1,4 @@
-import { getRandomProxy } from "@awardrobe/proxies";
+import { proxies } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
@@ -19,7 +19,7 @@ function getProductUrl(
   return productUrl.href;
 }
 
-export const UniqloUS: StoreAdapter = Object.freeze({
+export const UniqloUS: StoreAdapter = {
   urlRegex: /^uniqlo.com\/us\//,
   storeHandle: "uniqlo-us",
 
@@ -30,7 +30,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     const increment = 100;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-      const { httpsAgent } = getRandomProxy();
+      const { httpsAgent } = proxies.getRandomProxy();
       const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
 
       const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
@@ -65,7 +65,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
 
     const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
 
@@ -84,7 +84,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
   getProductDetails: async function getProductDetails(productCode: string) {
     const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
 
     const [l2sResponse, detailsResponse] = await Promise.all([
       axios.get(l2sEndpoint, { httpsAgent }),
@@ -161,4 +161,4 @@ export const UniqloUS: StoreAdapter = Object.freeze({
       variants: filteredVariants,
     };
   },
-});
+};

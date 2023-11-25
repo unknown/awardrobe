@@ -1,6 +1,6 @@
 import parse from "node-html-parser";
 
-import { getRandomProxy } from "@awardrobe/proxies";
+import { proxies } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
@@ -16,7 +16,7 @@ function getProductUrl(product: Product, item: Item) {
   return productUrl.href;
 }
 
-export const AbercrombieUS: StoreAdapter = Object.freeze({
+export const AbercrombieUS: StoreAdapter = {
   urlRegex: /abercrombie.com\/shop\/us\//,
   storeHandle: "abercrombie-us",
 
@@ -29,7 +29,7 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
       const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
-      const { httpsAgent } = getRandomProxy();
+      const { httpsAgent } = proxies.getRandomProxy();
       const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
       if (searchResponse.status !== 200) {
@@ -58,7 +58,7 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
 
     const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
@@ -83,7 +83,7 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
   // TODO: investigate why the endpoint returns false inventory data sometimes
   getProductDetails: async function getProductDetails(productCode: string) {
     const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-    const { httpsAgent } = getRandomProxy();
+    const { httpsAgent } = proxies.getRandomProxy();
 
     const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
     const timestamp = new Date();
@@ -156,4 +156,4 @@ export const AbercrombieUS: StoreAdapter = Object.freeze({
       variants,
     };
   },
-});
+};

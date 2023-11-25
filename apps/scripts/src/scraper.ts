@@ -1,10 +1,10 @@
 import "dotenv/config";
 
 import { AbercrombieUS, UniqloUS } from "@awardrobe/adapters";
-import { testProxies } from "@awardrobe/proxies";
+import { proxies } from "@awardrobe/proxies";
 
 async function main() {
-  const { numSuccesses, numFailures } = await testProxies();
+  const { numSuccesses, numFailures } = await proxies.testProxies();
   console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
   const limit = 1;
