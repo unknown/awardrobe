@@ -7,11 +7,6 @@ import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../../utils/types";
 import { productSchema } from "./schemas";
 
-const headers = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-};
-
 export const ZaraUS: StoreAdapter = Object.freeze({
   urlPrefixes: ["zara.com/us/"],
   storeHandle: "zara-us",
@@ -23,7 +18,7 @@ export const ZaraUS: StoreAdapter = Object.freeze({
 
   getProductCode: async function getProductCode(url: string) {
     const { httpsAgent } = getRandomProxy();
-    const initialResponse = await axios.get(url, { httpsAgent, headers });
+    const initialResponse = await axios.get(url, { httpsAgent });
 
     if (initialResponse.status !== 200) {
       throw new Error(
@@ -43,7 +38,7 @@ export const ZaraUS: StoreAdapter = Object.freeze({
     }
     const challengeUrl = `https://www.zara.com${challengeRoute}`;
 
-    const productResponse = await axios.get(challengeUrl, { httpsAgent, headers });
+    const productResponse = await axios.get(challengeUrl, { httpsAgent });
     const root = parse(productResponse.data);
 
     const htmlId = root.querySelector("html")?.getAttribute("id");
@@ -60,7 +55,7 @@ export const ZaraUS: StoreAdapter = Object.freeze({
     const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
     const { httpsAgent } = getRandomProxy();
     const params = { locale: "en_US" };
-    const productResponse = await axios.get(productEndpoint, { httpsAgent, headers, params });
+    const productResponse = await axios.get(productEndpoint, { httpsAgent, params });
     const timestamp = new Date();
 
     if (productResponse.status !== 200) {

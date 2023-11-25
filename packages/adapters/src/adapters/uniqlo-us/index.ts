@@ -5,11 +5,6 @@ import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../../utils/types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
-const headers = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-};
-
 function getProductUrl(
   productCode: string,
   attributes: { color?: Option; size?: Option; pld?: Option },
@@ -38,7 +33,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
       const { httpsAgent } = getRandomProxy();
       const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
 
-      const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params, headers });
+      const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
 
       if (productsResponse.status !== 200) {
         throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
@@ -72,7 +67,7 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
     const { httpsAgent } = getRandomProxy();
 
-    const searchResponse = await axios.get(detailsEndpoint, { httpsAgent, headers });
+    const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
 
     if (searchResponse.status !== 200) {
       throw new Error(`Failed to get product code from ${url}`);
@@ -92,8 +87,8 @@ export const UniqloUS: StoreAdapter = Object.freeze({
     const { httpsAgent } = getRandomProxy();
 
     const [l2sResponse, detailsResponse] = await Promise.all([
-      axios.get(l2sEndpoint, { httpsAgent, headers }),
-      axios.get(detailsEndpoint, { httpsAgent, headers }),
+      axios.get(l2sEndpoint, { httpsAgent }),
+      axios.get(detailsEndpoint, { httpsAgent }),
     ]);
     const timestamp = new Date();
 
