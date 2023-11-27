@@ -9,10 +9,7 @@ import { resend } from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
 import { ExtendedProduct, ExtendedVariantInfo, PartialPrice } from "./types";
 
-export async function updateProducts(
-  products: ExtendedProduct[],
-  priceFromVariant: Map<string, PartialPrice>,
-) {
+export async function updateProducts(products: ExtendedProduct[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
   const throttledUpdate = throttle(async (product: ExtendedProduct) => {
     try {
@@ -26,19 +23,15 @@ export async function updateProducts(
       const variantData: ExtendedVariantInfo[] = await Promise.all(
         variants.map(async (variantInfo) => {
           const variant = await getProductVariant(product, variantInfo);
-          const oldPrice = priceFromVariant.get(variant.id) ?? null;
           return {
             ...variantInfo,
             productVariant: variant,
-            flags: getFlags(variantInfo, oldPrice),
+            flags: getFlags(variantInfo, variant.latestPrice),
           };
         }),
       );
 
-      await updateOutdatedPrices(
-        variantData.filter((variantInfo) => variantInfo.flags.isOutdated),
-        priceFromVariant,
-      );
+      await updateOutdatedPrices(variantData.filter((variantInfo) => variantInfo.flags.isOutdated));
 
       await Promise.all(
         variantData.map(async (variantInfo) => {
@@ -75,7 +68,7 @@ async function getProductVariant(product: ExtendedProduct, variantInfo: VariantI
         productUrl,
         productId: product.id,
       },
-      include: { prices: true },
+      include: { prices: true, latestPrice: true },
     });
     product.variants.push(productVariant);
     return productVariant;
@@ -93,8 +86,8 @@ function attributesToMap(attributes: VariantAttribute[]) {
   );
 }
 
-function getFlags(variantInfo: VariantInfo, oldPrice: PartialPrice | null) {
-  if (!oldPrice) {
+function getFlags(variantInfo: VariantInfo, latestPrice: PartialPrice | null) {
+  if (!latestPrice) {
     return {
       isOutdated: true,
       hasPriceDropped: false,
@@ -102,15 +95,15 @@ function getFlags(variantInfo: VariantInfo, oldPrice: PartialPrice | null) {
     };
   }
 
-  const diffTime = variantInfo.timestamp.getTime() - oldPrice.timestamp.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = variantInfo.timestamp.getTime() - latestPrice.timestamp.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
   const isStale = diffDays >= 1;
 
-  const hasPriceChanged = variantInfo.priceInCents !== oldPrice.priceInCents;
-  const hasPriceDropped = variantInfo.priceInCents < oldPrice.priceInCents;
+  const hasPriceChanged = variantInfo.priceInCents !== latestPrice.priceInCents;
+  const hasPriceDropped = variantInfo.priceInCents < latestPrice.priceInCents;
 
-  const hasStockChanged = variantInfo.inStock !== oldPrice.inStock;
-  const hasRestocked = variantInfo.inStock && !oldPrice.inStock;
+  const hasStockChanged = variantInfo.inStock !== latestPrice.inStock;
+  const hasRestocked = variantInfo.inStock && !latestPrice.inStock;
 
   return {
     hasPriceDropped,
@@ -119,22 +112,24 @@ function getFlags(variantInfo: VariantInfo, oldPrice: PartialPrice | null) {
   };
 }
 
-async function updateOutdatedPrices(
-  outdatedVariants: ExtendedVariantInfo[],
-  priceFromVariant: Map<string, PartialPrice>,
-) {
-  await prisma.price.createMany({
-    data: outdatedVariants.map(({ productVariant, timestamp, priceInCents, inStock }) => ({
-      productVariantId: productVariant.id,
-      timestamp,
-      priceInCents,
-      inStock,
-    })),
-  });
-
-  outdatedVariants.forEach(({ productVariant, timestamp, priceInCents, inStock }) => {
-    priceFromVariant.set(productVariant.id, { timestamp, priceInCents, inStock });
-  });
+async function updateOutdatedPrices(outdatedVariants: ExtendedVariantInfo[]) {
+  await prisma.$transaction(
+    outdatedVariants.map(({ productVariant, timestamp, priceInCents, inStock }) =>
+      prisma.productVariant.update({
+        where: { id: productVariant.id },
+        data: {
+          latestPrice: {
+            create: {
+              timestamp,
+              priceInCents,
+              inStock,
+              productVariantId: productVariant.id,
+            },
+          },
+        },
+      }),
+    ),
+  );
 }
 
 async function handlePriceDrop(product: Product, variant: ExtendedVariantInfo) {

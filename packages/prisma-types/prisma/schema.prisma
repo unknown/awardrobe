@@ -87,9 +87,10 @@ model Price {
   productVariantId String
   timestamp        DateTime @default(now())
   priceInCents     Int
-  inStock          Boolean  @default(false)
+  inStock          Boolean
 
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  productVariant         ProductVariant  @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  latestInProductVariant ProductVariant? @relation("LatestPrice")
 
   @@index([productVariantId])
 }
@@ -100,9 +101,11 @@ model ProductVariant {
   productUrl    String
   attributes    Json // record from name to value
   prices        Price[]
+  latestPriceId String?               @unique
   notifications ProductNotification[]
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  latestPrice Price?  @relation("LatestPrice", fields: [latestPriceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([productId])
 }
