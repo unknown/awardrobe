@@ -2,12 +2,12 @@ import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import { prisma, Product } from "@awardrobe/prisma-types";
+import { Price, prisma, Product } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
 import { resend } from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
-import { ExtendedProduct, ExtendedVariantInfo, PartialPrice } from "./types";
+import { ExtendedProduct, ExtendedVariantInfo } from "./types";
 
 export async function updateProducts(products: ExtendedProduct[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
@@ -86,7 +86,7 @@ function attributesToMap(attributes: VariantAttribute[]) {
   );
 }
 
-function getFlags(variantInfo: VariantInfo, latestPrice: PartialPrice | null) {
+function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
   if (!latestPrice) {
     return {
       isOutdated: true,

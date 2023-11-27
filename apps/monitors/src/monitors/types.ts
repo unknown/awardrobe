@@ -19,9 +19,3 @@ export type ExtendedVariantInfo = VariantInfo & {
   productVariant: ProductVariant;
   flags: VariantFlags;
 };
-
-export type PartialPrice = {
-  timestamp: Date;
-  priceInCents: number;
-  inStock: boolean;
-};
