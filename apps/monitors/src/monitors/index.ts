@@ -95,9 +95,9 @@ function attributesToMap(attributes: VariantAttribute[]) {
 function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
   if (!latestPrice) {
     return {
-      isOutdated: true,
       hasPriceDropped: false,
       hasRestocked: false,
+      isOutdated: true,
     };
   }
 
@@ -111,10 +111,12 @@ function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
   const hasStockChanged = variantInfo.inStock !== latestPrice.inStock;
   const hasRestocked = variantInfo.inStock && !latestPrice.inStock;
 
+  const isOutdated = isStale || hasPriceChanged || hasStockChanged;
+
   return {
     hasPriceDropped,
     hasRestocked,
-    isOutdated: isStale || hasPriceChanged || hasStockChanged,
+    isOutdated,
   };
 }
 
@@ -174,9 +176,9 @@ async function handlePriceDrop(product: Product, variant: ExtendedVariantInfo) {
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Price drop",
         react: PriceNotificationEmail({
-          productName: product.name,
           description,
           priceInCents,
+          productName: product.name,
           productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
         }),
       });
@@ -220,9 +222,9 @@ async function handleRestock(product: Product, variant: ExtendedVariantInfo) {
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Item back in stock",
         react: StockNotificationEmail({
-          productName: product.name,
           description,
           priceInCents,
+          productName: product.name,
           productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
         }),
       });
