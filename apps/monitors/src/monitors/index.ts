@@ -22,18 +22,21 @@ export async function updateProducts(products: ExtendedProduct[]) {
 
       const variantData: ExtendedVariantInfo[] = await Promise.all(
         variants.map(async (variantInfo) => {
-          const variant = await getProductVariant(product, variantInfo);
+          const productVariant = await getProductVariant(product, variantInfo);
+          const flags = getFlags(variantInfo, productVariant.latestPrice);
           return {
             ...variantInfo,
-            productVariant: variant,
-            flags: getFlags(variantInfo, variant.latestPrice),
+            productVariant,
+            flags,
           };
         }),
       );
 
-      await updateOutdatedPrices(variantData.filter((variantInfo) => variantInfo.flags.isOutdated));
+      const updatePricesPromise = updateOutdatedPrices(
+        variantData.filter((variantInfo) => variantInfo.flags.isOutdated),
+      );
 
-      await Promise.all(
+      const emailsPromise = Promise.all(
         variantData.map(async (variantInfo) => {
           if (variantInfo.flags.hasPriceDropped) {
             await handlePriceDrop(product, variantInfo);
@@ -43,6 +46,8 @@ export async function updateProducts(products: ExtendedProduct[]) {
           }
         }),
       );
+
+      await Promise.all([updatePricesPromise, emailsPromise]);
     } catch (error) {
       console.error(`Error updating ${product.name}\n${error}`);
     }
@@ -54,10 +59,10 @@ export async function updateProducts(products: ExtendedProduct[]) {
 async function getProductVariant(product: ExtendedProduct, variantInfo: VariantInfo) {
   const { productUrl, attributes } = variantInfo;
   const inputAttributeMap = attributesToMap(attributes);
+
   const existingVariant = product.variants.find((productVariant) => {
     const variantAttributes = productVariant.attributes as VariantAttribute[];
-    const variantAttributeMap = attributesToMap(variantAttributes);
-    return shallowEquals(inputAttributeMap, variantAttributeMap);
+    return shallowEquals(inputAttributeMap, attributesToMap(variantAttributes));
   });
 
   if (!existingVariant) {
@@ -73,6 +78,7 @@ async function getProductVariant(product: ExtendedProduct, variantInfo: VariantI
     product.variants.push(productVariant);
     return productVariant;
   }
+
   return existingVariant;
 }
 
