@@ -121,7 +121,8 @@ function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
 }
 
 async function updateOutdatedPrices(outdatedVariants: ExtendedVariantInfo[]) {
-  await prisma.$transaction(
+  // TODO: convert this to a custom query
+  await Promise.all(
     outdatedVariants.map(({ productVariant, timestamp, priceInCents, inStock }) =>
       prisma.productVariant.update({
         where: { id: productVariant.id },
