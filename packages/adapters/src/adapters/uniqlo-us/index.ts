@@ -20,7 +20,7 @@ function getProductUrl(
 }
 
 export const UniqloUS: StoreAdapter = {
-  urlRegex: /^uniqlo.com\/us\//,
+  urlRegex: /^(?:www.)?uniqlo\.com\/us\//,
   storeHandle: "uniqlo-us",
 
   getProducts: async function getProducts(limit?: number) {

@@ -17,7 +17,7 @@ function getProductUrl(product: Product, item: Item) {
 }
 
 export const AbercrombieUS: StoreAdapter = {
-  urlRegex: /abercrombie.com\/shop\/us\//,
+  urlRegex: /^(?:www.)?abercrombie\.com\/shop\/us\//,
   storeHandle: "abercrombie-us",
 
   getProducts: async function getProducts(limit?: number) {

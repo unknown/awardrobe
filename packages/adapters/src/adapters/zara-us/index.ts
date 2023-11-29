@@ -8,7 +8,7 @@ import { StoreAdapter, VariantInfo } from "../types";
 import { productSchema } from "./schemas";
 
 export const ZaraUS: StoreAdapter = {
-  urlRegex: /^zara\.com\/us/,
+  urlRegex: /^(?:www.)?zara\.com\/us\//,
   storeHandle: "zara-us",
 
   getProducts: async function getProducts(_?: number) {

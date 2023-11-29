@@ -10,7 +10,7 @@ const headers = {
 };
 
 export const JCrewUS: StoreAdapter = {
-  urlRegex: /^jcrew.com/,
+  urlRegex: /^(?:www.)?jcrew\.com/,
   storeHandle: "jcrew-us",
 
   getProducts: async function getProducts(_?: number) {
