@@ -13,7 +13,7 @@
     "@awardrobe/proxies": "*",
     "axios": "^1.6.2",
     "https-proxy-agent": "^7.0.2",
-    "node-html-parser": "^6.1.10",
+    "node-html-parser": "^6.1.11",
     "zod": "^3.22.4"
   },
   "devDependencies": {
