@@ -44,7 +44,7 @@
     "lodash.debounce": "^4.0.8",
     "next": "^13.5.4",
     "next-auth": "^4.24.5",
-    "nodemailer": "^6.9.6",
+    "nodemailer": "^6.9.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resend": "^1.1.0",
