@@ -20,6 +20,6 @@
     "@types/node": "^20.8.3",
     "@types/react": "^18.2.25",
     "tsup": "^8.0.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   }
 }

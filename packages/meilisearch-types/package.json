@@ -19,6 +19,6 @@
     "dotenv-cli": "^7.3.0",
     "prisma": "^5.6.0",
     "tsup": "^8.0.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   }
 }
