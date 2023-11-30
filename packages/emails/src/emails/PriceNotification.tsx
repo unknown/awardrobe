@@ -38,9 +38,7 @@ export default function PriceNotificationEmail({
           <Text className="my-3 text-sm text-[#747474]">{description}</Text>
           <Text className="my-3 text-xl font-bold">{price}</Text>
           <Button
-            pX={16}
-            pY={8}
-            className="rounded-md border border-solid border-[#eaeaea] text-center text-sm text-black no-underline"
+            className="rounded-md border border-solid border-[#eaeaea] px-4 py-2 text-center text-sm text-black no-underline"
             href={productUrl}
           >
             View item

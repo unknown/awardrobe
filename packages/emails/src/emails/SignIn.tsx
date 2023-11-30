@@ -18,9 +18,7 @@ export default function SignInEmail({ url = "https://example.com" }: SignInEmail
           <Heading className="text-2xl font-medium">Sign in to Awardrobe</Heading>
           <Text className="text-sm">Click the button below to sign in to Awardrobe.</Text>
           <Button
-            pX={24}
-            pY={12}
-            className="rounded-md bg-[#109FEF] text-center text-sm font-medium text-white no-underline"
+            className="rounded-md bg-[#109FEF] px-6 py-3 text-center text-sm font-medium text-white no-underline"
             href={url}
           >
             Sign in to Awardrobe
