@@ -34,7 +34,7 @@
     "@visx/grid": "^3.3.0",
     "@visx/group": "^3.3.0",
     "@visx/responsive": "^3.3.0",
-    "@visx/scale": "^3.3.0",
+    "@visx/scale": "^3.5.0",
     "@visx/shape": "^3.5.0",
     "@visx/tooltip": "^3.3.0",
     "class-variance-authority": "^0.7.0",
