@@ -7,7 +7,7 @@ import { Prisma, prisma } from "@awardrobe/prisma-types";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { authOptions } from "@/utils/auth";
 
-const extendedProduct = Prisma.validator<Prisma.ProductArgs>()({
+const extendedProduct = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: { variants: true, store: true },
 });
 export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
@@ -24,7 +24,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const product: ExtendedProduct | null = await prisma.product.findUnique({
     where: { id: params.productId },
     include: {
-      variants: { include: { notifications: userId ? { where: { userId } } : { take: 0 } } },
+      variants: {
+        include: {
+          notifications: userId ? { where: { userId } } : { take: 0 },
+        },
+      },
       store: true,
     },
   });

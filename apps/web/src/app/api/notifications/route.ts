@@ -5,7 +5,7 @@ import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 
-const extendedNotification = Prisma.validator<Prisma.ProductNotificationArgs>()({
+const extendedNotification = Prisma.validator<Prisma.ProductNotificationDefaultArgs>()({
   include: { productVariant: { include: { product: true } } },
 });
 export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
