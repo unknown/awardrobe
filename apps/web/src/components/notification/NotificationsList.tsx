@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
@@ -13,8 +12,9 @@ export function NotificationList() {
 
   useEffect(() => {
     const abortController = new AbortController();
-    const abortSignal = abortController.signal;
-    fetchNotifications({ abortSignal });
+
+    fetchNotifications({ abortSignal: abortController.signal });
+
     return () => {
       abortController.abort();
     };
@@ -31,9 +31,7 @@ export function NotificationList() {
         return (
           <div key={id} className="flex items-center gap-3">
             <div>
-              <Link href={`/product/${productVariant.product.id}?variantId=${productVariant.id}`}>
-                <h2 className="text-lg font-medium">{productVariant.product.name}</h2>
-              </Link>
+              <h2 className="text-lg font-medium">{productVariant.productUrl}</h2>
               <p className="text-muted-foreground text-sm">{description}</p>
             </div>
             <DeleteNotificationButton

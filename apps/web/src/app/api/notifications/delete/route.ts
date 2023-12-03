@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
-import { Prisma, prisma } from "@awardrobe/prisma-types";
-
-import { authOptions } from "@/utils/auth";
+import { Prisma } from "@awardrobe/prisma-types";
+import { deleteNotification } from "@awardrobe/prisma-types/prisma/product-notification";
 
 type DeleteNotificationRequest = {
   notificationId: string;
@@ -21,22 +19,14 @@ type DeleteNotificationError = {
 export type DeleteNotificationResponse = DeleteNotificationSuccess | DeleteNotificationError;
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user.id) {
-    return NextResponse.json<DeleteNotificationResponse>(
-      { status: "error", error: "Unauthenticated" },
-      { status: 401 },
-    );
-  }
-
   try {
     const { notificationId }: DeleteNotificationRequest = await req.json();
 
-    await prisma.productNotification.delete({
-      where: { id: notificationId, userId: session.user.id },
+    await deleteNotification({ notificationId });
+
+    return NextResponse.json<DeleteNotificationResponse>({
+      status: "success",
     });
-    return NextResponse.json<DeleteNotificationResponse>({ status: "success" });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2005") {

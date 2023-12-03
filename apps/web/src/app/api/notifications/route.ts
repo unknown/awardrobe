@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { Prisma, prisma } from "@awardrobe/prisma-types";
+import { findNotificationsByUser, NotificationWithVariant } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
-
-const extendedNotification = Prisma.validator<Prisma.ProductNotificationDefaultArgs>()({
-  include: { productVariant: { include: { product: true } } },
-});
-export type ExtendedNotification = Prisma.ProductNotificationGetPayload<
-  typeof extendedNotification
->;
 
 type GetNotificationsRequest = {
   productId: string;
@@ -18,7 +11,7 @@ type GetNotificationsRequest = {
 
 type GetNotificationsSuccess = {
   status: "success";
-  notifications: ExtendedNotification[];
+  notifications: NotificationWithVariant[];
 };
 
 type GetNotificationsError = {
@@ -40,18 +33,15 @@ export async function POST(req: Request) {
 
   try {
     const { productId }: GetNotificationsRequest = await req.json();
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { id: session.user.id },
-      include: {
-        productNotifications: {
-          where: { productVariant: { productId } },
-          include: { productVariant: { include: { product: true } } },
-        },
-      },
+
+    const notifications = await findNotificationsByUser({
+      userId: session.user.id,
+      productIds: productId ? [productId] : undefined,
     });
+
     return NextResponse.json<GetNotificationsResponse>({
       status: "success",
-      notifications: user.productNotifications,
+      notifications,
     });
   } catch (e) {
     return NextResponse.json<GetNotificationsResponse>(

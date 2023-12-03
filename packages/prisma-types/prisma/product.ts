@@ -21,6 +21,7 @@ export async function findFollowingProducts(userId: string) {
 const productWithVariants = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: { variants: true, store: true },
 });
+
 export type ProductWithVariants = Prisma.ProductGetPayload<typeof productWithVariants>;
 
 export async function findProductWithVariants(productId: string) {

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { Prisma, prisma } from "@awardrobe/prisma-types";
+import { createNotification, NotificationWithVariant, Prisma } from "@awardrobe/prisma-types";
 
-import { ExtendedNotification } from "@/app/api/notifications/route";
 import { authOptions } from "@/utils/auth";
 
 export type AddNotificationRequest = {
@@ -15,7 +14,7 @@ export type AddNotificationRequest = {
 
 type AddNotificationSuccess = {
   status: "success";
-  notification: ExtendedNotification;
+  notification: NotificationWithVariant;
 };
 
 type AddNotificationError = {
@@ -46,17 +45,18 @@ export async function POST(req: Request) {
   }
 
   try {
-    const notification = await prisma.productNotification.create({
-      data: {
-        productVariant: { connect: { id: variantId } },
-        priceInCents,
-        priceDrop,
-        restock,
-        user: { connect: { id: session.user.id } },
-      },
-      include: { productVariant: { include: { product: true } } },
+    const notification = await createNotification({
+      variantId,
+      priceDrop,
+      restock,
+      userId: session.user.id,
+      priceInCents: priceInCents ?? null,
     });
-    return NextResponse.json<AddNotificationSuccess>({ status: "success", notification });
+
+    return NextResponse.json<AddNotificationSuccess>({
+      status: "success",
+      notification,
+    });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2002") {
