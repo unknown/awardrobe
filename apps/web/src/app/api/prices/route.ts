@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { Price, prisma } from "@awardrobe/prisma-types";
+import { findPrices, Price } from "@awardrobe/prisma-types";
 
 type GetPricesRequest = {
   variantId: string;
@@ -23,19 +23,10 @@ export async function POST(req: Request) {
   const { variantId, startDate }: GetPricesRequest = await req.json();
 
   try {
-    const productVariant = await prisma.productVariant.findUniqueOrThrow({
-      where: { id: variantId },
-      include: {
-        prices: {
-          where: { timestamp: { gte: startDate } },
-          orderBy: { timestamp: "asc" },
-          take: 1000,
-        },
-      },
-    });
+    const prices = await findPrices({ variantId, startDate });
     return NextResponse.json<GetPricesResponse>({
       status: "success",
-      prices: productVariant.prices,
+      prices,
     });
   } catch (e) {
     return NextResponse.json<GetPricesResponse>(
