@@ -1,7 +1,7 @@
 import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
-import { Price, prisma } from "@awardrobe/prisma-types";
+import { createProductVariant, Price } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
 import { shallowEquals } from "../utils/utils";
@@ -59,8 +59,7 @@ async function getUpdatedVariants(product: ExtendedProduct): Promise<ExtendedVar
 }
 
 async function getProductVariant(product: ExtendedProduct, variantInfo: VariantInfo) {
-  const { productUrl, attributes } = variantInfo;
-  const inputAttributeMap = attributesToMap(attributes);
+  const inputAttributeMap = attributesToMap(variantInfo.attributes);
 
   const existingVariant = product.variants.find((productVariant) => {
     const variantAttributes = productVariant.attributes as VariantAttribute[];
@@ -68,16 +67,11 @@ async function getProductVariant(product: ExtendedProduct, variantInfo: VariantI
   });
 
   if (!existingVariant) {
-    console.warn(`Creating new variant: ${JSON.stringify(attributes)}`);
-    const productVariant = await prisma.productVariant.create({
-      data: {
-        attributes,
-        productUrl,
-        productId: product.id,
-      },
-      include: { prices: true, latestPrice: true },
+    console.warn(`Creating new variant: ${JSON.stringify(variantInfo.attributes)}`);
+    const productVariant = await createProductVariant({
+      productId: product.id,
+      variantInfo,
     });
-    product.variants.push(productVariant);
     return productVariant;
   }
 
