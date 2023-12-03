@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
 import { meilisearch, Product as ProductDocument } from "@awardrobe/meilisearch-types";
-import { Prisma, prisma, Product } from "@awardrobe/prisma-types";
+import { createProduct, Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 
@@ -42,23 +42,16 @@ export async function POST(req: Request) {
     const productCode = await adapter.getProductCode(productUrl);
     const { name, variants } = await adapter.getProductDetails(productCode);
 
-    const product = await prisma.product.create({
-      data: {
-        productCode,
-        name,
-        store: { connect: { handle: adapter.storeHandle } },
-        variants: {
-          createMany: {
-            data: variants.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
-          },
-        },
-      },
-      include: { store: true },
+    const product = await createProduct({
+      name,
+      productCode,
+      variants,
+      storeHandle: adapter.storeHandle,
     });
 
     const productDocument: ProductDocument = {
-      id: product.id,
       name,
+      id: product.id,
       storeName: product.store.name,
     };
     await meilisearch.index("products").addDocuments([productDocument], { primaryKey: "id" });

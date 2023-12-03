@@ -1,6 +1,31 @@
 import { Prisma } from "@prisma/client";
 
+import { VariantInfo } from "@awardrobe/adapters";
+
 import { prisma } from "./prisma";
+
+export async function createProduct(options: {
+  name: string;
+  productCode: string;
+  storeHandle: string;
+  variants: VariantInfo[];
+}) {
+  const { name, productCode, storeHandle, variants } = options;
+
+  return await prisma.product.create({
+    data: {
+      name,
+      productCode,
+      store: { connect: { handle: storeHandle } },
+      variants: {
+        createMany: {
+          data: variants,
+        },
+      },
+    },
+    include: { store: true },
+  });
+}
 
 export async function findProductsWithLatestPrice() {
   return await prisma.product.findMany({
