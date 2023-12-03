@@ -1,4 +1,4 @@
-import { prisma } from "@awardrobe/prisma-types";
+import { findFollowingProducts } from "@awardrobe/prisma-types";
 
 import { ProductList } from "./ProductList";
 
@@ -7,10 +7,7 @@ type FollowingProductListProps = {
 };
 
 export async function FollowingProductList({ userId }: FollowingProductListProps) {
-  const followingProducts = await prisma.product.findMany({
-    where: { variants: { some: { notifications: { some: { userId } } } } },
-    include: { store: true },
-  });
+  const followingProducts = await findFollowingProducts(userId);
 
   return (
     <ProductList

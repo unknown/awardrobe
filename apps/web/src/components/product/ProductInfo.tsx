@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
+import { ProductWithVariants } from "@awardrobe/prisma-types";
 
-import { ExtendedProduct } from "@/app/(app)/product/[productId]/page";
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { formatCurrency } from "@/utils/utils";
 import { DateRange, usePrices } from "../../hooks/usePrices";
@@ -13,7 +13,7 @@ import { ChartPrice, ProductChart } from "./ProductChart";
 import { DateRangeControl, VariantControls } from "./ProductControls";
 
 export type ProductInfoProps = {
-  product: ExtendedProduct;
+  product: ProductWithVariants;
   productOptions: Record<string, string[]>;
   initialAttributes: Record<string, string>;
   initialVariantId: string | null;
