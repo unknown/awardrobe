@@ -15,6 +15,11 @@ export type VariantFlags = {
   hasRestocked: boolean;
 };
 
+export type UpdateVariantCallback = (
+  product: ExtendedProduct,
+  variantInfo: ExtendedVariantInfo,
+) => Promise<void>;
+
 export type ExtendedVariantInfo = VariantInfo & {
   productVariant: ProductVariant;
   flags: VariantFlags;
