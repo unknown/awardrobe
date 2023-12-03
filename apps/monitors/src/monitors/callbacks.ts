@@ -55,7 +55,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
     data: { lastPriceDropPing: new Date() },
   });
 
-  await Promise.all(
+  await Promise.allSettled(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
       await resend.emails.send({
@@ -104,7 +104,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock(
     data: { lastRestockPing: new Date() },
   });
 
-  await Promise.all(
+  await Promise.allSettled(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
       await resend.emails.send({
