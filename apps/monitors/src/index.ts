@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import cron from "node-cron";
 
-import { prisma } from "@awardrobe/prisma-types";
+import { findProductsWithLatestPrice } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
 import { updateProducts } from "./monitors";
@@ -12,12 +12,7 @@ async function setupMonitors() {
     try {
       const start = Date.now();
 
-      const products = await prisma.product.findMany({
-        include: {
-          variants: { include: { latestPrice: true } },
-          store: true,
-        },
-      });
+      const products = await findProductsWithLatestPrice();
 
       console.log(`Updating ${products.length} products`);
 

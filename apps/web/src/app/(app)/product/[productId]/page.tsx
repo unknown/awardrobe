@@ -1,16 +1,9 @@
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { Prisma, prisma } from "@awardrobe/prisma-types";
+import { findProductWithVariants } from "@awardrobe/prisma-types";
 
 import { ProductInfo } from "@/components/product/ProductInfo";
-import { authOptions } from "@/utils/auth";
-
-const extendedProduct = Prisma.validator<Prisma.ProductDefaultArgs>()({
-  include: { variants: true, store: true },
-});
-export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
 
 type ProductPageProps = {
   params: { productId: string };
@@ -18,20 +11,7 @@ type ProductPageProps = {
 };
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user.id;
-
-  const product: ExtendedProduct | null = await prisma.product.findUnique({
-    where: { id: params.productId },
-    include: {
-      variants: {
-        include: {
-          notifications: userId ? { where: { userId } } : { take: 0 },
-        },
-      },
-      store: true,
-    },
-  });
+  const product = await findProductWithVariants(params.productId);
 
   if (!product) {
     notFound();
