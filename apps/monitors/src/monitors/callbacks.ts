@@ -35,7 +35,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
 
   await updateLastPingByType({
     type: "priceDrop",
-    notificationIds: notifications.map(({ id }) => id),
+    notificationIds: notifications.map((notification) => notification.id),
   });
 
   await Promise.allSettled(
@@ -73,7 +73,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock(
 
   await updateLastPingByType({
     type: "restock",
-    notificationIds: notifications.map(({ id }) => id),
+    notificationIds: notifications.map((notification) => notification.id),
   });
 
   await Promise.allSettled(
