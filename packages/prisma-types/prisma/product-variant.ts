@@ -1,4 +1,4 @@
-import { VariantAttribute, VariantInfo } from "@awardrobe/adapters";
+import { VariantInfo } from "@awardrobe/adapters";
 
 import { prisma } from "./prisma";
 
