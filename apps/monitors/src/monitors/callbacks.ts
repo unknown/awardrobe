@@ -1,34 +1,24 @@
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import { prisma } from "@awardrobe/prisma-types";
+import { createLatestPrice, prisma } from "@awardrobe/prisma-types";
 
 import { resend } from "../utils/emailer";
 import { ExtendedProduct, ExtendedVariantInfo, UpdateVariantCallback, VariantFlags } from "./types";
 
 const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant(
   _: ExtendedProduct,
-  { productVariant, timestamp, priceInCents, inStock }: ExtendedVariantInfo,
+  variantInfo: ExtendedVariantInfo,
 ) {
-  // TODO: convert this to a custom query
-  await prisma.productVariant.update({
-    where: { id: productVariant.id },
-    data: {
-      latestPrice: {
-        create: {
-          timestamp,
-          priceInCents,
-          inStock,
-          productVariantId: productVariant.id,
-        },
-      },
-    },
+  await createLatestPrice({
+    variantInfo,
+    variantId: variantInfo.productVariant.id,
   });
 };
 
 const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
   product: ExtendedProduct,
-  variant: ExtendedVariantInfo,
+  variantInfo: ExtendedVariantInfo,
 ) {
-  const { productVariant, attributes, priceInCents } = variant;
+  const { productVariant, attributes, priceInCents } = variantInfo;
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
@@ -75,9 +65,9 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
 
 const restockCallback: UpdateVariantCallback = async function handleRestock(
   product: ExtendedProduct,
-  variant: ExtendedVariantInfo,
+  variantInfo: ExtendedVariantInfo,
 ) {
-  const { productVariant, attributes, priceInCents } = variant;
+  const { productVariant, attributes, priceInCents } = variantInfo;
   const description = attributes.map(({ value }) => value).join(" - ");
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
