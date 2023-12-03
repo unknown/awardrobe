@@ -1,59 +1,61 @@
 import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
-import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import { Price, prisma, Product } from "@awardrobe/prisma-types";
+import { Price, prisma } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
-import { resend } from "../utils/emailer";
 import { shallowEquals } from "../utils/utils";
-import { ExtendedProduct, ExtendedVariantInfo } from "./types";
+import { updateVariantCallbacks } from "./callbacks";
+import { ExtendedProduct, ExtendedVariantInfo, VariantFlags } from "./types";
 
 export async function updateProducts(products: ExtendedProduct[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
-  const throttledUpdate = throttle(async (product: ExtendedProduct) => {
-    try {
-      const adapter = getAdapter(product.store.handle);
-      const { variants } = await adapter.getProductDetails(product.productCode);
-      if (variants.length === 0) {
-        console.warn(`Product ${product.productCode} has empty data`);
-        return;
-      }
+  const throttledGetUpdatedVariants = throttle(getUpdatedVariants);
 
-      const variantData: ExtendedVariantInfo[] = await Promise.all(
-        variants.map(async (variantInfo) => {
-          const productVariant = await getProductVariant(product, variantInfo);
-          const flags = getFlags(variantInfo, productVariant.latestPrice);
-          return {
-            ...variantInfo,
-            productVariant,
-            flags,
-          };
-        }),
-      );
+  await Promise.allSettled(
+    products.map(async (product) => {
+      const variants = await throttledGetUpdatedVariants(product).catch((error) => {
+        console.error(`Error updating ${product.name}\n${error}`);
+        return [] as ExtendedVariantInfo[];
+      });
 
-      const updatePricesPromise = updateOutdatedPrices(
-        variantData.filter((variantInfo) => variantInfo.flags.isOutdated),
-      );
-
-      const emailsPromise = Promise.all(
-        variantData.map(async (variantInfo) => {
-          if (variantInfo.flags.hasPriceDropped) {
-            await handlePriceDrop(product, variantInfo);
+      const variantsCallbacks = variants.map(async (variantInfo) => {
+        const variantCallbacks = Object.entries(variantInfo.flags).map(([flagString, value]) => {
+          if (!value) {
+            return null;
           }
-          if (variantInfo.flags.hasRestocked) {
-            await handleRestock(product, variantInfo);
-          }
-        }),
-      );
 
-      await Promise.all([updatePricesPromise, emailsPromise]);
-    } catch (error) {
-      console.error(`Error updating ${product.name}\n${error}`);
-    }
-  });
+          const flag = flagString as keyof VariantFlags;
+          return updateVariantCallbacks[flag](product, variantInfo);
+        });
 
-  await Promise.all(products.map(throttledUpdate));
+        return Promise.allSettled(variantCallbacks);
+      });
+
+      await Promise.allSettled(variantsCallbacks);
+    }),
+  );
+}
+
+async function getUpdatedVariants(product: ExtendedProduct): Promise<ExtendedVariantInfo[]> {
+  const adapter = getAdapter(product.store.handle);
+
+  const { variants } = await adapter.getProductDetails(product.productCode);
+  if (variants.length === 0) {
+    console.warn(`Fetching ${product.productCode} returned empty data`);
+  }
+
+  return Promise.all(
+    variants.map(async (variantInfo) => {
+      const productVariant = await getProductVariant(product, variantInfo);
+      const flags = getFlags(variantInfo, productVariant.latestPrice);
+      return {
+        ...variantInfo,
+        productVariant,
+        flags,
+      };
+    }),
+  );
 }
 
 async function getProductVariant(product: ExtendedProduct, variantInfo: VariantInfo) {
@@ -118,117 +120,4 @@ function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
     hasRestocked,
     isOutdated,
   };
-}
-
-async function updateOutdatedPrices(outdatedVariants: ExtendedVariantInfo[]) {
-  // TODO: convert this to a custom query
-  await Promise.all(
-    outdatedVariants.map(({ productVariant, timestamp, priceInCents, inStock }) =>
-      prisma.productVariant.update({
-        where: { id: productVariant.id },
-        data: {
-          latestPrice: {
-            create: {
-              timestamp,
-              priceInCents,
-              inStock,
-              productVariantId: productVariant.id,
-            },
-          },
-        },
-      }),
-    ),
-  );
-}
-
-async function handlePriceDrop(product: Product, variant: ExtendedVariantInfo) {
-  const { productVariant, attributes, priceInCents } = variant;
-  const description = attributes.map(({ value }) => value).join(" - ");
-
-  console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
-
-  const notifications = await prisma.productNotification.findMany({
-    where: {
-      priceDrop: true,
-      productVariant: { id: productVariant.id },
-      AND: [
-        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
-        {
-          OR: [
-            { lastPriceDropPing: null },
-            { lastPriceDropPing: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24) } },
-          ],
-        },
-      ],
-    },
-    include: { user: true },
-  });
-
-  await prisma.productNotification.updateMany({
-    where: { id: { in: notifications.map(({ id }) => id) } },
-    data: { lastPriceDropPing: new Date() },
-  });
-
-  await Promise.all(
-    notifications.map(async (notification) => {
-      if (!notification.user.email) return;
-      await resend.emails.send({
-        to: [notification.user.email],
-        from: "Awardrobe <notifications@getawardrobe.com>",
-        subject: "Price drop",
-        react: PriceNotificationEmail({
-          description,
-          priceInCents,
-          productName: product.name,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-        }),
-      });
-    }),
-  );
-}
-
-async function handleRestock(product: Product, variant: ExtendedVariantInfo) {
-  const { productVariant, attributes, priceInCents } = variant;
-  const description = attributes.map(({ value }) => value).join(" - ");
-
-  console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
-
-  const notifications = await prisma.productNotification.findMany({
-    where: {
-      restock: true,
-      productVariant: { id: productVariant.id },
-      AND: [
-        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
-        {
-          OR: [
-            { lastRestockPing: null },
-            { lastRestockPing: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24) } },
-          ],
-        },
-      ],
-    },
-    include: { user: true },
-  });
-
-  await prisma.productNotification.updateMany({
-    where: { id: { in: notifications.map(({ id }) => id) } },
-    data: { lastRestockPing: new Date() },
-  });
-
-  await Promise.all(
-    notifications.map(async (notification) => {
-      if (!notification.user.email) return;
-      await resend.emails.send({
-        to: [notification.user.email],
-        from: "Awardrobe <notifications@getawardrobe.com>",
-        subject: "Item back in stock",
-        react: StockNotificationEmail({
-          description,
-          priceInCents,
-          productName: product.name,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
-        }),
-      });
-    }),
-  );
 }
