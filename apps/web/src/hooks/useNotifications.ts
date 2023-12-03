@@ -1,12 +1,14 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { NotificationWithVariant } from "@awardrobe/prisma-types";
+
 import {
   AddNotificationRequest,
   AddNotificationResponse,
 } from "@/app/api/notifications/create/route";
 import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route";
-import { ExtendedNotification, GetNotificationsResponse } from "@/app/api/notifications/route";
+import { GetNotificationsResponse } from "@/app/api/notifications/route";
 
 export type FetchNotificationsOptions = {
   productId?: string;
@@ -28,7 +30,9 @@ export function useNotifications() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [notificationsData, setNotificationsData] = useState<ExtendedNotification[] | null>(null);
+  const [notificationsData, setNotificationsData] = useState<NotificationWithVariant[] | null>(
+    null,
+  );
 
   const fetchNotifications = useCallback(async function (options: FetchNotificationsOptions) {
     setLoading(true);

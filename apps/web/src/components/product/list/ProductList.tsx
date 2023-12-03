@@ -3,7 +3,7 @@ import { Bell } from "@icons/Bell";
 import { getServerSession } from "next-auth";
 
 import { Product } from "@awardrobe/meilisearch-types";
-import { prisma } from "@awardrobe/prisma-types";
+import { findNotificationsByUser } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 
@@ -18,12 +18,9 @@ export async function ProductList({ products }: ProductListProps) {
 
   const session = await getServerSession(authOptions);
   const notifications = session
-    ? await prisma.productNotification.findMany({
-        where: {
-          productVariant: { productId: { in: products.map((product) => product.id) } },
-          userId: session.user.id,
-        },
-        include: { productVariant: true },
+    ? await findNotificationsByUser({
+        userId: session.user.id,
+        productIds: products.map((product) => product.id),
       })
     : [];
 
