@@ -2,19 +2,21 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
-import { meilisearch, Product } from "@awardrobe/meilisearch-types";
+import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
 import { ProductList } from "./ProductList";
 
 type BrowseProductListProps = {
-  search: string;
+  query: string;
   page: number;
 };
 
-export async function BrowseProductList({ search, page }: BrowseProductListProps) {
-  const searchResponse = await meilisearch
-    .index("products")
-    .search(search, { page, hitsPerPage: 24 });
+export async function BrowseProductList({ query, page }: BrowseProductListProps) {
+  const searchResponse = await searchProducts({
+    page,
+    query,
+    hitsPerPage: 24,
+  });
 
   return (
     <Fragment>
@@ -33,7 +35,7 @@ export async function BrowseProductList({ search, page }: BrowseProductListProps
               return <Fragment key={page}>{pageButton}</Fragment>;
             }
             return (
-              <Link key={page} href={`/browse?search=${search}&page=${page}`}>
+              <Link key={page} href={`/browse?q=${query}&page=${page}`}>
                 {pageButton}
               </Link>
             );

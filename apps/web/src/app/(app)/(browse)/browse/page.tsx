@@ -6,13 +6,13 @@ import { ProductListControls } from "@/components/product/list/ProductListContro
 
 type BrowsePageProps = {
   searchParams: {
-    search?: string;
+    q?: string;
     page?: string;
   };
 };
 
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
-  const search = searchParams.search ?? "";
+  const query = searchParams.q ?? "";
   const page = Number(searchParams.page) || 1;
 
   const apiDateTime = await fetch("http://worldtimeapi.org/api/timezone/America/New_York")
@@ -22,9 +22,9 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
   return (
     <Fragment>
-      <ProductListControls searchQuery={search} />
+      <ProductListControls searchQuery={query} />
       <Suspense
-        key={`${search}-${page}`}
+        key={`${query}-${page}`}
         fallback={
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {[...Array(6)].map((_, i) => (
@@ -33,7 +33,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           </div>
         }
       >
-        <BrowseProductList search={search} page={page} />
+        <BrowseProductList query={query} page={page} />
       </Suspense>
       <p className="text-muted-foreground text-center">Last updated at {lastDate.toISOString()}</p>
     </Fragment>

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct } from "@awardrobe/db";
-import { meilisearch, Product as ProductDocument } from "@awardrobe/meilisearch-types";
+import { addProduct } from "@awardrobe/meilisearch-types";
 import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
@@ -50,12 +50,11 @@ export async function POST(req: Request) {
       storeHandle: adapter.storeHandle,
     });
 
-    const productDocument: ProductDocument = {
+    await addProduct({
       name,
       id: product.id,
       storeName: product.store.name,
-    };
-    await meilisearch.index("products").addDocuments([productDocument], { primaryKey: "id" });
+    });
 
     revalidatePath("/(app)/(browse)/browse", "page");
 

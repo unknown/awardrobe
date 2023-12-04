@@ -16,8 +16,8 @@ export function ProductListControls({ searchQuery }: ProductListControlsProps) {
 
   const debouncedSearch = useRef(
     debounce(async (query) => {
-      router.push(`/browse?search=${query}`);
-    }, 500),
+      router.push(`/browse?q=${query}`);
+    }, 1000),
   ).current;
 
   useEffect(() => {
@@ -34,6 +34,12 @@ export function ProductListControls({ searchQuery }: ProductListControlsProps) {
         placeholder="Search"
         defaultValue={searchQuery}
         onChange={(event) => debouncedSearch(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            debouncedSearch.cancel();
+            router.push(`/browse?q=${event.currentTarget.value}`);
+          }
+        }}
       />
       <AddProductDialog
         onAddProduct={({ id }) => {

@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --parallel",
     "start": "turbo run start",
     "clean": "turbo run clean && rm -rf node_modules"
   },
