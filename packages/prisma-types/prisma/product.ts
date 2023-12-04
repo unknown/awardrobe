@@ -45,10 +45,22 @@ export async function findProductsWithLatestPrice(): Promise<ProductWithLatestPr
   });
 }
 
-export async function findFollowingProducts(userId: string) {
+export async function findFollowingProducts(options: {
+  userId: string;
+  includeFollowingVariants?: boolean;
+}) {
+  const { userId, includeFollowingVariants } = options;
+
   return await prisma.product.findMany({
-    include: { store: true },
     where: { variants: { some: { notifications: { some: { userId } } } } },
+    include: {
+      store: true,
+      variants: includeFollowingVariants
+        ? {
+            where: { notifications: { some: { userId } } },
+          }
+        : undefined,
+    },
   });
 }
 

@@ -7,7 +7,7 @@ type FollowingProductListProps = {
 };
 
 export async function FollowingProductList({ userId }: FollowingProductListProps) {
-  const followingProducts = await findFollowingProducts(userId);
+  const followingProducts = await findFollowingProducts({ userId });
 
   return (
     <ProductList
