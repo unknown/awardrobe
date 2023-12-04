@@ -1,14 +1,14 @@
 import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
-import { createProductVariant, Price } from "@awardrobe/prisma-types";
+import { createProductVariant, Price, ProductWithLatestPrice } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
 import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
-import { ExtendedProduct, ExtendedVariantInfo, VariantFlags } from "./types";
+import { ExtendedVariantInfo, VariantFlags } from "./types";
 
-export async function updateProducts(products: ExtendedProduct[]) {
+export async function updateProducts(products: ProductWithLatestPrice[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
   const throttledGetUpdatedVariants = throttle(getUpdatedVariants);
 
@@ -20,13 +20,14 @@ export async function updateProducts(products: ExtendedProduct[]) {
       });
 
       const variantsCallbacks = variants.map(async (variantInfo) => {
-        const variantCallbacks = Object.entries(variantInfo.flags).map(([flagString, value]) => {
+        const options = { product, variantInfo };
+
+        const variantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
           if (!value) {
             return null;
           }
 
-          const flag = flagString as keyof VariantFlags;
-          return updateVariantCallbacks[flag](product, variantInfo);
+          return updateVariantCallbacks[flag as keyof VariantFlags](options);
         });
 
         return Promise.allSettled(variantCallbacks);
@@ -37,7 +38,7 @@ export async function updateProducts(products: ExtendedProduct[]) {
   );
 }
 
-async function getUpdatedVariants(product: ExtendedProduct): Promise<ExtendedVariantInfo[]> {
+async function getUpdatedVariants(product: ProductWithLatestPrice): Promise<ExtendedVariantInfo[]> {
   const adapter = getAdapter(product.store.handle);
 
   const { variants } = await adapter.getProductDetails(product.productCode);
@@ -58,7 +59,7 @@ async function getUpdatedVariants(product: ExtendedProduct): Promise<ExtendedVar
   );
 }
 
-async function getProductVariant(product: ExtendedProduct, variantInfo: VariantInfo) {
+async function getProductVariant(product: ProductWithLatestPrice, variantInfo: VariantInfo) {
   const inputAttributeMap = attributesToMap(variantInfo.attributes);
 
   const existingVariant = product.variants.find((productVariant) => {

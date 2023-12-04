@@ -1,13 +1,5 @@
 import { VariantInfo } from "@awardrobe/adapters";
-import { Prisma, ProductVariant } from "@awardrobe/prisma-types";
-
-const extendedProduct = Prisma.validator<Prisma.ProductDefaultArgs>()({
-  include: {
-    variants: { include: { latestPrice: true } },
-    store: true,
-  },
-});
-export type ExtendedProduct = Prisma.ProductGetPayload<typeof extendedProduct>;
+import { ProductVariant, ProductWithLatestPrice } from "@awardrobe/prisma-types";
 
 export type VariantFlags = {
   isOutdated: boolean;
@@ -15,10 +7,10 @@ export type VariantFlags = {
   hasRestocked: boolean;
 };
 
-export type UpdateVariantCallback = (
-  product: ExtendedProduct,
-  variantInfo: ExtendedVariantInfo,
-) => Promise<void>;
+export type UpdateVariantCallback = (options: {
+  product: ProductWithLatestPrice;
+  variantInfo: ExtendedVariantInfo;
+}) => Promise<void>;
 
 export type ExtendedVariantInfo = VariantInfo & {
   productVariant: ProductVariant;
