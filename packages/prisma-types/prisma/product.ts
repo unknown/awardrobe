@@ -27,7 +27,16 @@ export async function createProduct(options: {
   });
 }
 
-export async function findProductsWithLatestPrice() {
+const productWithLatestPrice = Prisma.validator<Prisma.ProductDefaultArgs>()({
+  include: {
+    variants: { include: { latestPrice: true } },
+    store: true,
+  },
+});
+
+export type ProductWithLatestPrice = Prisma.ProductGetPayload<typeof productWithLatestPrice>;
+
+export async function findProductsWithLatestPrice(): Promise<ProductWithLatestPrice[]> {
   return await prisma.product.findMany({
     include: {
       variants: { include: { latestPrice: true } },
@@ -49,7 +58,9 @@ const productWithVariants = Prisma.validator<Prisma.ProductDefaultArgs>()({
 
 export type ProductWithVariants = Prisma.ProductGetPayload<typeof productWithVariants>;
 
-export async function findProductWithVariants(productId: string) {
+export async function findProductWithVariants(
+  productId: string,
+): Promise<ProductWithVariants | null> {
   return await prisma.product.findUnique({
     ...productWithVariants,
     where: { id: productId },

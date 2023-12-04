@@ -6,22 +6,21 @@ import {
 } from "@awardrobe/prisma-types";
 
 import { resend } from "../utils/emailer";
-import { ExtendedProduct, ExtendedVariantInfo, UpdateVariantCallback, VariantFlags } from "./types";
+import { UpdateVariantCallback, VariantFlags } from "./types";
 
-const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant(
-  _: ExtendedProduct,
-  variantInfo: ExtendedVariantInfo,
-) {
+const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({
+  variantInfo,
+}) {
   await createLatestPrice({
     variantInfo,
     variantId: variantInfo.productVariant.id,
   });
 };
 
-const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
-  product: ExtendedProduct,
-  variantInfo: ExtendedVariantInfo,
-) {
+const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop({
+  product,
+  variantInfo,
+}) {
   const { productVariant, attributes, priceInCents } = variantInfo;
   const description = attributes.map(({ value }) => value).join(" - ");
 
@@ -56,10 +55,10 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
   );
 };
 
-const restockCallback: UpdateVariantCallback = async function handleRestock(
-  product: ExtendedProduct,
-  variantInfo: ExtendedVariantInfo,
-) {
+const restockCallback: UpdateVariantCallback = async function handleRestock({
+  product,
+  variantInfo,
+}) {
   const { productVariant, attributes, priceInCents } = variantInfo;
   const description = attributes.map(({ value }) => value).join(" - ");
 
