@@ -7,17 +7,16 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "db:generate": "npm run with-env -- prisma generate",
-    "db:push": "npm run with-env -- prisma db push --skip-generate",
-    "dev": "npm run with-env -- prisma studio --browser none",
+    "db:generate": "pnpm with-env prisma generate",
+    "db:push": "pnpm with-env prisma db push --skip-generate",
+    "dev": "pnpm with-env prisma studio --browser none",
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
-    "@awardrobe/adapters": "*",
     "@prisma/client": "^5.6.0"
   },
   "devDependencies": {
-    "@awardrobe/tsconfig": "*",
+    "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "dotenv-cli": "^7.3.0",
     "prisma": "^5.6.0",

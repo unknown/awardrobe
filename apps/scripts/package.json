@@ -5,18 +5,19 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "db:seed": "npm run with-env -- ts-node -r tsconfig-paths/register --transpile-only src/seed.ts",
-    "scraper": "npm run with-env -- ts-node -r tsconfig-paths/register --transpile-only src/scraper.ts"
+    "db:seed": "pnpm with-env ts-node -r tsconfig-paths/register --transpile-only src/seed.ts",
+    "scraper": "pnpm with-env ts-node -r tsconfig-paths/register --transpile-only src/scraper.ts"
   },
   "dependencies": {
-    "@awardrobe/adapters": "*",
-    "@awardrobe/meilisearch-types": "*",
-    "@awardrobe/prisma-types": "*",
-    "@awardrobe/proxies": "*",
-    "@awardrobe/tsconfig": "*",
+    "@awardrobe/adapters": "workspace:^",
+    "@awardrobe/meilisearch-types": "workspace:^",
+    "@awardrobe/prisma-types": "workspace:^",
+    "@awardrobe/proxies": "workspace:^",
+    "@awardrobe/tsconfig": "workspace:^",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "dotenv-cli": "^7.3.0",
     "nodemon": "^3.0.2",

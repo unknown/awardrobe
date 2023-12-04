@@ -5,22 +5,24 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "dev": "npm run with-env -- nodemon",
-    "build": "npm run with-env -- tsc",
-    "start": "npm run with-env -- node dist/index.js"
+    "dev": "pnpm with-env nodemon",
+    "build": "pnpm with-env tsc",
+    "start": "pnpm with-env node dist/index.js"
   },
   "dependencies": {
-    "@awardrobe/adapters": "*",
-    "@awardrobe/db": "*",
-    "@awardrobe/emails": "*",
-    "@awardrobe/prisma-types": "*",
-    "@awardrobe/tsconfig": "*",
+    "@awardrobe/adapters": "workspace:^",
+    "@awardrobe/db": "workspace:^",
+    "@awardrobe/emails": "workspace:^",
+    "@awardrobe/prisma-types": "workspace:^",
+    "@awardrobe/proxies": "workspace:^",
+    "@awardrobe/tsconfig": "workspace:^",
     "dotenv": "^16.3.1",
     "node-cron": "^3.0.3",
     "p-throttle": "^4.1.1",
     "resend": "^2.0.0"
   },
   "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "@types/node-cron": "^3.0.11",
     "dotenv-cli": "^7.3.0",

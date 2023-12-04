@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rm -rf .react-email .turbo node_modules dist",
     "emails:preview": "email dev --dir src/emails --port 3001",
-    "dev": "npm run build -- --watch",
+    "dev": "pnpm build --watch",
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
@@ -16,7 +16,7 @@
     "react-email": "^1.10.0"
   },
   "devDependencies": {
-    "@awardrobe/tsconfig": "*",
+    "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "@types/react": "^18.2.41",
     "tsup": "^8.0.1",

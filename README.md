@@ -27,12 +27,12 @@ To get a local instance running, please follow these steps.
 ### Prerequisites
 
 - Node.js
-- npm
+- pnpm
 - Instances of MySQL and Meilisearch
 
 ### Development
 
 1. Clone the repository
-1. Run `npm install`
+1. Run `pnpm install`
 1. Create a `.env` file if it doesn't already exist
-1. Run `npm run dev`
+1. Run `pnpm run dev`
