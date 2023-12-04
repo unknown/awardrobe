@@ -14,16 +14,13 @@
     "@awardrobe/db": "*",
     "@awardrobe/emails": "*",
     "@awardrobe/prisma-types": "*",
-    "@awardrobe/proxies": "*",
     "@awardrobe/tsconfig": "*",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
     "node-cron": "^3.0.3",
     "p-throttle": "^4.1.1",
     "resend": "^2.0.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/node": "^20.10.1",
     "@types/node-cron": "^3.0.11",
     "dotenv-cli": "^7.3.0",

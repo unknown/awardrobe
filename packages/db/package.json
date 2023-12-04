@@ -6,7 +6,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "with-env": "dotenv -e ../../.env --",
+    "dev": "npm run build -- --watch",
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
@@ -15,7 +15,6 @@
   "devDependencies": {
     "@awardrobe/tsconfig": "*",
     "@types/node": "^20.10.1",
-    "dotenv-cli": "^7.3.0",
     "tsup": "^8.0.1",
     "typescript": "^5.3.2"
   }
