@@ -9,12 +9,13 @@ const inter = Inter({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://awardrobe.co"),
   title: "Awardrobe",
   description: "Track prices and set alerts while building your wardrobe.",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://getawardrobe.com",
+    url: "https://awardrobe.co",
     title: "Awardrobe — Shopping for clothes made simple",
     description: "Track prices and set alerts while building your wardrobe.",
     siteName: "Awardrobe",
