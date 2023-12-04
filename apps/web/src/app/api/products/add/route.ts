@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
+import { createProduct } from "@awardrobe/db";
 import { meilisearch, Product as ProductDocument } from "@awardrobe/meilisearch-types";
-import { createProduct, Prisma, Product } from "@awardrobe/prisma-types";
+import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 

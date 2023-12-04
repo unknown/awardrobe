@@ -1,5 +1,6 @@
 import { VariantInfo } from "@awardrobe/adapters";
-import { ProductVariant, ProductWithLatestPrice } from "@awardrobe/prisma-types";
+import { ProductWithLatestPrice } from "@awardrobe/db";
+import { ProductVariant } from "@awardrobe/prisma-types";
 
 export type VariantFlags = {
   isOutdated: boolean;

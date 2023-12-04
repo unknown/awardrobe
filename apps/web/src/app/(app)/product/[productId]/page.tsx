@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { findProductWithVariants } from "@awardrobe/prisma-types";
+import { findProductWithVariants } from "@awardrobe/db";
 
 import { ProductInfo } from "@/components/product/ProductInfo";
 

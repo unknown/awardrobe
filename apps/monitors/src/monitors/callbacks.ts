@@ -1,9 +1,5 @@
+import { createLatestPrice, findNotificationsByType, updateLastPingByType } from "@awardrobe/db";
 import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
-import {
-  createLatestPrice,
-  findNotificationsByType,
-  updateLastPingByType,
-} from "@awardrobe/prisma-types";
 
 import { resend } from "../utils/emailer";
 import { UpdateVariantCallback, VariantFlags } from "./types";

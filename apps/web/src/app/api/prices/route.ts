@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { findPrices, Price } from "@awardrobe/prisma-types";
+import { findPrices } from "@awardrobe/db";
+import { Price } from "@awardrobe/prisma-types";
 
 type GetPricesRequest = {
   variantId: string;
