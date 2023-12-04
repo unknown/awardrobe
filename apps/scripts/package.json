@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/node": "^20.10.1",
     "dotenv-cli": "^7.3.0",
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"
   }
