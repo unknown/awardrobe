@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { deleteNotification } from "@awardrobe/db";
 import { Prisma } from "@awardrobe/prisma-types";
-import { deleteNotification } from "@awardrobe/prisma-types/prisma/product-notification";
 
 type DeleteNotificationRequest = {
   notificationId: string;

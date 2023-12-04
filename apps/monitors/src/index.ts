@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import cron from "node-cron";
 
-import { findProductsWithLatestPrice } from "@awardrobe/prisma-types";
+import { findProductsWithLatestPrice } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
 import { updateProducts } from "./monitors";

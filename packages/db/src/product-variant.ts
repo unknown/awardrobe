@@ -1,6 +1,5 @@
 import { VariantInfo } from "@awardrobe/adapters";
-
-import { prisma } from "./prisma";
+import { prisma } from "@awardrobe/prisma-types";
 
 export async function createLatestPrice(options: { variantId: string; variantInfo: VariantInfo }) {
   const {

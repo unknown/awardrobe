@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { prisma } from "@awardrobe/prisma-types";
 
 export async function findPrices(options: { variantId: string; startDate: string }) {
   return await prisma.price.findMany({

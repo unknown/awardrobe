@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
+    "@awardrobe/db": "*",
     "@awardrobe/emails": "*",
     "@awardrobe/meilisearch-types": "*",
     "@awardrobe/prisma-types": "*",

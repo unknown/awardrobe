@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { findNotificationsByUser, NotificationWithVariant } from "@awardrobe/prisma-types";
+import { findNotificationsByUser, NotificationWithVariant } from "@awardrobe/db";
 
 import { authOptions } from "@/utils/auth";
 

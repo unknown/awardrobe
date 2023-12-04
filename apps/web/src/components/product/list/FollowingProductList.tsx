@@ -1,4 +1,4 @@
-import { findFollowingProducts } from "@awardrobe/prisma-types";
+import { findFollowingProducts } from "@awardrobe/db";
 
 import { ProductList } from "./ProductList";
 

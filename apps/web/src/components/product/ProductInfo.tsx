@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductWithVariants } from "@awardrobe/prisma-types";
+import { ProductWithVariants } from "@awardrobe/db";
 
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { formatCurrency } from "@/utils/utils";

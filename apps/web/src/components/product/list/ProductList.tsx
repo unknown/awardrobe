@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Bell } from "@icons/Bell";
 import { getServerSession } from "next-auth";
 
+import { findNotificationsByUser } from "@awardrobe/db";
 import { Product } from "@awardrobe/meilisearch-types";
-import { findNotificationsByUser } from "@awardrobe/prisma-types";
 
 import { authOptions } from "@/utils/auth";
 

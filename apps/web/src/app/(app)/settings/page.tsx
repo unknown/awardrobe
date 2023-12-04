@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { findFollowingProducts } from "@awardrobe/prisma-types";
+import { findFollowingProducts } from "@awardrobe/db";
 
 import { authOptions } from "@/utils/auth";
 

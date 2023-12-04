@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "*",
+    "@awardrobe/db": "*",
     "@awardrobe/emails": "*",
     "@awardrobe/prisma-types": "*",
     "@awardrobe/proxies": "*",

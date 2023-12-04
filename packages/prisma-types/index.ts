@@ -1,7 +1,2 @@
 export * from "@prisma/client";
-
-export * from "./prisma/prisma";
-export * from "./prisma/product";
-export * from "./prisma/price";
-export * from "./prisma/product-variant";
-export * from "./prisma/product-notification";
+export * from "./src/prisma";

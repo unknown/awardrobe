@@ -1,7 +1,8 @@
 import pThrottle from "p-throttle";
 
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
-import { createProductVariant, Price, ProductWithLatestPrice } from "@awardrobe/prisma-types";
+import { createProductVariant, ProductWithLatestPrice } from "@awardrobe/db";
+import { Price } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
 import { shallowEquals } from "../utils/utils";

@@ -1,6 +1,4 @@
-import { Prisma } from "@prisma/client";
-
-import { prisma } from "./prisma";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 export async function createNotification(options: {
   variantId: string;

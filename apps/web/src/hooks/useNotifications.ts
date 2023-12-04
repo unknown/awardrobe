@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { NotificationWithVariant } from "@awardrobe/prisma-types";
+import { NotificationWithVariant } from "@awardrobe/db";
 
 import {
   AddNotificationRequest,

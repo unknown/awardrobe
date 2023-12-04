@@ -1,8 +1,5 @@
-import { Prisma } from "@prisma/client";
-
 import { VariantInfo } from "@awardrobe/adapters";
-
-import { prisma } from "./prisma";
+import { Prisma, prisma } from "@awardrobe/prisma-types";
 
 export async function createProduct(options: {
   name: string;
