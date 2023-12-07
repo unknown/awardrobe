@@ -54,17 +54,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, variants } = await adapter.getProductDetails(productCode);
+    const details = await adapter.getProductDetails(productCode).catch((error) => {
+      console.error(error);
+      return null;
+    });
+    if (!details) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Error retrieving product details" },
+        { status: 400 },
+      );
+    }
 
     const product = await createProduct({
-      name,
       productCode,
-      variants,
+      name: details.name,
+      variants: details.variants,
       storeHandle: adapter.storeHandle,
     });
 
     await addProduct({
-      name,
+      name: details.name,
       id: product.id,
       storeName: product.store.name,
     });
