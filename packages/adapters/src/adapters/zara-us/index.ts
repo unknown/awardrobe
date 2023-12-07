@@ -28,7 +28,7 @@ export const ZaraUS: StoreAdapter = {
       ?.match(challengeRegex)?.[1];
 
     if (!challengeRoute) {
-      throw new Error(`Failed to get product code from ${url}`);
+      return null;
     }
     const challengeUrl = `https://www.zara.com${challengeRoute}`;
 
@@ -38,11 +38,7 @@ export const ZaraUS: StoreAdapter = {
     const htmlId = root.querySelector("html")?.getAttribute("id");
     const productId = htmlId?.split("-").pop();
 
-    if (!productId) {
-      throw new Error(`Failed to get product code from ${url}`);
-    }
-
-    return productId;
+    return productId ?? null;
   },
 
   getProductDetails: async function getProductDetails(productCode: string) {

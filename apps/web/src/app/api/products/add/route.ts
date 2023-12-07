@@ -35,19 +35,25 @@ export async function POST(req: Request) {
     );
   }
 
-  // TODO: more descriptive errors
   try {
     const { productUrl }: AddProductRequest = await req.json();
 
     const adapter = getAdapterFromUrl(productUrl);
     if (!adapter) {
       return NextResponse.json<AddProductResponse>(
-        { status: "error", error: "Store not supported" },
+        { status: "error", error: "Store not yet supported" },
         { status: 400 },
       );
     }
 
     const productCode = await adapter.getProductCode(productUrl);
+    if (!productCode) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Error retrieving product code" },
+        { status: 400 },
+      );
+    }
+
     const { name, variants } = await adapter.getProductDetails(productCode);
 
     const product = await createProduct({

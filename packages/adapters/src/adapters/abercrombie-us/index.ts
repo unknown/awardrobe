@@ -50,7 +50,7 @@ export const AbercrombieUS: StoreAdapter = {
 
     const productCode = matches?.[1];
     if (!productCode) {
-      throw new Error(`Failed to get product code from ${url}`);
+      return null;
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
@@ -63,11 +63,7 @@ export const AbercrombieUS: StoreAdapter = {
       .querySelector("meta[name=branch:deeplink:collectionID]")
       ?.getAttribute("content");
 
-    if (!collectionId) {
-      throw new Error(`Failed to get product code from ${url}`);
-    }
-
-    return collectionId;
+    return collectionId ?? null;
   },
 
   // TODO: investigate why the endpoint returns false inventory data sometimes

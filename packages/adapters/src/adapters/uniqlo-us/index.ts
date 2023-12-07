@@ -57,7 +57,7 @@ export const UniqloUS: StoreAdapter = {
 
     const productCode = matches?.[0];
     if (!productCode) {
-      throw new Error(`Failed to get product code from ${url}`);
+      return null;
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
@@ -67,7 +67,7 @@ export const UniqloUS: StoreAdapter = {
 
     const detailsResult = detailsSchema.parse(searchResponse.data);
     if (detailsResult.status === "nok") {
-      throw new Error(`Failed to get product code from ${url}`);
+      return null;
     }
 
     return productCode;
