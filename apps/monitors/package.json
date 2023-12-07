@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "dev": "pnpm with-env nodemon",
+    "dev": "pnpm with-env tsx watch src/index.ts --clear-screen=false",
     "build": "pnpm with-env tsc",
     "start": "pnpm with-env node dist/index.js"
   },
@@ -26,9 +26,7 @@
     "@types/node": "^20.10.3",
     "@types/node-cron": "^3.0.11",
     "dotenv-cli": "^7.3.0",
-    "nodemon": "^3.0.2",
-    "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.6.2",
     "typescript": "^5.3.3"
   }
 }

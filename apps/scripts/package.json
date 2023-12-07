@@ -5,8 +5,8 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
-    "db:seed": "pnpm with-env ts-node -r tsconfig-paths/register --transpile-only src/seed.ts",
-    "scraper": "pnpm with-env ts-node -r tsconfig-paths/register --transpile-only src/scraper.ts"
+    "db:seed": "pnpm with-env tsx src/seed.ts",
+    "scraper": "pnpm with-env tsx src/scraper.ts"
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
@@ -20,8 +20,7 @@
     "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "dotenv-cli": "^7.3.0",
-    "nodemon": "^3.0.2",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.6.2",
     "typescript": "^5.3.3"
   }
 }
