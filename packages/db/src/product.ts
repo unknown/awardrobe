@@ -16,7 +16,7 @@ export async function createProduct(options: {
       store: { connect: { handle: storeHandle } },
       variants: {
         createMany: {
-          data: variants,
+          data: variants.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
         },
       },
     },
