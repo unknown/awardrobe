@@ -41,6 +41,9 @@ export async function updateProducts(products: ProductWithLatestPrice[]) {
 
 async function getUpdatedVariants(product: ProductWithLatestPrice): Promise<ExtendedVariantInfo[]> {
   const adapter = getAdapter(product.store.handle);
+  if (!adapter) {
+    throw new Error(`Failed to get adapter for ${product.store.handle}`);
+  }
 
   const { variants } = await adapter.getProductDetails(product.productCode);
   if (variants.length === 0) {

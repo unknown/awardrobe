@@ -35,23 +35,45 @@ export async function POST(req: Request) {
     );
   }
 
-  // TODO: more descriptive errors
   try {
     const { productUrl }: AddProductRequest = await req.json();
 
     const adapter = getAdapterFromUrl(productUrl);
+    if (!adapter) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Store not yet supported" },
+        { status: 400 },
+      );
+    }
+
     const productCode = await adapter.getProductCode(productUrl);
-    const { name, variants } = await adapter.getProductDetails(productCode);
+    if (!productCode) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Error retrieving product code" },
+        { status: 400 },
+      );
+    }
+
+    const details = await adapter.getProductDetails(productCode).catch((error) => {
+      console.error(error);
+      return null;
+    });
+    if (!details) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Error retrieving product details" },
+        { status: 400 },
+      );
+    }
 
     const product = await createProduct({
-      name,
       productCode,
-      variants,
+      name: details.name,
+      variants: details.variants,
       storeHandle: adapter.storeHandle,
     });
 
     await addProduct({
-      name,
+      name: details.name,
       id: product.id,
       storeName: product.store.name,
     });

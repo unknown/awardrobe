@@ -21,13 +21,8 @@ export const JCrewUS: StoreAdapter = {
   getProductCode: async function getProductCode(url: string) {
     const productCodeRegex = /\/([a-zA-Z0-9]+)/g;
     const matches = url.match(productCodeRegex);
-
     const productCode = matches?.at(-1)?.slice(1);
-    if (!productCode) {
-      throw new Error(`Failed to get product code from ${url}`);
-    }
-
-    return productCode;
+    return productCode ?? null;
   },
 
   getProductDetails: async function getProductDetails(productCode: string) {

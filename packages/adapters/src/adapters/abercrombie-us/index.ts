@@ -32,10 +32,6 @@ export const AbercrombieUS: StoreAdapter = {
       const { httpsAgent } = proxies.getRandomProxy();
       const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
-      if (searchResponse.status !== 200) {
-        throw new Error(`Failed to get products. Status code: ${searchResponse.status}`);
-      }
-
       const { products, stats } = searchSchema.parse(searchResponse.data);
 
       productCodes.push(...products.map((product) => product.collection));
@@ -54,7 +50,7 @@ export const AbercrombieUS: StoreAdapter = {
 
     const productCode = matches?.[1];
     if (!productCode) {
-      throw new Error(`Failed to get product code from ${url}`);
+      return null;
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
@@ -62,22 +58,12 @@ export const AbercrombieUS: StoreAdapter = {
 
     const productResponse = await axios.get(productEndpoint, { httpsAgent });
 
-    if (productResponse.status !== 200) {
-      throw new Error(
-        `Failed to search for product ${productCode}. Status code: ${productResponse.status}`,
-      );
-    }
-
     const root = parse(productResponse.data);
     const collectionId = root
       .querySelector("meta[name=branch:deeplink:collectionID]")
       ?.getAttribute("content");
 
-    if (!collectionId) {
-      throw new Error(`Failed to get product code from ${url}`);
-    }
-
-    return collectionId;
+    return collectionId ?? null;
   },
 
   // TODO: investigate why the endpoint returns false inventory data sometimes
@@ -87,12 +73,6 @@ export const AbercrombieUS: StoreAdapter = {
 
     const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
     const timestamp = new Date();
-
-    if (collectionResponse.status !== 200) {
-      throw new Error(
-        `Failed to get product details for ${productCode}. Status code: ${collectionResponse.status}`,
-      );
-    }
 
     const { products } = collectionSchema.parse(collectionResponse.data);
 
