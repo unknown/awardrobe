@@ -13,45 +13,63 @@ export async function updateProducts(products: ProductWithLatestPrice[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
   const throttledGetUpdatedVariants = throttle(getUpdatedVariants);
 
-  await Promise.allSettled(
+  await Promise.all(
     products.map(async (product) => {
-      const variants = await throttledGetUpdatedVariants(product).catch((error) => {
-        console.error(`Error updating ${product.name}\n${error}`);
-        return [] as ExtendedVariantInfo[];
-      });
+      const variants = await throttledGetUpdatedVariants(product);
 
-      const variantsCallbacks = variants.map(async (variantInfo) => {
+      if (!variants) {
+        return;
+      }
+
+      const allVariantsCallbacks = variants.map(async (variantInfo) => {
         const options = { product, variantInfo };
 
-        const variantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
+        const singleVariantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
           if (!value) {
             return null;
           }
 
-          return updateVariantCallbacks[flag as keyof VariantFlags](options);
+          const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
+          return callback.catch((error) =>
+            console.error(
+              `Failed to run ${flag} callback for ${product.name} (${variantInfo.attributes})\n${error}`,
+            ),
+          );
         });
 
-        return Promise.allSettled(variantCallbacks);
+        return Promise.all(singleVariantCallbacks);
       });
 
-      await Promise.allSettled(variantsCallbacks);
+      await Promise.all(allVariantsCallbacks);
     }),
   );
 }
 
-async function getUpdatedVariants(product: ProductWithLatestPrice): Promise<ExtendedVariantInfo[]> {
+async function getUpdatedVariants(
+  product: ProductWithLatestPrice,
+): Promise<ExtendedVariantInfo[] | null> {
   const adapter = getAdapter(product.store.handle);
+
   if (!adapter) {
-    throw new Error(`Failed to get adapter for ${product.store.handle}`);
+    console.error(`No adapter found for ${product.store.handle}`);
+    return null;
   }
 
-  const { variants } = await adapter.getProductDetails(product.productCode);
-  if (variants.length === 0) {
-    console.warn(`Fetching ${product.productCode} returned empty data`);
+  const details = await adapter.getProductDetails(product.productCode).catch((error) => {
+    console.error(`Failed to get product details for ${product.name}\n${error}`);
+    return null;
+  });
+
+  if (!details) {
+    return null;
+  }
+
+  if (details.variants.length === 0) {
+    console.warn(`Product details for ${product.name} is empty`);
   }
 
   return Promise.all(
-    variants.map(async (variantInfo) => {
+    details.variants.map(async (variantInfo) => {
       const productVariant = await getProductVariant(product, variantInfo);
       const flags = getFlags(variantInfo, productVariant.latestPrice);
       return {

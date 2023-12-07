@@ -9,20 +9,21 @@ import { updateProducts } from "./monitors";
 
 async function setupMonitors() {
   cron.schedule(`*/10 * * * *`, async () => {
-    try {
-      const start = Date.now();
+    const start = Date.now();
 
-      const products = await findProductsWithLatestPrice();
+    const products = await findProductsWithLatestPrice().catch((error) => {
+      console.error(`Failed to find products\n${error}`);
+      return [];
+    });
 
-      console.log(`Updating ${products.length} products`);
+    console.log(`Updating ${products.length} products`);
 
-      await updateProducts(products);
+    await updateProducts(products).catch((error) => {
+      console.error(`Failed to update products\n${error}`);
+    });
 
-      const elapsed = (Date.now() - start) / 1000;
-      console.log(`Finished updating products in ${elapsed} seconds`);
-    } catch (error) {
-      console.error(`Error pinging products\n${error}`);
-    }
+    const elapsed = (Date.now() - start) / 1000;
+    console.log(`Finished updating products in ${elapsed} seconds`);
   });
 }
 
