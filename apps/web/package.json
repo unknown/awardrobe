@@ -25,6 +25,7 @@
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-select": "^2.0.0",
     "@vercel/analytics": "^1.1.1",
+    "@vercel/speed-insights": "^1.0.0",
     "@visx/axis": "^3.5.0",
     "@visx/curve": "^3.3.0",
     "@visx/event": "^3.3.0",
