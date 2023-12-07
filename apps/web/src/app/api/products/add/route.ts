@@ -40,6 +40,13 @@ export async function POST(req: Request) {
     const { productUrl }: AddProductRequest = await req.json();
 
     const adapter = getAdapterFromUrl(productUrl);
+    if (!adapter) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Store not supported" },
+        { status: 400 },
+      );
+    }
+
     const productCode = await adapter.getProductCode(productUrl);
     const { name, variants } = await adapter.getProductDetails(productCode);
 

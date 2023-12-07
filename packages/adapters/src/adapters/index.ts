@@ -10,23 +10,11 @@ export { AbercrombieUS, JCrewUS, UniqloUS, ZaraUS };
 const adapters: StoreAdapter[] = [AbercrombieUS, JCrewUS, UniqloUS, ZaraUS];
 
 export function getAdapter(storeHandle: string) {
-  const adapter = adapters.find((adapter) => adapter.storeHandle === storeHandle);
-
-  if (!adapter) {
-    throw new Error(`No adapter implemented for ${storeHandle}`);
-  }
-
-  return adapter;
+  return adapters.find((adapter) => adapter.storeHandle === storeHandle) ?? null;
 }
 
 export function getAdapterFromUrl(url: string) {
   const productUrl = new URL(url);
   const storeUrl = productUrl.hostname + productUrl.pathname;
-  const adapter = adapters.find((adapter) => adapter.urlRegex.test(storeUrl));
-
-  if (!adapter) {
-    throw new Error(`No adapter found for ${url}`);
-  }
-
-  return adapter;
+  return adapters.find((adapter) => adapter.urlRegex.test(storeUrl)) ?? null;
 }
