@@ -35,10 +35,6 @@ export const UniqloUS: StoreAdapter = {
 
       const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
 
-      if (productsResponse.status !== 200) {
-        throw new Error(`Failed to get products. Status code: ${productsResponse.status}`);
-      }
-
       const productsData = productsSchema.parse(productsResponse.data);
       if (productsData.status === "nok") {
         throw new Error(`Failed to get products`);
@@ -69,10 +65,6 @@ export const UniqloUS: StoreAdapter = {
 
     const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
 
-    if (searchResponse.status !== 200) {
-      throw new Error(`Failed to get product code from ${url}`);
-    }
-
     const detailsResult = detailsSchema.parse(searchResponse.data);
     if (detailsResult.status === "nok") {
       throw new Error(`Failed to get product code from ${url}`);
@@ -91,12 +83,6 @@ export const UniqloUS: StoreAdapter = {
       axios.get(detailsEndpoint, { httpsAgent }),
     ]);
     const timestamp = new Date();
-
-    if (l2sResponse?.status !== 200 || detailsResponse?.status !== 200) {
-      throw new Error(
-        `Failed to get product details for ${productCode}. Status codes: ${l2sResponse?.status} and ${detailsResponse?.status}`,
-      );
-    }
 
     const [l2sData, detailsData] = [
       l2sSchema.parse(l2sResponse.data),

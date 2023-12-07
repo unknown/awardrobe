@@ -20,12 +20,6 @@ export const ZaraUS: StoreAdapter = {
     const { httpsAgent } = proxies.getRandomProxy();
     const initialResponse = await axios.get(url, { httpsAgent });
 
-    if (initialResponse.status !== 200) {
-      throw new Error(
-        `Failed to search for product ${url}. Status code: ${initialResponse.status}`,
-      );
-    }
-
     const initialRoot = parse(initialResponse.data);
     const challengeRegex = /URL='(.*)'/;
     const challengeRoute = initialRoot
@@ -57,12 +51,6 @@ export const ZaraUS: StoreAdapter = {
     const params = { locale: "en_US" };
     const productResponse = await axios.get(productEndpoint, { httpsAgent, params });
     const timestamp = new Date();
-
-    if (productResponse.status !== 200) {
-      throw new Error(
-        `Failed to get product details for ${productCode}. Status code: ${productResponse.status}`,
-      );
-    }
 
     const { name, detail, seo } = productSchema.parse(productResponse.data);
     // TODO: per variant product urls
