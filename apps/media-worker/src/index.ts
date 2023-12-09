@@ -5,6 +5,10 @@ export interface Env {
 
 export default {
   async fetch(request: Request, env: Env, _: ExecutionContext): Promise<Response> {
+    if (request.method !== "PUT") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
     const auth = request.headers.get("Authorization");
     const expectedAuth = `Bearer ${env.AUTH_SECRET}`;
 
