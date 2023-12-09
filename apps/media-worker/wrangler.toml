@@ -1,0 +1,7 @@
+name = "media-worker"
+main = "src/index.ts"
+compatibility_date = "2023-12-06"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "awardrobe"
