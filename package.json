@@ -9,6 +9,7 @@
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
     "dotenv-cli": "^7.3.0",
     "prettier": "^3.1.0",
