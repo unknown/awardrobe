@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-import { getAdapterFromUrl } from "@awardrobe/adapters";
+import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
@@ -78,7 +78,13 @@ export async function POST(req: Request) {
       id: product.id,
       storeName: product.store.name,
     });
-    const addImagePromise = addProductImage(product.id, details);
+
+    const addImagePromise = details.imageUrl
+      ? downloadImage(details.imageUrl).then((imageBuffer) =>
+          addProductImage(product.id, imageBuffer),
+        )
+      : undefined;
+
     await Promise.all([addPromise, addImagePromise]);
 
     revalidatePath("/(app)/(browse)/browse", "page");

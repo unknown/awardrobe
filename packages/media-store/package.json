@@ -10,9 +10,6 @@
     "build": "tsup index.ts --format cjs --dts"
   },
   "dependencies": {
-    "@awardrobe/adapters": "workspace:^",
-    "@awardrobe/prisma-types": "workspace:^",
-    "@awardrobe/proxies": "workspace:^",
     "axios": "^1.6.2"
   },
   "devDependencies": {
