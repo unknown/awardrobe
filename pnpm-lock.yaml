@@ -99,6 +99,12 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters
+      '@awardrobe/db':
+        specifier: workspace:^
+        version: link:../../packages/db
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../../packages/media-store
       '@awardrobe/meilisearch-types':
         specifier: workspace:^
         version: link:../../packages/meilisearch-types
@@ -368,15 +374,6 @@ importers:
 
   packages/media-store:
     dependencies:
-      '@awardrobe/adapters':
-        specifier: workspace:^
-        version: link:../adapters
-      '@awardrobe/prisma-types':
-        specifier: workspace:^
-        version: link:../prisma-types
-      '@awardrobe/proxies':
-        specifier: workspace:^
-        version: link:../proxies
       axios:
         specifier: ^1.6.2
         version: 1.6.2
