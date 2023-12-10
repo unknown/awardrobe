@@ -47,11 +47,23 @@ const okL2sSchema = z.object({
 });
 export const l2sSchema = z.union([okL2sSchema, errorSchema]);
 
+const imageSchema = z.object({
+  image: z.string(),
+});
+
+const videoSchema = z.object({
+  video: z.string(),
+});
+
 // contains human-readable names for colors and sizes
 const okDetailsSchema = z.object({
   status: z.literal("ok"),
   result: z.object({
     name: z.string(),
+    longDescription: z.string(),
+    images: z.object({
+      sub: z.array(z.union([imageSchema, videoSchema])),
+    }),
     colors: z.array(optionSchema),
     sizes: z.array(optionSchema),
     plds: z.array(optionSchema),

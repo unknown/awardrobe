@@ -23,8 +23,12 @@ const productSchema = z.object({
   collection: z.string(),
   productSeoToken: z.string(),
   name: z.string(),
+  longDesc: z.string(),
   lowContractPrice: z.number().optional(),
   highContractPrice: z.number().optional(),
+  imageSet: z.object({
+    prod: z.array(z.object({ id: z.string() })),
+  }),
   items: z.array(itemSchema),
 });
 export type Product = z.infer<typeof productSchema>;

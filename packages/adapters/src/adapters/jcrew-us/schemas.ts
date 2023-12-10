@@ -3,6 +3,8 @@ import { z } from "zod";
 export const productSchema = z.object({
   id: z.string(),
   name: z.string(),
+  long_description: z.string(),
+  c_imageURL: z.string(),
   variants: z.array(
     z.object({
       orderable: z.boolean(),
@@ -24,6 +26,7 @@ export const productSchema = z.object({
     }),
   ),
 });
+
 export const productInfoSchema = z.union([
   z.object({
     name: z.string(),

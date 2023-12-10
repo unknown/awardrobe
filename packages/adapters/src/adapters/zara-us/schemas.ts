@@ -28,6 +28,13 @@ export const productSchema = z.object({
         id: z.string(),
         name: z.string(),
         productId: z.number(),
+        shopcartMedia: z.array(
+          z.object({
+            path: z.string(),
+            name: z.string(),
+            timestamp: z.string(),
+          }),
+        ),
         sizes: z.array(
           z.object({
             availability: z.union([
@@ -46,6 +53,9 @@ export const productSchema = z.object({
   }),
   seo: z.object({
     keyword: z.string(),
+    description: z.string(),
     seoProductId: z.string(),
   }),
 });
+
+export type Product = z.infer<typeof productSchema>;
