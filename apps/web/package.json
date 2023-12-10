@@ -14,6 +14,7 @@
     "@awardrobe/adapters": "workspace:^",
     "@awardrobe/db": "workspace:^",
     "@awardrobe/emails": "workspace:^",
+    "@awardrobe/media-store": "workspace:^",
     "@awardrobe/meilisearch-types": "workspace:^",
     "@awardrobe/prisma-types": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",

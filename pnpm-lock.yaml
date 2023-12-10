@@ -99,6 +99,9 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../../packages/media-store
       '@awardrobe/meilisearch-types':
         specifier: workspace:^
         version: link:../../packages/meilisearch-types
@@ -139,6 +142,9 @@ importers:
       '@awardrobe/emails':
         specifier: workspace:^
         version: link:../../packages/emails
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../../packages/media-store
       '@awardrobe/meilisearch-types':
         specifier: workspace:^
         version: link:../../packages/meilisearch-types
@@ -356,6 +362,25 @@ importers:
       '@types/react':
         specifier: ^18.2.42
         version: 18.2.42
+      tsup:
+        specifier: ^8.0.1
+        version: 8.0.1(typescript@5.3.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
+  packages/media-store:
+    dependencies:
+      axios:
+        specifier: ^1.6.2
+        version: 1.6.2
+    devDependencies:
+      '@awardrobe/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^20.10.3
+        version: 20.10.3
       tsup:
         specifier: ^8.0.1
         version: 8.0.1(typescript@5.3.3)

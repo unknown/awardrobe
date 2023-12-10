@@ -1,0 +1,21 @@
+{
+  "name": "@awardrobe/media-store",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules dist",
+    "dev": "pnpm build --watch",
+    "build": "tsup index.ts --format cjs --dts"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
+    "@types/node": "^20.10.3",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

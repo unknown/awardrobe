@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 import { ProductWithVariants } from "@awardrobe/db";
+import { getProductPath } from "@awardrobe/media-store";
 
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { formatCurrency } from "@/utils/utils";
@@ -80,68 +81,78 @@ export function ProductInfo({
       : null;
 
   const getPillText = () => {
-    if (!variant?.productUrl) {
-      return "Not available";
-    } else if (prices === null) {
-      return "Loading...";
-    } else if (lastPrice === undefined) {
-      return "See price";
-    } else {
-      return `${formatCurrency(lastPrice.priceInCents)} on ${
-        product.store.shortenedName ?? product.store.name
-      }`;
+    switch (true) {
+      case !variant?.productUrl:
+        return "Not available";
+      case prices === null:
+        return "Loading...";
+      case lastPrice === undefined:
+        return "See price";
+      default:
+        return `${formatCurrency(lastPrice.priceInCents)} on ${
+          product.store.shortenedName ?? product.store.name
+        }`;
     }
   };
+
+  const mediaStorePath = getProductPath(product.id);
+  const url = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
   return (
     <section className="space-y-12">
       <div className="container max-w-4xl">
-        <div className="flex flex-col gap-2">
-          <p className="text-muted-foreground text-sm">{product.store.name}</p>
-          <h1 className="text-3xl font-medium">{product.name}</h1>
-          <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
-            <VariantControls
-              attributes={attributes}
-              productOptions={productOptions}
-              onAttributeChange={(name, value) => {
-                const newAttributes = { ...attributes, [name]: value };
-                setAttributes(newAttributes);
-
-                const variant = product.variants.find((variant) => {
-                  const variantAttributes = variant.attributes as VariantAttribute[];
-                  if (variantAttributes.length !== Object.keys(newAttributes).length) return false;
-                  return variantAttributes.every(
-                    (attribute) => newAttributes[attribute.name] === attribute.value,
-                  );
-                });
-                const variantId = variant?.id ?? null;
-                setVariantId(variantId);
-
-                loadPrices({ variantId, dateRange });
-
-                const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
-                params.set("variantId", variantId ?? "null");
-                router.replace(`${pathname}?${params.toString()}`); // TODO: shallow replace
-              }}
-            />
+        <div className="flex flex-col items-center gap-8 sm:flex-row">
+          <div className="h-64 min-w-[16rem]">
+            <img className="h-full w-full object-contain" src={url} />
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <a
-            className="text-md inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600"
-            href={variant?.productUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {getPillText()}
-          </a>
-          <NotificationPopover
-            productId={product.id}
-            productOptions={productOptions}
-            variants={product.variants}
-            attributes={attributes}
-            priceInCents={lastPrice?.priceInCents ?? null}
-          />
+          <div className="flex flex-col gap-2">
+            <p className="text-muted-foreground text-sm">{product.store.name}</p>
+            <h1 className="text-3xl font-medium">{product.name}</h1>
+            <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
+              <VariantControls
+                attributes={attributes}
+                productOptions={productOptions}
+                onAttributeChange={(name, value) => {
+                  const newAttributes = { ...attributes, [name]: value };
+                  setAttributes(newAttributes);
+
+                  const variant = product.variants.find((variant) => {
+                    const variantAttributes = variant.attributes as VariantAttribute[];
+                    if (variantAttributes.length !== Object.keys(newAttributes).length)
+                      return false;
+                    return variantAttributes.every(
+                      (attribute) => newAttributes[attribute.name] === attribute.value,
+                    );
+                  });
+                  const variantId = variant?.id ?? null;
+                  setVariantId(variantId);
+
+                  loadPrices({ variantId, dateRange });
+
+                  const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
+                  params.set("variantId", variantId ?? "null");
+                  router.replace(`${pathname}?${params.toString()}`); // TODO: shallow replace
+                }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <a
+                className="text-md inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600"
+                href={variant?.productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {getPillText()}
+              </a>
+              <NotificationPopover
+                productId={product.id}
+                productOptions={productOptions}
+                variants={product.variants}
+                attributes={attributes}
+                priceInCents={lastPrice?.priceInCents ?? null}
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div className="container max-w-4xl space-y-2">

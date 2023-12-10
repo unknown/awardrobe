@@ -34,7 +34,11 @@
     "db:seed": {
       "cache": false
     },
-    "scraper": {
+    "scripts:fix": {
+      "dependsOn": ["^build", "^db:generate"],
+      "cache": false
+    },
+    "scripts:scraper": {
       "dependsOn": ["^build", "^db:generate"],
       "cache": false
     },

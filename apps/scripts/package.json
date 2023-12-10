@@ -6,10 +6,12 @@
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
     "db:seed": "pnpm with-env tsx src/seed.ts",
-    "scraper": "pnpm with-env tsx src/scraper.ts"
+    "scripts:fix": "pnpm with-env tsx src/fix.ts",
+    "scripts:scraper": "pnpm with-env tsx src/scraper.ts"
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
+    "@awardrobe/media-store": "workspace:^",
     "@awardrobe/meilisearch-types": "workspace:^",
     "@awardrobe/prisma-types": "workspace:^",
     "@awardrobe/proxies": "workspace:^",
