@@ -15,7 +15,7 @@ function getImageUrl(product: Product) {
   }
 
   const { path, name, timestamp } = media;
-  return `https://static.zara.net/photos/${path}/${name}.jpg/ts=${timestamp}`;
+  return `https://static.zara.net/photos/${path}/${name}.jpg?ts=${timestamp}`;
 }
 
 export const ZaraUS: StoreAdapter = {
