@@ -99,9 +99,6 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters
-      '@awardrobe/db':
-        specifier: workspace:^
-        version: link:../../packages/db
       '@awardrobe/media-store':
         specifier: workspace:^
         version: link:../../packages/media-store
