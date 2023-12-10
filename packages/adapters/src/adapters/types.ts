@@ -11,14 +11,18 @@ export type VariantInfo = {
   inStock: boolean;
 };
 
+export type ProductDetails = {
+  name: string;
+  variants: VariantInfo[];
+  description?: string;
+  imageUrl?: string;
+};
+
 export interface StoreAdapter {
   urlRegex: RegExp;
   storeHandle: string;
   // TODO: create pagination interface?
   getProducts: (limit?: number) => Promise<string[]>;
   getProductCode: (url: string) => Promise<string | null>;
-  getProductDetails: (productCode: string) => Promise<{
-    name: string;
-    variants: VariantInfo[];
-  }>;
+  getProductDetails: (productCode: string) => Promise<ProductDetails>;
 }

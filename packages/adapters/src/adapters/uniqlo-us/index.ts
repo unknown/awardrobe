@@ -23,7 +23,7 @@ export const UniqloUS: StoreAdapter = {
   urlRegex: /^(?:www.)?uniqlo\.com\/us\//,
   storeHandle: "uniqlo-us",
 
-  getProducts: async function getProducts(limit?: number) {
+  async getProducts(limit?: number) {
     const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
 
     const productCodes: string[] = [];
@@ -73,7 +73,7 @@ export const UniqloUS: StoreAdapter = {
     return productCode;
   },
 
-  getProductDetails: async function getProductDetails(productCode: string) {
+  async getProductDetails(productCode: string) {
     const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
     const { httpsAgent } = proxies.getRandomProxy();
@@ -94,7 +94,7 @@ export const UniqloUS: StoreAdapter = {
     }
 
     const { l2s, stocks, prices } = l2sData.result;
-    const { name, ...options } = detailsData.result;
+    const { name, longDescription, images, ...options } = detailsData.result;
 
     const variants: VariantInfo[] = [];
     l2s.forEach((variant) => {
@@ -142,9 +142,15 @@ export const UniqloUS: StoreAdapter = {
       return attributes.length === totalNumAttributes || inStock;
     });
 
+    const filteredImages = images.sub.filter(
+      (image): image is { image: string } => "image" in image,
+    );
+
     return {
       name,
       variants: filteredVariants,
+      description: longDescription,
+      imageUrl: filteredImages[0]?.image,
     };
   },
 };

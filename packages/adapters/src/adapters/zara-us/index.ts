@@ -5,18 +5,29 @@ import { proxies } from "@awardrobe/proxies";
 import { axios } from "../../utils/axios";
 import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
-import { productSchema } from "./schemas";
+import { Product, productSchema } from "./schemas";
+
+function getImageUrl(product: Product) {
+  const media = product.detail.colors[0]?.shopcartMedia[0];
+
+  if (!media) {
+    return null;
+  }
+
+  const { path, name, timestamp } = media;
+  return `https://static.zara.net/photos/${path}/${name}.jpg/ts=${timestamp}`;
+}
 
 export const ZaraUS: StoreAdapter = {
   urlRegex: /^(?:www.)?zara\.com\/us\//,
   storeHandle: "zara-us",
 
-  getProducts: async function getProducts(_?: number) {
+  async getProducts(_?: number) {
     // TODO: implement
     return [];
   },
 
-  getProductCode: async function getProductCode(url: string) {
+  async getProductCode(url: string) {
     const { httpsAgent } = proxies.getRandomProxy();
     const initialResponse = await axios.get(url, { httpsAgent });
 
@@ -41,15 +52,15 @@ export const ZaraUS: StoreAdapter = {
     return productId ?? null;
   },
 
-  getProductDetails: async function getProductDetails(productCode: string) {
+  async getProductDetails(productCode: string) {
     const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
     const { httpsAgent } = proxies.getRandomProxy();
     const params = { locale: "en_US" };
     const productResponse = await axios.get(productEndpoint, { httpsAgent, params });
     const timestamp = new Date();
 
-    const { name, detail, seo } = productSchema.parse(productResponse.data);
-    // TODO: per variant product urls
+    const product = productSchema.parse(productResponse.data);
+    const { name, detail, seo } = product;
 
     const variants: VariantInfo[] = detail.colors.flatMap((color) => {
       const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.seoProductId}.html?v1=${color.productId}`;
@@ -68,6 +79,8 @@ export const ZaraUS: StoreAdapter = {
     return {
       variants,
       name: toTitleCase(name),
+      description: seo.description,
+      imageUrl: getImageUrl(product) ?? undefined,
     };
   },
 };

@@ -9,18 +9,28 @@ import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
   const productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
-  const color = item.definingAttrs.Color?.sequence.toString();
+  const color = item.definingAttrs["Color"]?.sequence.toString();
 
   if (color) productUrl.searchParams.set("seq", color);
 
   return productUrl.href;
 }
 
+function getImageUrl(product: Product) {
+  const imageId = product.imageSet.prod[0]?.id;
+
+  if (!imageId) {
+    return null;
+  }
+
+  return `https://img.abercrombie.com/is/image/anf/${imageId}.jpg?policy=product-large`;
+}
+
 export const AbercrombieUS: StoreAdapter = {
   urlRegex: /^(?:www.)?abercrombie\.com\/shop\/us\//,
   storeHandle: "abercrombie-us",
 
-  getProducts: async function getProducts(limit?: number) {
+  async getProducts(limit?: number) {
     // category 10000 represents all of A&F
     const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
 
@@ -44,7 +54,7 @@ export const AbercrombieUS: StoreAdapter = {
     return productCodes;
   },
 
-  getProductCode: async function getProductCode(url: string) {
+  async getProductCode(url: string) {
     const productCodeRegex = /\/p\/([a-zA-Z0-9-]+)/;
     const matches = url.match(productCodeRegex);
 
@@ -66,8 +76,7 @@ export const AbercrombieUS: StoreAdapter = {
     return collectionId ?? null;
   },
 
-  // TODO: investigate why the endpoint returns false inventory data sometimes
-  getProductDetails: async function getProductDetails(productCode: string) {
+  async getProductDetails(productCode: string) {
     const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
     const { httpsAgent } = proxies.getRandomProxy();
 
@@ -132,8 +141,10 @@ export const AbercrombieUS: StoreAdapter = {
 
     // TODO: handle variants with different names
     return {
-      name: products[0].name,
       variants,
+      name: products[0].name,
+      description: products[0].longDesc,
+      imageUrl: getImageUrl(products[0]) ?? undefined,
     };
   },
 };

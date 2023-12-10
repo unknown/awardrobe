@@ -13,19 +13,19 @@ export const JCrewUS: StoreAdapter = {
   urlRegex: /^(?:www.)?jcrew\.com/,
   storeHandle: "jcrew-us",
 
-  getProducts: async function getProducts(_?: number) {
+  async getProducts(_?: number) {
     // TODO: implement
     return [];
   },
 
-  getProductCode: async function getProductCode(url: string) {
+  async getProductCode(url: string) {
     const productCodeRegex = /\/([a-zA-Z0-9]+)/g;
     const matches = url.match(productCodeRegex);
     const productCode = matches?.at(-1)?.slice(1);
     return productCode ?? null;
   },
 
-  getProductDetails: async function getProductDetails(productCode: string) {
+  async getProductDetails(productCode: string) {
     const productEndpoint = `https://app.jcrew.com/browse/products/${productCode}`;
     const { httpsAgent } = proxies.getRandomProxy();
     const params = {
@@ -56,7 +56,7 @@ export const JCrewUS: StoreAdapter = {
         return {
           timestamp,
           attributes,
-          productUrl: "",
+          productUrl: "", // TODO: implement
           inStock: variant.orderable,
           priceInCents: dollarsToCents(variant.price.toString()),
         };
@@ -66,6 +66,8 @@ export const JCrewUS: StoreAdapter = {
     return {
       variants,
       name: productInfo.name,
+      description: products[0]?.long_description,
+      imageUrl: products[0]?.c_imageURL,
     };
   },
 };
