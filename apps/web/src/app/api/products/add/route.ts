@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct } from "@awardrobe/db";
+import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 import { Prisma, Product } from "@awardrobe/prisma-types";
 
@@ -72,11 +73,13 @@ export async function POST(req: Request) {
       storeHandle: adapter.storeHandle,
     });
 
-    await addProduct({
+    const addPromise = addProduct({
       name: details.name,
       id: product.id,
       storeName: product.store.name,
     });
+    const addImagePromise = addProductImage(product.id, details);
+    await Promise.all([addPromise, addImagePromise]);
 
     revalidatePath("/(app)/(browse)/browse", "page");
 

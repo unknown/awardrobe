@@ -22,7 +22,7 @@ export function getCdnUrl(productId: string) {
   return new URL(path, MEDIA_URL).href;
 }
 
-export async function addProduct(productId: string, product: ProductDetails) {
+export async function addProductImage(productId: string, product: ProductDetails) {
   const { imageUrl } = product;
 
   if (!imageUrl) {
