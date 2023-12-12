@@ -1,4 +1,7 @@
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/Button";
 import {
   Select,
@@ -10,21 +13,22 @@ import {
 } from "@ui/Select";
 import { twMerge } from "tailwind-merge";
 
-import { DateRange, DateRanges } from "@/hooks/usePrices";
+import { DateRange, DateRanges } from "@/utils/dates";
 
 export type VariantControlsProps = {
   productOptions: Record<string, string[]>;
-  attributes: Record<string, string>;
-  onAttributeChange: (name: string, value: string) => void;
+  initialAttributes: Record<string, string>;
 };
 
-export function VariantControls({
-  productOptions,
-  attributes,
-  onAttributeChange,
-}: VariantControlsProps) {
+export function VariantControls({ productOptions, initialAttributes }: VariantControlsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [attributes, setAttributes] = useState(initialAttributes);
+
   return (
-    <Fragment>
+    <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
       {Object.entries(productOptions).map(([name, values]) => {
         const selectedValue = attributes[name]; // TODO: handle undefined
         return (
@@ -35,7 +39,13 @@ export function VariantControls({
             <Select
               value={selectedValue}
               onValueChange={(value) => {
-                onAttributeChange(name, value);
+                setAttributes((attributes) => ({ ...attributes, [name]: value }));
+                const params = new URLSearchParams({
+                  ...attributes,
+                  ...Object.fromEntries(searchParams.entries()),
+                });
+                params.set(name, value);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               }}
             >
               <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
@@ -54,16 +64,21 @@ export function VariantControls({
           </Fragment>
         );
       })}
-    </Fragment>
+    </div>
   );
 }
 
 export type DateRangeControlProps = {
-  dateRange: DateRange;
-  onDateRangeChange: (newDateRange: DateRange) => void;
+  initialDateRange: DateRange;
 };
 
-export function DateRangeControl({ dateRange, onDateRangeChange }: DateRangeControlProps) {
+export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [dateRange, setDateRange] = useState(initialDateRange);
+
   return (
     <div aria-label="Select a date range">
       {DateRanges.map((range, index) => {
@@ -77,7 +92,10 @@ export function DateRangeControl({ dateRange, onDateRangeChange }: DateRangeCont
             variant="outline"
             onClick={() => {
               if (dateRange !== range) {
-                onDateRangeChange(range);
+                setDateRange(range);
+                const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
+                params.set("range", range);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               }
             }}
             className={twMerge(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
