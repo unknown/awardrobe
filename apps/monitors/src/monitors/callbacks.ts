@@ -18,7 +18,12 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
   variantInfo,
 }) {
   const { productVariant, attributes, priceInCents } = variantInfo;
+
   const description = attributes.map(({ value }) => value).join(" - ");
+  const url = new URL(`https://www.awardrobe.co/product/${product.id}`);
+  attributes.forEach(({ name, value }) => {
+    url.searchParams.set(name, value);
+  });
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
@@ -44,7 +49,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
           description,
           priceInCents,
           productName: product.name,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+          productUrl: url.toString(),
         }),
       });
     }),
@@ -56,7 +61,12 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
   variantInfo,
 }) {
   const { productVariant, attributes, priceInCents } = variantInfo;
+
   const description = attributes.map(({ value }) => value).join(" - ");
+  const url = new URL(`https://www.awardrobe.co/product/${product.id}`);
+  attributes.forEach(({ name, value }) => {
+    url.searchParams.set(name, value);
+  });
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
 
@@ -82,7 +92,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
           description,
           priceInCents,
           productName: product.name,
-          productUrl: `https://getawardrobe.com/product/${product.id}?variantId=${productVariant.id}`,
+          productUrl: url.toString(),
         }),
       });
     }),
