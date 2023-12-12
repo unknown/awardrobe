@@ -1,3 +1,5 @@
+"use client";
+
 import { Fragment, useEffect } from "react";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
