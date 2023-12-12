@@ -28,42 +28,39 @@ export function VariantControls({ productOptions, initialAttributes }: VariantCo
   const [attributes, setAttributes] = useState(initialAttributes);
 
   return (
-    <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:flex">
-      {Object.entries(productOptions).map(([name, values]) => {
-        const selectedValue = attributes[name]; // TODO: handle undefined
-        return (
-          <Fragment key={name}>
-            <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
-              {name}
-            </label>
-            <Select
-              value={selectedValue}
-              onValueChange={(value) => {
-                setAttributes((attributes) => ({ ...attributes, [name]: value }));
-                const params = new URLSearchParams({
-                  ...attributes,
-                  ...Object.fromEntries(searchParams.entries()),
-                });
-                params.set(name, value);
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-              }}
-            >
-              <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
-                <SelectValue placeholder={`Select a ${name}...`} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {values.map((value) => (
-                    <SelectItem value={value} key={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Fragment>
-        );
-      })}
+    <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:grid-cols-[max-content_1fr_max-content_1fr]">
+      {Object.entries(productOptions).map(([name, values]) => (
+        <Fragment key={name}>
+          <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
+            {name}
+          </label>
+          <Select
+            value={attributes[name] ?? ""}
+            onValueChange={(value) => {
+              setAttributes((attributes) => ({ ...attributes, [name]: value }));
+              const params = new URLSearchParams({
+                ...attributes,
+                ...Object.fromEntries(searchParams),
+              });
+              params.set(name, value);
+              router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+            }}
+          >
+            <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
+              <SelectValue placeholder={`Select a ${name}...`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {values.map((value) => (
+                  <SelectItem value={value} key={value}>
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Fragment>
+      ))}
     </div>
   );
 }
@@ -93,7 +90,7 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
             onClick={() => {
               if (dateRange !== range) {
                 setDateRange(range);
-                const params = new URLSearchParams(Object.fromEntries(searchParams.entries()));
+                const params = new URLSearchParams(searchParams);
                 params.set("range", range);
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               }

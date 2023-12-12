@@ -91,35 +91,32 @@ export function AddNotificationDialog({
             }
           }}
         >
-          {Object.entries(productOptions).map(([name, values]) => {
-            const selectedValue = attributes[name]; // TODO: handle undefined
-            return (
-              <Fragment key={name}>
-                <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
-                  {name}
-                </label>
-                <Select
-                  value={selectedValue}
-                  onValueChange={(value) => {
-                    setAttributes((attributes) => ({ ...attributes, [name]: value }));
-                  }}
-                >
-                  <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
-                    <SelectValue placeholder={`Select a ${name}...`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {values.map((value) => (
-                        <SelectItem value={value} key={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Fragment>
-            );
-          })}
+          {Object.entries(productOptions).map(([name, values]) => (
+            <Fragment key={name}>
+              <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
+                {name}
+              </label>
+              <Select
+                value={attributes[name] ?? ""}
+                onValueChange={(value) => {
+                  setAttributes((attributes) => ({ ...attributes, [name]: value }));
+                }}
+              >
+                <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
+                  <SelectValue placeholder={`Select a ${name}...`} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {values.map((value) => (
+                      <SelectItem value={value} key={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Fragment>
+          ))}
           <label className="text-primary text-sm font-medium" htmlFor="price">
             Price Threshold (In Cents)
           </label>
