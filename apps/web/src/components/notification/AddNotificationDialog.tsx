@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Checkbox } from "@ui/Checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@ui/Dialog";
 import { Input } from "@ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@ui/Select";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 import { ProductVariant } from "@awardrobe/prisma-types";
@@ -26,8 +34,9 @@ type AddNotificationOptions = {
 
 export function AddNotificationDialog({
   variants,
+  productOptions,
   onNotificationCreate,
-  attributes,
+  attributes: parentAttributes,
   priceInCents: parentPriceInCents,
 }: AddNotificationDialogProps) {
   const [open, setOpen] = useState(false);
@@ -38,6 +47,8 @@ export function AddNotificationDialog({
     priceDrop: true,
     restock: true,
   });
+  const [attributes, setAttributes] = useState<Record<string, string>>(parentAttributes);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -80,6 +91,35 @@ export function AddNotificationDialog({
             }
           }}
         >
+          {Object.entries(productOptions).map(([name, values]) => {
+            const selectedValue = attributes[name]; // TODO: handle undefined
+            return (
+              <Fragment key={name}>
+                <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
+                  {name}
+                </label>
+                <Select
+                  value={selectedValue}
+                  onValueChange={(value) => {
+                    setAttributes((attributes) => ({ ...attributes, [name]: value }));
+                  }}
+                >
+                  <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
+                    <SelectValue placeholder={`Select a ${name}...`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {values.map((value) => (
+                        <SelectItem value={value} key={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Fragment>
+            );
+          })}
           <label className="text-primary text-sm font-medium" htmlFor="price">
             Price Threshold (In Cents)
           </label>
