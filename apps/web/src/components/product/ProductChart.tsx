@@ -13,6 +13,7 @@ import { AreaClosed, Bar, Line, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
+import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency, formatDate } from "@/utils/utils";
 
 export type ChartPrice = {
@@ -48,20 +49,42 @@ export function ProductChart({
   margin = defaultMargin,
   showAxes = true,
 }: PricesChartProps) {
+  const { isLoading } = useProductInfo();
+
   return (
     <ParentSize className="relative">
       {({ width, height }) => {
-        if (!prices) {
-          return <PlaceholderChart />;
-        }
+        const chartComponent =
+          prices === null ? (
+            <PlaceholderChart />
+          ) : (
+            <VisxChart
+              prices={prices}
+              width={width}
+              height={height}
+              margin={margin}
+              showAxes={showAxes}
+            />
+          );
+
+        const overlayComponent = isLoading ? (
+          <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        ) : prices === null ? (
+          <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+            <h2 className="text-xl font-medium">No price history</h2>
+            <p className="text-muted-foreground">
+              We have no data in this date range. Maybe try again later?
+            </p>
+          </div>
+        ) : null;
+
         return (
-          <VisxChart
-            prices={prices}
-            width={width}
-            height={height}
-            margin={margin}
-            showAxes={showAxes}
-          />
+          <div className="relative h-[20rem] sm:h-[24rem] md:h-[28rem]">
+            {chartComponent}
+            {overlayComponent}
+          </div>
         );
       }}
     </ParentSize>
