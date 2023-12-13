@@ -93,7 +93,11 @@ export default async function ProductPage({
         <div className="container max-w-4xl">
           <div className="flex flex-col items-center gap-8 sm:flex-row">
             <div className="h-64 min-w-[16rem]">
-              <img className="h-full w-full object-contain" src={mediaUrl} />
+              <img
+                className="h-full w-full object-contain"
+                src={mediaUrl}
+                alt={`Image of ${product.name}`}
+              />
             </div>
             <div className="flex w-full flex-col gap-2">
               <p className="text-muted-foreground text-sm">{product.store.name}</p>
