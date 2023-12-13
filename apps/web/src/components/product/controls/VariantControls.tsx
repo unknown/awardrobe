@@ -13,18 +13,13 @@ import {
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 
-export type VariantControlsProps = {
-  productOptions: Record<string, string[]>;
-  initialAttributes: Record<string, string>;
-};
-
-export function VariantControls({ productOptions, initialAttributes }: VariantControlsProps) {
+export function VariantControls() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const { productOptions, attributes: initialAttributes, setIsLoading } = useProductInfo();
   const [attributes, setAttributes] = useState(initialAttributes);
-  const { setIsLoading } = useProductInfo();
 
   return (
     <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:grid-cols-[max-content_1fr_max-content_1fr]">

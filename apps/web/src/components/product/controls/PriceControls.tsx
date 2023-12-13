@@ -1,31 +1,15 @@
 "use client";
 
-import { ProductWithVariants } from "@awardrobe/db";
-import { Price, ProductVariant } from "@awardrobe/prisma-types";
-
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
-type PriceControlsProps = {
-  product: ProductWithVariants;
-  variant: ProductVariant | null;
-  lastPrice: Price | null;
-  productOptions: Record<string, string[]>;
-  initialAttributes: Record<string, string>;
-};
-
-export function PriceControls({
-  product,
-  variant,
-  lastPrice,
-  productOptions,
-  initialAttributes,
-}: PriceControlsProps) {
-  const { isLoading } = useProductInfo();
+export function PriceControls() {
+  const { product, variant, prices, isLoading } = useProductInfo();
 
   const storeName = product.store.shortenedName ?? product.store.name;
   const productUrl = variant?.productUrl;
+  const lastPrice = prices?.at(-1);
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -43,13 +27,7 @@ export function PriceControls({
               ? "See price"
               : `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`}
       </a>
-      <NotificationPopover
-        productId={product.id}
-        productOptions={productOptions}
-        variants={product.variants}
-        attributes={initialAttributes}
-        priceInCents={lastPrice?.priceInCents ?? null}
-      />
+      <NotificationPopover />
     </div>
   );
 }

@@ -41,7 +41,7 @@ export default async function ProductPage({
   });
 
   const variant =
-    Object.keys(attributesParams).length > 0
+    (Object.keys(attributesParams).length > 0
       ? product.variants.find((variant) => {
           const attributes = variant.attributes as VariantAttribute[];
           if (attributes.length !== Object.keys(attributesParams).length) {
@@ -49,7 +49,7 @@ export default async function ProductPage({
           }
           return attributes.every(({ name, value }) => attributesParams[name] === value);
         })
-      : product.variants[0];
+      : product.variants[0]) ?? null;
 
   const initialDateRange = range ?? "7d";
   const initialAttributes: Record<string, string> = {};
@@ -88,7 +88,13 @@ export default async function ProductPage({
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
   return (
-    <ProductInfoProvider>
+    <ProductInfoProvider
+      product={product}
+      productOptions={productOptions}
+      variant={variant}
+      attributes={initialAttributes}
+      prices={prices}
+    >
       <section className="space-y-12">
         <div className="container max-w-4xl">
           <div className="flex flex-col items-center gap-8 sm:flex-row">
@@ -102,17 +108,8 @@ export default async function ProductPage({
             <div className="flex w-full flex-col gap-2">
               <p className="text-muted-foreground text-sm">{product.store.name}</p>
               <h1 className="text-3xl font-medium">{product.name}</h1>
-              <VariantControls
-                initialAttributes={initialAttributes}
-                productOptions={productOptions}
-              />
-              <PriceControls
-                product={product}
-                variant={variant ?? null}
-                lastPrice={lastPrice ?? null}
-                productOptions={productOptions}
-                initialAttributes={initialAttributes}
-              />
+              <VariantControls />
+              <PriceControls />
             </div>
           </div>
         </div>
