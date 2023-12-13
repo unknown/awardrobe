@@ -42,7 +42,13 @@ export function ProductInfoProvider({ children, ...props }: ProductInfoProviderP
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(false);
+    let canceled = false;
+    if (!canceled) {
+      setIsLoading(false);
+    }
+    return () => {
+      canceled = true;
+    };
   }, [searchParams]);
 
   return (
