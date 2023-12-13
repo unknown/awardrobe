@@ -6,28 +6,16 @@ import { Button } from "@ui/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@ui/Popover";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductVariant } from "@awardrobe/prisma-types";
 
 import { AddNotificationDialog } from "@/components/notification/AddNotificationDialog";
 import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
+import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatCurrency } from "@/utils/utils";
 
-type NotificationPopoverProps = {
-  productId: string;
-  productOptions: Record<string, string[]>;
-  variants: ProductVariant[];
-  attributes: Record<string, string>;
-  priceInCents: number | null;
-};
+export function NotificationPopover() {
+  const { product } = useProductInfo();
 
-export function NotificationPopover({
-  productId,
-  productOptions,
-  variants,
-  attributes,
-  priceInCents,
-}: NotificationPopoverProps) {
   const {
     data: notifications,
     fetchNotifications,
@@ -38,11 +26,11 @@ export function NotificationPopover({
   useEffect(() => {
     const abortController = new AbortController();
     const abortSignal = abortController.signal;
-    fetchNotifications({ productId, abortSignal });
+    fetchNotifications({ abortSignal, productId: product.id });
     return () => {
       abortController.abort();
     };
-  }, [fetchNotifications, productId]);
+  }, [fetchNotifications, product.id]);
 
   return (
     <Popover>
@@ -76,13 +64,7 @@ export function NotificationPopover({
               );
             })}
           </div>
-          <AddNotificationDialog
-            productOptions={productOptions}
-            variants={variants}
-            attributes={attributes}
-            priceInCents={priceInCents}
-            onNotificationCreate={addNotification}
-          />
+          <AddNotificationDialog onNotificationCreate={addNotification} />
         </div>
       </PopoverContent>
     </Popover>

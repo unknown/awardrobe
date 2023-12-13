@@ -2,7 +2,6 @@
 
 import { Fragment, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@ui/Button";
 import {
   Select,
   SelectContent,
@@ -11,20 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
-import { twMerge } from "tailwind-merge";
 
-import { DateRange, DateRanges } from "@/utils/dates";
+import { useProductInfo } from "@/components/product/ProductInfoProvider";
 
-export type VariantControlsProps = {
-  productOptions: Record<string, string[]>;
-  initialAttributes: Record<string, string>;
-};
-
-export function VariantControls({ productOptions, initialAttributes }: VariantControlsProps) {
+export function VariantControls() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const { productOptions, attributes: initialAttributes, setIsLoading } = useProductInfo();
   const [attributes, setAttributes] = useState(initialAttributes);
 
   return (
@@ -37,6 +31,7 @@ export function VariantControls({ productOptions, initialAttributes }: VariantCo
           <Select
             value={attributes[name] ?? ""}
             onValueChange={(value) => {
+              setIsLoading(true);
               setAttributes((attributes) => ({ ...attributes, [name]: value }));
               const params = new URLSearchParams({
                 ...attributes,
@@ -61,46 +56,6 @@ export function VariantControls({ productOptions, initialAttributes }: VariantCo
           </Select>
         </Fragment>
       ))}
-    </div>
-  );
-}
-
-export type DateRangeControlProps = {
-  initialDateRange: DateRange;
-};
-
-export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const [dateRange, setDateRange] = useState(initialDateRange);
-
-  return (
-    <div aria-label="Select a date range">
-      {DateRanges.map((range, index) => {
-        const isSelected = range === dateRange;
-        const [isFirst, isLast] = [index === 0, index === DateRanges.length - 1];
-        const rounded = isFirst ? "rounded-r-none" : isLast ? "rounded-l-none" : "rounded-none";
-
-        return (
-          <Button
-            key={range}
-            variant="outline"
-            onClick={() => {
-              if (dateRange !== range) {
-                setDateRange(range);
-                const params = new URLSearchParams(searchParams);
-                params.set("range", range);
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-              }
-            }}
-            className={twMerge(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
-          >
-            {range}
-          </Button>
-        );
-      })}
     </div>
   );
 }

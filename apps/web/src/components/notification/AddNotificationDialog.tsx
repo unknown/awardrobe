@@ -14,16 +14,12 @@ import {
 } from "@ui/Select";
 
 import { VariantAttribute } from "@awardrobe/adapters";
-import { ProductVariant } from "@awardrobe/prisma-types";
 
+import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { CreateNotificationOptions } from "@/hooks/useNotifications";
 
 export type AddNotificationDialogProps = {
-  variants: ProductVariant[];
-  productOptions: Record<string, string[]>;
   onNotificationCreate: (options: CreateNotificationOptions) => Promise<boolean>;
-  attributes: Record<string, string>;
-  priceInCents: number | null;
 };
 
 type AddNotificationOptions = {
@@ -32,22 +28,19 @@ type AddNotificationOptions = {
   restock: boolean;
 };
 
-export function AddNotificationDialog({
-  variants,
-  productOptions,
-  onNotificationCreate,
-  attributes: parentAttributes,
-  priceInCents: parentPriceInCents,
-}: AddNotificationDialogProps) {
+export function AddNotificationDialog({ onNotificationCreate }: AddNotificationDialogProps) {
+  const { product, productOptions, attributes: initialAttributes, prices } = useProductInfo();
+  const lastPrice = prices?.at(-1);
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [options, setOptions] = useState<AddNotificationOptions>({
-    priceInCents: parentPriceInCents ?? 5000,
+    priceInCents: lastPrice?.priceInCents ?? 5000,
     priceDrop: true,
     restock: true,
   });
-  const [attributes, setAttributes] = useState<Record<string, string>>(parentAttributes);
+  const [attributes, setAttributes] = useState<Record<string, string>>(initialAttributes);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -66,7 +59,7 @@ export function AddNotificationDialog({
           onSubmit={async (event) => {
             event.preventDefault();
 
-            const variant = variants.find((variant) => {
+            const variant = product.variants.find((variant) => {
               const variantAttributes = variant.attributes as VariantAttribute[];
               if (variantAttributes.length !== Object.keys(attributes).length) return false;
               return variantAttributes.every(
@@ -134,7 +127,7 @@ export function AddNotificationDialog({
               if (event.target.value === "") {
                 setOptions((options) => ({
                   ...options,
-                  priceInCents: parentPriceInCents ?? 5000,
+                  priceInCents: lastPrice?.priceInCents ?? 5000,
                 }));
               }
             }}
