@@ -9,11 +9,8 @@ import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
   const productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
-  const color = item.definingAttrs["Color"]?.sequence.toString();
-
-  if (color) productUrl.searchParams.set("seq", color);
-
-  return productUrl.href;
+  productUrl.searchParams.set("seq", item.swatchSequence);
+  return productUrl.toString();
 }
 
 function getImageUrl(product: Product) {

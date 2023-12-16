@@ -2,6 +2,7 @@ import z from "zod";
 
 export const itemSchema = z.object({
   itemId: z.string(),
+  swatchSequence: z.string(),
   listPrice: z.number(),
   offerPrice: z.number(),
   definingAttrs: z.record(
