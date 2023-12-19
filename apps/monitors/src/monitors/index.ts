@@ -11,38 +11,37 @@ import { ExtendedVariantInfo, VariantFlags } from "./types";
 
 export async function updateProducts(products: ProductWithLatestPrice[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
-  const throttledGetUpdatedVariants = throttle(getUpdatedVariants);
+  const throttledUpdateProduct = throttle(updateProduct);
+  await Promise.all(products.map(throttledUpdateProduct));
+}
 
-  await Promise.all(
-    products.map(async (product) => {
-      const variants = await throttledGetUpdatedVariants(product);
+async function updateProduct(product: ProductWithLatestPrice) {
+  const variants = await getUpdatedVariants(product);
 
-      if (!variants) {
-        return;
+  if (!variants) {
+    return;
+  }
+
+  const allVariantsCallbacks = variants.map(async (variantInfo) => {
+    const options = { product, variantInfo };
+
+    const singleVariantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
+      if (!value) {
+        return null;
       }
 
-      const allVariantsCallbacks = variants.map(async (variantInfo) => {
-        const options = { product, variantInfo };
+      const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
+      return callback.catch((error) =>
+        console.error(
+          `Failed to run ${flag} callback for ${product.name} (${variantInfo.attributes})\n${error}`,
+        ),
+      );
+    });
 
-        const singleVariantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
-          if (!value) {
-            return null;
-          }
+    return Promise.all(singleVariantCallbacks);
+  });
 
-          const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
-          return callback.catch((error) =>
-            console.error(
-              `Failed to run ${flag} callback for ${product.name} (${variantInfo.attributes})\n${error}`,
-            ),
-          );
-        });
-
-        return Promise.all(singleVariantCallbacks);
-      });
-
-      await Promise.all(allVariantsCallbacks);
-    }),
-  );
+  await Promise.all(allVariantsCallbacks);
 }
 
 async function getUpdatedVariants(
