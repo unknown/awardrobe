@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import { AbercrombieUS, UniqloUS } from "@awardrobe/adapters";
 import { proxies } from "@awardrobe/proxies";
 

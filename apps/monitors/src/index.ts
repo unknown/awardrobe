@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import cron from "node-cron";
 
 import { findProductsWithLatestPrice } from "@awardrobe/db";
