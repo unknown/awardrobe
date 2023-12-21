@@ -17,7 +17,7 @@
     "@awardrobe/proxies": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
     "node-cron": "^3.0.3",
-    "p-throttle": "^4.1.1"
+    "p-throttle": "^6.1.0"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",

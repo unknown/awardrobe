@@ -69,8 +69,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       p-throttle:
-        specifier: ^4.1.1
-        version: 4.1.1
+        specifier: ^6.1.0
+        version: 6.1.0
     devDependencies:
       '@types/node':
         specifier: ^20.10.3
@@ -6004,9 +6004,9 @@ packages:
       p-limit: 3.1.0
     dev: true
 
-  /p-throttle@4.1.1:
-    resolution: {integrity: sha512-TuU8Ato+pRTPJoDzYD4s7ocJYcNSEZRvlxoq3hcPI2kZDZ49IQ1Wkj7/gDJc3X7XiEAAvRGtDzdXJI0tC3IL1g==}
-    engines: {node: '>=10'}
+  /p-throttle@6.1.0:
+    resolution: {integrity: sha512-eQMdGTxk2+047La67wefUtt0tEHh7D+C8Jl7QXoFCuIiNYeQ9zWs2AZiJdIAs72rSXZ06t11me2bgalRNdy3SQ==}
+    engines: {node: '>=18'}
     dev: false
 
   /p-try@2.2.0:
