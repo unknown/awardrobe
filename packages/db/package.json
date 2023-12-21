@@ -2,12 +2,10 @@
   "name": "@awardrobe/db",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules dist",
-    "dev": "pnpm build --watch",
-    "build": "tsup index.ts --format cjs --dts"
+    "clean": "rm -rf .turbo node_modules dist"
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",

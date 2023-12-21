@@ -2,15 +2,14 @@
   "name": "@awardrobe/prisma-types",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
     "db:generate": "pnpm with-env prisma generate",
     "db:push": "pnpm with-env prisma db push --skip-generate",
-    "dev": "pnpm with-env prisma studio --browser none",
-    "build": "tsup index.ts --format cjs --dts"
+    "dev": "pnpm with-env prisma studio --browser none"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0"
