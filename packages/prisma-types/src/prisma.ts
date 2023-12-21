@@ -1,7 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as { prisma?: PrismaClient };
+const prismaClientSingleton = () => {
+  return new PrismaClient();
+};
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
+}
 
-export const prisma: PrismaClient = globalForPrisma.prisma || new PrismaClient();
+export const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production" || process.env.ENVIRONMENT === "monitors") {
+  globalThis.prisma = prisma;
+}

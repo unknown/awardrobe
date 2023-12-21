@@ -1,7 +1,6 @@
 import { createLatestPrice, findNotificationsByType, updateLastPingByType } from "@awardrobe/db";
-import { PriceNotificationEmail, StockNotificationEmail } from "@awardrobe/emails";
+import { PriceNotificationEmail, resend, StockNotificationEmail } from "@awardrobe/emails";
 
-import { resend } from "../utils/emailer";
 import { UpdateVariantCallback, VariantFlags } from "./types";
 
 const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({

@@ -9,3 +9,5 @@ import StockNotificationEmail, {
 export { StockNotificationEmail, StockNotificationEmailProps };
 export { PriceNotificationEmail, PriceNotificationEmailProps };
 export { SignInEmail, SignInEmailProps };
+
+export { resend } from "./src/resend";

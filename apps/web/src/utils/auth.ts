@@ -2,10 +2,8 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions, type DefaultSession } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
-import { SignInEmail } from "@awardrobe/emails";
+import { resend, SignInEmail } from "@awardrobe/emails";
 import { prisma } from "@awardrobe/prisma-types";
-
-import { resend } from "@/utils/resend";
 
 declare module "next-auth" {
   interface Session {
