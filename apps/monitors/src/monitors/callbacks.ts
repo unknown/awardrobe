@@ -6,18 +6,20 @@ import { UpdateVariantCallback, VariantFlags } from "./types";
 
 const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({
   variantInfo,
+  productVariant,
 }) {
   await createLatestPrice({
     variantInfo,
-    variantId: variantInfo.productVariant.id,
+    variantId: productVariant.id,
   });
 };
 
 const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop({
   product,
   variantInfo,
+  productVariant,
 }) {
-  const { productVariant, attributes, priceInCents } = variantInfo;
+  const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
   const url = new URL(`https://www.awardrobe.co/product/${product.id}`);
@@ -59,8 +61,9 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
 const restockCallback: UpdateVariantCallback = async function handleRestock({
   product,
   variantInfo,
+  productVariant,
 }) {
-  const { productVariant, attributes, priceInCents } = variantInfo;
+  const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
   const url = new URL(`https://www.awardrobe.co/product/${product.id}`);

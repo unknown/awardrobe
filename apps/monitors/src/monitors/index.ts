@@ -7,7 +7,7 @@ import { proxies } from "@awardrobe/proxies";
 
 import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
-import { ExtendedVariantInfo, VariantFlags } from "./types";
+import { VariantFlags } from "./types";
 
 export async function updateProducts(products: ProductWithLatestPrice[]) {
   const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
@@ -23,9 +23,11 @@ async function updateProduct(product: ProductWithLatestPrice) {
   }
 
   const allVariantsCallbacks = variants.map(async (variantInfo) => {
-    const options = { product, variantInfo };
+    const productVariant = await getProductVariant(product, variantInfo);
+    const flags = getFlags(variantInfo, productVariant.latestPrice);
+    const options = { product, variantInfo, productVariant };
 
-    const singleVariantCallbacks = Object.entries(variantInfo.flags).map(([flag, value]) => {
+    const singleVariantCallbacks = Object.entries(flags).map(([flag, value]) => {
       if (!value) {
         return null;
       }
@@ -38,15 +40,13 @@ async function updateProduct(product: ProductWithLatestPrice) {
       );
     });
 
-    return Promise.all(singleVariantCallbacks);
+    await Promise.all(singleVariantCallbacks);
   });
 
   await Promise.all(allVariantsCallbacks);
 }
 
-async function getUpdatedVariants(
-  product: ProductWithLatestPrice,
-): Promise<ExtendedVariantInfo[] | null> {
+async function getUpdatedVariants(product: ProductWithLatestPrice): Promise<VariantInfo[] | null> {
   const adapter = getAdapter(product.store.handle);
 
   if (!adapter) {
@@ -67,17 +67,7 @@ async function getUpdatedVariants(
     console.warn(`Product details for ${product.name} is empty`);
   }
 
-  return Promise.all(
-    details.variants.map(async (variantInfo) => {
-      const productVariant = await getProductVariant(product, variantInfo);
-      const flags = getFlags(variantInfo, productVariant.latestPrice);
-      return {
-        ...variantInfo,
-        productVariant,
-        flags,
-      };
-    }),
-  );
+  return details.variants;
 }
 
 async function getProductVariant(product: ProductWithLatestPrice, variantInfo: VariantInfo) {

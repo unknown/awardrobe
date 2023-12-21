@@ -10,10 +10,6 @@ export type VariantFlags = {
 
 export type UpdateVariantCallback = (options: {
   product: ProductWithLatestPrice;
-  variantInfo: ExtendedVariantInfo;
-}) => Promise<void>;
-
-export type ExtendedVariantInfo = VariantInfo & {
+  variantInfo: VariantInfo;
   productVariant: ProductVariant;
-  flags: VariantFlags;
-};
+}) => Promise<void>;
