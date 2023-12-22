@@ -2,6 +2,7 @@
   "name": "@awardrobe/scripts",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",

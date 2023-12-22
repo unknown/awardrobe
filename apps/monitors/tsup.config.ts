@@ -6,6 +6,7 @@ export default defineConfig({
   noExternal: [
     "@awardrobe/adapters",
     "@awardrobe/db",
+    "@awardrobe/emails",
     "@awardrobe/prisma-types",
     "@awardrobe/proxies",
     "@awardrobe/tsconfig",

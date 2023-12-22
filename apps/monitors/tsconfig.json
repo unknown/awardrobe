@@ -1,6 +1,7 @@
 {
   "extends": "@awardrobe/tsconfig/base.json",
   "compilerOptions": {
+    "jsx": "react",
     "noEmit": false,
     "outDir": "./dist"
   },
