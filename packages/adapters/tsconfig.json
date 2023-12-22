@@ -1,4 +1,4 @@
 {
   "extends": "@awardrobe/tsconfig/base.json",
-  "include": ["*.ts", "src"]
+  "include": ["src"]
 }

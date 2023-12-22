@@ -1,6 +1,6 @@
-import { ProxyManager } from "./src/proxies";
+import { ProxyManager } from "./proxies";
 
-export * from "./src/proxies";
+export * from "./proxies";
 
 const proxyManagerSingleton = () => {
   const envProxies = process.env.PROXIES?.split(",") ?? [];

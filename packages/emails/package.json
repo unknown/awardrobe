@@ -2,13 +2,13 @@
   "name": "@awardrobe/emails",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "clean": "rm -rf .react-email .turbo node_modules dist",
-    "emails:preview": "email dev --dir src/emails --port 3001",
-    "dev": "pnpm build --watch",
-    "build": "tsup index.ts --format cjs --dts"
+    "emails:preview": "email dev --dir src/emails --port 3001"
   },
   "dependencies": {
     "@react-email/components": "0.0.12",
@@ -21,7 +21,6 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@types/node": "^20.10.3",
     "@types/react": "^18.2.42",
-    "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   }
 }

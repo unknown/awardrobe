@@ -1,5 +1,5 @@
 {
-  "extends": "@awardrobe/tsconfig/nextjs.json",
+  "extends": "@awardrobe/tsconfig/base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "plugins": [
@@ -11,7 +11,9 @@
       "@ui/*": ["src/components/ui/*"],
       "@icons/*": ["src/components/icons/*"],
       "@/*": ["./src/*"]
-    }
+    },
+    "incremental": true,
+    "jsx": "preserve"
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

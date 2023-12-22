@@ -2,6 +2,7 @@
   "name": "@awardrobe/web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "rm -rf .next .turbo node_modules",
     "with-env": "dotenv -e ../../.env --",

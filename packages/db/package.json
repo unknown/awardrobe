@@ -2,8 +2,10 @@
   "name": "@awardrobe/db",
   "version": "1.0.0",
   "private": true,
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist"
   },
@@ -14,7 +16,6 @@
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
-    "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   }
 }

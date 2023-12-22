@@ -2,8 +2,10 @@
   "name": "@awardrobe/prisma-types",
   "version": "1.0.0",
   "private": true,
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
@@ -19,7 +21,6 @@
     "@types/node": "^20.10.3",
     "dotenv-cli": "^7.3.0",
     "prisma": "^5.7.0",
-    "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   }
 }

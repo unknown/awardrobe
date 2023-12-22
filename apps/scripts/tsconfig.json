@@ -1,8 +1,4 @@
 {
   "extends": "@awardrobe/tsconfig/base.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "outDir": "./dist"
-  },
   "include": ["src"]
 }
