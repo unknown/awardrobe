@@ -6,7 +6,7 @@
     "clean": "rm -rf .turbo node_modules dist",
     "with-env": "dotenv -e ../../.env --",
     "dev": "pnpm with-env tsx watch --clear-screen=false src/index.ts",
-    "build": "pnpm with-env tsup --format cjs",
+    "build": "pnpm with-env tsup",
     "start": "pnpm with-env node dist/index.js"
   },
   "dependencies": {
