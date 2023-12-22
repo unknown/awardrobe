@@ -1,4 +1,5 @@
-import { AbercrombieUS, UniqloUS, VariantInfo } from "@awardrobe/adapters";
+import { AbercrombieUS, downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
+import { addProductImage } from "@awardrobe/media-store";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 import { prisma } from "@awardrobe/prisma-types";
 
@@ -14,6 +15,7 @@ async function seedUniqloUS() {
       externalUrl: "https://www.uniqlo.com/",
     },
   });
+
   const productCodes = [
     "E457264-000",
     "E457967-000",
@@ -23,8 +25,17 @@ async function seedUniqloUS() {
     "E455498-000",
     "E450251-000",
   ];
+
   for (const productCode of productCodes) {
-    const details = await UniqloUS.getProductDetails(productCode);
+    const details = await UniqloUS.getProductDetails(productCode).catch((error) => {
+      console.error(`Failed to get product details for ${productCode}\n${error}`);
+      return null;
+    });
+
+    if (!details) {
+      continue;
+    }
+
     await addProduct(uniqlo.id, productCode, details);
   }
 }
@@ -42,10 +53,18 @@ async function seedAbercrombieUS() {
     },
   });
 
-  const productCodes = ["519937"];
+  const productCodes = ["511064"];
 
   for (const productCode of productCodes) {
-    const details = await AbercrombieUS.getProductDetails(productCode);
+    const details = await AbercrombieUS.getProductDetails(productCode).catch((error) => {
+      console.error(`Failed to get product details for ${productCode}\n${error}`);
+      return null;
+    });
+
+    if (!details) {
+      continue;
+    }
+
     await addProduct(abercrombie.id, productCode, details);
   }
 }
@@ -71,14 +90,10 @@ async function main() {
   await populateMeilisearch();
 }
 
-async function addProduct(
-  storeId: string,
-  productCode: string,
-  productDetails: { name: string; variants: VariantInfo[] },
-) {
-  const { name, variants } = productDetails;
+async function addProduct(storeId: string, productCode: string, details: ProductDetails) {
+  const { name, variants, imageUrl } = details;
 
-  await prisma.product.upsert({
+  const product = await prisma.product.upsert({
     where: { storeId_productCode: { storeId, productCode } },
     update: {},
     create: {
@@ -95,6 +110,15 @@ async function addProduct(
       },
     },
   });
+
+  if (!imageUrl) {
+    console.log(`No image found for ${productCode}`);
+    return;
+  }
+
+  await downloadImage(imageUrl)
+    .then(async (imageBuffer) => addProductImage(product.id, imageBuffer))
+    .catch(() => console.error(`Failed to add image for ${productCode}`));
 }
 
 main()
