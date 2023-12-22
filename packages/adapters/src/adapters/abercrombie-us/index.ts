@@ -4,7 +4,7 @@ import { proxies } from "@awardrobe/proxies";
 
 import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
-import { StoreAdapter, VariantInfo } from "../types";
+import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
@@ -90,8 +90,9 @@ export const AbercrombieUS: StoreAdapter = {
     products.forEach((product) => {
       if (!product.items[0]) return;
 
-      // sort items by attribute value sequence so that variants are ordered properly
-      Object.keys(product.items[0].definingAttrs).forEach((key) => {
+      // sort "items" (variants) by each attribute's value sequence to ensure consistent ordering
+      const attributesKeys = Object.keys(product.items[0].definingAttrs);
+      attributesKeys.forEach((key) => {
         product.items.sort((a, b) => {
           const [aAttr, bAttr] = [a.definingAttrs[key], b.definingAttrs[key]];
           if (!aAttr || !bAttr) return 0;
@@ -102,21 +103,33 @@ export const AbercrombieUS: StoreAdapter = {
       product.items.forEach((item) => {
         // the size is stored in individual grouped attributes and in a single composite attribute
         // we only want the grouped attributes
-        const attributes = Object.values(item.definingAttrs)
+        const attributes: VariantAttribute[] = Object.values(item.definingAttrs)
+          .filter((attribute) => attribute.name !== "Size") // remove composite size attribute (e.g. 28 X 32)
           .sort((a, b) => {
-            // move grouped attributes to the back
-            if (a.name.startsWith("Size_")) return 1;
-            if (b.name.startsWith("Size_")) return -1;
-            // sort by sequence
-            return a.sequence - b.sequence;
+            // sort attributes, moving size attributes to the back and with primary sizes before secondary sizes
+            const aScore = a.name.startsWith("Size_")
+              ? a.name.endsWith("_P")
+                ? 1e6
+                : 1e7
+              : a.sequence;
+
+            const bScore = b.name.startsWith("Size_")
+              ? b.name.endsWith("_P")
+                ? 1e6
+                : 1e7
+              : b.sequence;
+
+            return aScore - bScore;
           })
-          .filter((attribute) => attribute.name !== "Size") // remove composite attribute
           .map((attribute) => {
             const value =
               attribute.name === "Color"
                 ? toTitleCase(`${attribute.sequence} ${attribute.value}`)
                 : attribute.value;
-            return { name: attribute.description, value };
+            return {
+              value,
+              name: attribute.description,
+            };
           });
 
         const lowestPrice = Math.min(
@@ -128,9 +141,9 @@ export const AbercrombieUS: StoreAdapter = {
 
         variants.push({
           timestamp,
-          productUrl: getProductUrl(product, item),
           attributes,
-          inStock: item.inventory.inventory > 0,
+          productUrl: getProductUrl(product, item),
+          inStock: item.inventory.inventoryStatus === "Available",
           priceInCents: dollarsToCents(lowestPrice.toString()),
         });
       });
