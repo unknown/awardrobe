@@ -1,21 +1,12 @@
-import pThrottle from "p-throttle";
-
 import { getAdapter, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
 import { createProductVariant, ProductWithLatestPrice } from "@awardrobe/db";
 import { Price } from "@awardrobe/prisma-types";
-import { proxies } from "@awardrobe/proxies";
 
 import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
 import { VariantFlags } from "./types";
 
-export async function updateProducts(products: ProductWithLatestPrice[]) {
-  const throttle = pThrottle({ limit: proxies.getNumProxies(), interval: 250 });
-  const throttledUpdateProduct = throttle(updateProduct);
-  await Promise.all(products.map(throttledUpdateProduct));
-}
-
-async function updateProduct(product: ProductWithLatestPrice) {
+export async function updateProduct(product: ProductWithLatestPrice) {
   const variants = await getUpdatedVariants(product);
 
   if (!variants) {
