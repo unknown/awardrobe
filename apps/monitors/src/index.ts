@@ -1,41 +1,40 @@
-import { Job, Queue, Worker } from "bullmq";
-import IORedis from "ioredis";
+import PgBoss, { Job } from "pg-boss";
 
 import { findProducts, findProductWithLatestPrice } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
 import { updateProduct } from "./monitors";
 
-// TODO: improve this
-const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) {
-  throw new Error("Missing REDIS_URL");
-}
-const redis = new IORedis(redisUrl, { maxRetriesPerRequest: null });
+async function main() {
+  const { numSuccesses, numFailures } = await proxies.testProxies();
+  console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
-const queue = new Queue("monitors", { connection: redis });
+  if (!process.env.PG_DATABASE_URL) {
+    throw new Error("Missing PG_DATABASE_URL");
+  }
 
-async function handleJob(job: Job) {
-  switch (job.name) {
-    case "refresh":
-      const products = await findProducts().catch((error) => {
-        console.error(`Failed to find products\n${error}`);
-        return [];
-      });
+  const boss = new PgBoss(process.env.PG_DATABASE_URL);
+  await boss.start();
 
-      console.log(`Updating ${products.length} products`);
+  const schedules = await boss.getSchedules();
+  await Promise.all(schedules.map((schedule) => boss.unschedule(schedule.name)));
+  await boss.schedule("update-products", "*/10 * * * *", { type: "update-products" });
 
-      queue.addBulk(
-        products.map((product) => ({
-          name: "updateProduct",
-          data: { productId: product.id },
-        })),
-      );
+  await boss.work("update-products", async () => {
+    const products = await findProducts();
+    console.log(`Updating ${products.length} products`);
 
-      break;
+    await boss.insert(
+      products.map((product) => ({ name: "update-product", data: { productId: product.id } })),
+    );
+  });
 
-    case "updateProduct":
-      const { productId }: { productId: string } = job.data;
+  await boss.work(
+    "update-product",
+    { teamSize: proxies.getNumProxies(), newJobCheckInterval: 250 },
+    async (job: Job<{ productId: string }>) => {
+      const { productId } = job.data;
+
       const product = await findProductWithLatestPrice(productId).catch((error) => {
         console.error(`Failed to find product ${productId}\n${error}`);
         return null;
@@ -48,22 +47,8 @@ async function handleJob(job: Job) {
       await updateProduct(product).catch((error) => {
         console.error(`Failed to update product\n${error}`);
       });
-
-      break;
-  }
-}
-
-async function main() {
-  const { numSuccesses, numFailures } = await proxies.testProxies();
-  console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
-
-  await queue.obliterate();
-  await queue.add("refresh", { type: "frequent" }, { repeat: { pattern: "*/10 * * * *" } });
-
-  new Worker("monitors", handleJob, {
-    connection: redis,
-    limiter: { max: proxies.getNumProxies(), duration: 250 },
-  });
+    },
+  );
 }
 
 void main();

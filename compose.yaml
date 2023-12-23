@@ -19,10 +19,12 @@ services:
     environment:
       - MEILI_NO_ANALYTICS=true
 
-  redis:
-    container_name: awardrobe-redis
-    image: redis:7.2-alpine
-    restart: always
-    command: redis-server --save 20 1 --loglevel warning --requirepass redis
+  postgres:
+    container_name: awardrobe-postgres
+    image: postgres:14-alpine
     ports:
-      - 6379:6379
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dev
