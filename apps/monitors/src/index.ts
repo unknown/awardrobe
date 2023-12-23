@@ -25,13 +25,21 @@ async function main() {
     console.log(`Updating ${products.length} products`);
 
     await boss.insert(
-      products.map((product) => ({ name: "update-product", data: { productId: product.id } })),
+      products.map((product) => ({
+        name: "update-product",
+        data: { productId: product.id },
+        singletonKey: product.id,
+      })),
     );
   });
 
   await boss.work(
     "update-product",
-    { teamSize: proxies.getNumProxies(), newJobCheckInterval: 250 },
+    {
+      teamSize: proxies.getNumProxies(),
+      teamConcurrency: proxies.getNumProxies(),
+      newJobCheckInterval: 250,
+    },
     async (job: Job<{ productId: string }>) => {
       const { productId } = job.data;
 
