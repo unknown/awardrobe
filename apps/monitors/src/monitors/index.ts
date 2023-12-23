@@ -101,8 +101,8 @@ function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
   }
 
   const diffTime = variantInfo.timestamp.getTime() - latestPrice.timestamp.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  const isStale = diffDays >= 1;
+  const diffHours = diffTime / (1000 * 60 * 60);
+  const isStale = diffHours >= 12;
 
   const hasPriceChanged = variantInfo.priceInCents !== latestPrice.priceInCents;
   const hasPriceDropped = variantInfo.priceInCents < latestPrice.priceInCents;
