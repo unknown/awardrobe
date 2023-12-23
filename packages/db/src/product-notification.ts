@@ -9,16 +9,28 @@ export async function createNotification(options: {
 }) {
   const { variantId, userId, priceInCents, priceDrop, restock } = options;
 
-  return await prisma.productNotification.create({
-    data: {
-      productVariant: { connect: { id: variantId } },
-      priceInCents,
-      priceDrop,
-      restock,
-      user: { connect: { id: userId } },
-    },
-    include: { productVariant: true },
-  });
+  const [notification, _] = await prisma.$transaction([
+    prisma.productNotification.create({
+      data: {
+        priceInCents,
+        priceDrop,
+        restock,
+        user: { connect: { id: userId } },
+        productVariant: { connect: { id: variantId } },
+      },
+      include: { productVariant: true },
+    }),
+    prisma.product.updateMany({
+      where: { variants: { some: { id: variantId } } },
+      data: {
+        numNotified: {
+          increment: 1,
+        },
+      },
+    }),
+  ]);
+
+  return notification;
 }
 
 const notificationWithVariant = Prisma.validator<Prisma.ProductNotificationDefaultArgs>()({
@@ -104,7 +116,20 @@ export async function updateLastPingByType(options: {
 export async function deleteNotification(options: { notificationId: string }) {
   const { notificationId } = options;
 
-  return await prisma.productNotification.delete({
-    where: { id: notificationId },
+  return await prisma.$transaction(async (tx) => {
+    const notification = await prisma.productNotification.delete({
+      where: { id: notificationId },
+    });
+
+    await tx.product.updateMany({
+      where: { variants: { some: { id: notification.productVariantId } } },
+      data: {
+        numNotified: {
+          decrement: 1,
+        },
+      },
+    });
+
+    return notification;
   });
 }

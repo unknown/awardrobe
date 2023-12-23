@@ -75,6 +75,7 @@ model Product {
   productCode String
   name        String
   variants    ProductVariant[]
+  numNotified Int              @default(0)
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 

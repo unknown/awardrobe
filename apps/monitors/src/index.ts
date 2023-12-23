@@ -18,11 +18,25 @@ async function main() {
 
   const schedules = await boss.getSchedules();
   await Promise.all(schedules.map((schedule) => boss.unschedule(schedule.name)));
-  await boss.schedule("update-products", "*/10 * * * *", { type: "update-products" });
+  await boss.schedule("update-products-frequent", "*/10 * * * *");
+  await boss.schedule("update-products-daily", "0 0 * * *");
 
-  await boss.work("update-products", async () => {
-    const products = await findProducts();
-    console.log(`Updating ${products.length} products`);
+  await boss.work("update-products-frequent", async () => {
+    const products = await findProducts({ numNotified: { gte: 1 } });
+    console.log(`[Frequent] Updating ${products.length} products`);
+
+    await boss.insert(
+      products.map((product) => ({
+        name: "update-product",
+        data: { productId: product.id },
+        singletonKey: product.id,
+      })),
+    );
+  });
+
+  await boss.work("update-products-daily", async () => {
+    const products = await findProducts({ numNotified: { lte: 0 } });
+    console.log(`[Daily] Updating ${products.length} products`);
 
     await boss.insert(
       products.map((product) => ({
@@ -38,6 +52,7 @@ async function main() {
     {
       teamSize: proxies.getNumProxies(),
       teamConcurrency: proxies.getNumProxies(),
+      teamRefill: true,
       newJobCheckInterval: 250,
     },
     async (job: Job<{ productId: string }>) => {

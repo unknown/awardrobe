@@ -24,8 +24,16 @@ export async function createProduct(options: {
   });
 }
 
-export async function findProducts(): Promise<Product[]> {
-  return await prisma.product.findMany();
+export type FindProductOptions = {
+  numNotified?: { gte?: number; lte?: number };
+};
+
+export async function findProducts(options: FindProductOptions = {}): Promise<Product[]> {
+  return await prisma.product.findMany({
+    where: {
+      numNotified: options.numNotified,
+    },
+  });
 }
 
 const productWithLatestPrice = Prisma.validator<Prisma.ProductDefaultArgs>()({
