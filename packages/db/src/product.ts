@@ -1,5 +1,5 @@
 import { VariantInfo } from "@awardrobe/adapters";
-import { Prisma, prisma } from "@awardrobe/prisma-types";
+import { Prisma, prisma, Product } from "@awardrobe/prisma-types";
 
 export async function createProduct(options: {
   name: string;
@@ -24,6 +24,10 @@ export async function createProduct(options: {
   });
 }
 
+export async function findProducts(): Promise<Product[]> {
+  return await prisma.product.findMany();
+}
+
 const productWithLatestPrice = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: {
     variants: { include: { latestPrice: true } },
@@ -33,12 +37,12 @@ const productWithLatestPrice = Prisma.validator<Prisma.ProductDefaultArgs>()({
 
 export type ProductWithLatestPrice = Prisma.ProductGetPayload<typeof productWithLatestPrice>;
 
-export async function findProductsWithLatestPrice(): Promise<ProductWithLatestPrice[]> {
-  return await prisma.product.findMany({
-    include: {
-      variants: { include: { latestPrice: true } },
-      store: true,
-    },
+export async function findProductWithLatestPrice(
+  productId: string,
+): Promise<ProductWithLatestPrice | null> {
+  return await prisma.product.findUnique({
+    ...productWithLatestPrice,
+    where: { id: productId },
   });
 }
 

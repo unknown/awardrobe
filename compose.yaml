@@ -18,3 +18,11 @@ services:
       - 7700:7700
     environment:
       - MEILI_NO_ANALYTICS=true
+
+  redis:
+    container_name: awardrobe-redis
+    image: redis:7.2-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass redis
+    ports:
+      - 6379:6379
