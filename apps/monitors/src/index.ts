@@ -89,9 +89,11 @@ async function main() {
     async (job: Job<{ productCode: string; storeHandle: string }>) => {
       const { productCode, storeHandle } = job.data;
 
-      await insertProduct(productCode, storeHandle).catch((error) => {
-        console.error(`Failed to insert product\n${error}`);
-      });
+      await insertProduct(productCode, storeHandle)
+        .then(() => console.log(`Inserted ${productCode} for ${storeHandle}`))
+        .catch((error) => {
+          console.error(`Failed to insert product\n${error}`);
+        });
     },
   );
 
