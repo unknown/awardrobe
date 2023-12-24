@@ -9,6 +9,8 @@ export default defineConfig({
     "@awardrobe/adapters",
     "@awardrobe/db",
     "@awardrobe/emails",
+    "@awardrobe/media-store",
+    "@awardrobe/meilisearch-types",
     "@awardrobe/prisma-types",
     "@awardrobe/proxies",
     "@awardrobe/tsconfig",
