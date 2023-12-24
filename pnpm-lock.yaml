@@ -56,6 +56,9 @@ importers:
       '@awardrobe/emails':
         specifier: workspace:^
         version: link:../../packages/emails
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../../packages/media-store
       '@awardrobe/meilisearch-types':
         specifier: workspace:^
         version: link:../../packages/meilisearch-types

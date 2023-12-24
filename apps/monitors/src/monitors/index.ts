@@ -1,10 +1,17 @@
-import { getAdapter, ProductDetails, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
+import {
+  downloadImage,
+  getAdapter,
+  ProductDetails,
+  VariantAttribute,
+  VariantInfo,
+} from "@awardrobe/adapters";
 import {
   createLatestPrice,
   createProduct,
   createProductVariant,
   ProductWithLatestPrice,
 } from "@awardrobe/db";
+import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 import { Price } from "@awardrobe/prisma-types";
 
@@ -55,7 +62,12 @@ export async function insertProduct(productCode: string, storeHandle: string) {
     storeName: product.store.name,
   });
 
-  // TODO: revalidate path, add image to media store
+  if (details.imageUrl) {
+    const image = await downloadImage(details.imageUrl);
+    await addProductImage(product.id, image);
+  }
+
+  // TODO: revalidate path
 }
 
 export async function updateProduct(product: ProductWithLatestPrice) {
