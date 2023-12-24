@@ -31,7 +31,7 @@ export const AbercrombieUS: StoreAdapter = {
     // category 10000 represents all of A&F
     const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
 
-    const productCodes: string[] = [];
+    const productCodes = new Set<string>();
     const increment = 240;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
@@ -45,14 +45,14 @@ export const AbercrombieUS: StoreAdapter = {
 
       const { products, stats } = searchSchema.parse(searchResponse.data);
 
-      productCodes.push(...products.map((product) => product.collection));
+      products.forEach((product) => productCodes.add(product.collection));
 
       if (!limit) {
         total = stats.total;
       }
     }
 
-    return productCodes;
+    return Array.from(productCodes);
   },
 
   async getProductCode(url: string) {
