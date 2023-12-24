@@ -25,13 +25,16 @@ export async function insertProduct(productCode: string, storeHandle: string) {
   });
 
   for (const variantInfo of details.variants) {
+    const variantAttributesMap = attributesToMap(variantInfo.attributes);
     const variant = product.variants.find((variant) => {
       const variantAttributes = variant.attributes as VariantAttribute[];
-      return shallowEquals(variantInfo.attributes, attributesToMap(variantAttributes));
+      return shallowEquals(variantAttributesMap, attributesToMap(variantAttributes));
     });
 
     if (!variant) {
-      console.error(`Failed to find variant ${JSON.stringify(variantInfo.attributes)}`);
+      console.error(
+        `Failed to find variant ${JSON.stringify(variantInfo.attributes)} for ${product.name}`,
+      );
       continue;
     }
 
@@ -51,7 +54,7 @@ export async function insertProduct(productCode: string, storeHandle: string) {
     storeName: product.store.name,
   });
 
-  // TODO: revalidate path
+  // TODO: revalidate path, add image to media store
 }
 
 export async function updateProduct(product: ProductWithLatestPrice) {
