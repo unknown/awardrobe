@@ -1,9 +1,11 @@
 import PgBoss, { Job } from "pg-boss";
 
-import { findProducts, findProductWithLatestPrice } from "@awardrobe/db";
+import { getAdapter } from "@awardrobe/adapters";
+import { findProducts, findProductWithLatestPrice, findStores } from "@awardrobe/db";
+import { prisma } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 
-import { updateProduct } from "./monitors";
+import { insertProduct, updateProduct } from "./monitors";
 
 async function main() {
   const { numSuccesses, numFailures } = await proxies.testProxies();
@@ -18,8 +20,10 @@ async function main() {
 
   const schedules = await boss.getSchedules();
   await Promise.all(schedules.map((schedule) => boss.unschedule(schedule.name)));
+
   await boss.schedule("update-products-frequent", "*/10 * * * *");
-  await boss.schedule("update-products-daily", "0 0 * * *");
+  await boss.schedule("update-products-periodic", "0 0 * * *");
+  await boss.schedule("update-products-list", "0 0 * * *");
 
   await boss.work("update-products-frequent", async () => {
     const products = await findProducts({ numNotified: { gte: 1 } });
@@ -30,11 +34,12 @@ async function main() {
         name: "update-product",
         data: { productId: product.id },
         singletonKey: product.id,
+        priority: 10,
       })),
     );
   });
 
-  await boss.work("update-products-daily", async () => {
+  await boss.work("update-products-periodic", async () => {
     const products = await findProducts({ numNotified: { lte: 0 } });
     console.log(`[Daily] Updating ${products.length} products`);
 
@@ -53,7 +58,7 @@ async function main() {
       teamSize: proxies.getNumProxies(),
       teamConcurrency: proxies.getNumProxies(),
       teamRefill: true,
-      newJobCheckInterval: 250,
+      newJobCheckInterval: 500,
     },
     async (job: Job<{ productId: string }>) => {
       const { productId } = job.data;
@@ -72,6 +77,60 @@ async function main() {
       });
     },
   );
+
+  await boss.work(
+    "insert-product",
+    {
+      teamSize: proxies.getNumProxies(),
+      teamConcurrency: proxies.getNumProxies(),
+      teamRefill: true,
+      newJobCheckInterval: 2000,
+    },
+    async (job: Job<{ productCode: string; storeHandle: string }>) => {
+      const { productCode, storeHandle } = job.data;
+
+      await insertProduct(productCode, storeHandle).catch((error) => {
+        console.error(`Failed to insert product\n${error}`);
+      });
+    },
+  );
+
+  await boss.work("update-products-list", async () => {
+    const stores = await findStores();
+    console.log(`Updating ${stores.length} stores`);
+
+    for (const store of stores) {
+      const adapter = getAdapter(store.handle);
+
+      if (!adapter) {
+        console.error(`No adapter found for ${store.handle}`);
+        continue;
+      }
+
+      const limit = process.env.NODE_ENV === "production" ? undefined : 10;
+      const products = await adapter.getProducts(limit).catch((error) => {
+        console.error(`Failed to get products for ${store.handle}\n${error}`);
+        return [];
+      });
+
+      console.log(`Found ${products.length} products for ${store.handle}`);
+
+      for (const productCode of products) {
+        const product = await prisma.product.findFirst({
+          where: {
+            productCode,
+            store: { handle: store.handle },
+          },
+        });
+
+        if (product) {
+          continue;
+        }
+
+        await boss.send("insert-product", { productCode, storeHandle: store.handle });
+      }
+    }
+  });
 }
 
 void main();

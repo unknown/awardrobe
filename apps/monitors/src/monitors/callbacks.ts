@@ -3,6 +3,9 @@ import { PriceNotificationEmail, resend, StockNotificationEmail } from "@awardro
 
 import { UpdateVariantCallback, VariantFlags } from "./types";
 
+// TODO: config file?
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
+
 const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({
   variantInfo,
   productVariant,
@@ -21,7 +24,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
-  const url = new URL(`https://www.awardrobe.co/product/${product.id}`);
+  const url = new URL(`/product/${product.id}`, baseUrl);
   attributes.forEach(({ name, value }) => {
     url.searchParams.set(name, value);
   });
@@ -65,7 +68,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
-  const url = new URL(`https://www.awardrobe.co/product/${product.id}`);
+  const url = new URL(`/product/${product.id}`, baseUrl);
   attributes.forEach(({ name, value }) => {
     url.searchParams.set(name, value);
   });

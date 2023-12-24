@@ -31,24 +31,28 @@ export const AbercrombieUS: StoreAdapter = {
     // category 10000 represents all of A&F
     const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
 
-    const productCodes: string[] = [];
-    const increment = 100;
+    const productCodes = new Set<string>();
+    const increment = 240;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-      const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
+      const params = {
+        start: offset,
+        rows: Math.min(total - offset, increment),
+        swatches: false,
+      };
       const { httpsAgent } = proxies.getRandomProxy();
       const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 
       const { products, stats } = searchSchema.parse(searchResponse.data);
 
-      productCodes.push(...products.map((product) => product.collection));
+      products.forEach((product) => productCodes.add(product.collection));
 
       if (!limit) {
         total = stats.total;
       }
     }
 
-    return productCodes;
+    return Array.from(productCodes);
   },
 
   async getProductCode(url: string) {
