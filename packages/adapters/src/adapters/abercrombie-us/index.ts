@@ -32,10 +32,14 @@ export const AbercrombieUS: StoreAdapter = {
     const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
 
     const productCodes: string[] = [];
-    const increment = 100;
+    const increment = 240;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-      const params = { start: offset, rows: Math.min(total - offset, increment), swatches: false };
+      const params = {
+        start: offset,
+        rows: Math.min(total - offset, increment),
+        swatches: false,
+      };
       const { httpsAgent } = proxies.getRandomProxy();
       const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
 

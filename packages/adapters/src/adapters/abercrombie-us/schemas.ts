@@ -46,5 +46,9 @@ export const searchSchema = z.object({
     total: z.number(),
     startNum: z.number(),
   }),
-  products: z.array(productSchema),
+  products: z.array(
+    z.object({
+      collection: z.string(),
+    }),
+  ),
 });
