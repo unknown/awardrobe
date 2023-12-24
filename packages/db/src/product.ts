@@ -20,7 +20,7 @@ export async function createProduct(options: {
         },
       },
     },
-    include: { store: true },
+    include: { store: true, variants: true },
   });
 }
 
