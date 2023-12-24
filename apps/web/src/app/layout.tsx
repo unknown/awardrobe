@@ -2,6 +2,8 @@ import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 import "@/styles/globals.css";
 
 const inter = Inter({
@@ -29,12 +31,14 @@ type RootLayoutProps = {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head />
       <body className="bg-background min-h-screen font-sans antialiased">
-        {children}
-        <Analytics />
-        <SpeedInsights />
+        <ThemeProvider attribute="class" enableSystem>
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </ThemeProvider>
       </body>
     </html>
   );

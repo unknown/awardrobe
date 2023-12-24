@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@ui/Button";
-import { twMerge } from "tailwind-merge";
+import { ToggleGroup, ToggleGroupItem } from "@ui/ToggleGroup";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { DateRange, DateRanges } from "@/utils/dates";
@@ -21,33 +20,27 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
   const { setIsLoading } = useProductInfo();
 
   return (
-    <div aria-label="Select a date range">
-      {DateRanges.map((range, index) => {
-        const isSelected = range === dateRange;
-        const [isFirst, isLast] = [index === 0, index === DateRanges.length - 1];
-        const rounded = isFirst ? "rounded-r-none" : isLast ? "rounded-l-none" : "rounded-none";
-
-        return (
-          <Button
-            key={range}
-            variant="outline"
-            onClick={() => {
-              if (dateRange === range) {
-                return;
-              }
-
-              setIsLoading(true);
-              setDateRange(range);
-              const params = new URLSearchParams(searchParams);
-              params.set("range", range);
-              router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-            }}
-            className={twMerge(isSelected && "bg-slate-200", rounded, !isLast && "border-r-0")}
-          >
-            {range}
-          </Button>
-        );
-      })}
-    </div>
+    <ToggleGroup
+      className="bg-muted text-muted-foreground rounded-lg p-1"
+      type="single"
+      value={dateRange}
+      onValueChange={(range: DateRange) => {
+        setIsLoading(true);
+        setDateRange(range);
+        const params = new URLSearchParams(searchParams);
+        params.set("range", range);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      }}
+    >
+      {DateRanges.map((range) => (
+        <ToggleGroupItem
+          className="data-[state=on]:bg-background data-[state=active]:shadow"
+          key={range}
+          value={range}
+        >
+          {range}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 }
