@@ -1,6 +1,6 @@
 import PgBoss, { Job } from "pg-boss";
 
-import { findProducts, findProductWithLatestPrice } from "@awardrobe/db";
+import { findProducts, findProductWithLatestPrice, findStores } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
 import { updateProduct } from "./monitors";
@@ -18,8 +18,10 @@ async function main() {
 
   const schedules = await boss.getSchedules();
   await Promise.all(schedules.map((schedule) => boss.unschedule(schedule.name)));
+
   await boss.schedule("update-products-frequent", "*/10 * * * *");
-  await boss.schedule("update-products-daily", "0 0 * * *");
+  await boss.schedule("update-products-periodic", "0 0 * * *");
+  await boss.schedule("update-products-list", "*/1 * * * *");
 
   await boss.work("update-products-frequent", async () => {
     const products = await findProducts({ numNotified: { gte: 1 } });
@@ -30,11 +32,12 @@ async function main() {
         name: "update-product",
         data: { productId: product.id },
         singletonKey: product.id,
+        priority: 10,
       })),
     );
   });
 
-  await boss.work("update-products-daily", async () => {
+  await boss.work("update-products-periodic", async () => {
     const products = await findProducts({ numNotified: { lte: 0 } });
     console.log(`[Daily] Updating ${products.length} products`);
 
@@ -72,6 +75,11 @@ async function main() {
       });
     },
   );
+
+  await boss.work("update-products-list", async () => {
+    const stores = await findStores();
+    console.log(`Updating ${stores.length} stores`);
+  });
 }
 
 void main();
