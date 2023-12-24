@@ -61,7 +61,7 @@ export default async function IndexPage() {
           </div>
         </div>
       </section>
-      <section className="space-y-6 bg-slate-50 py-8 md:py-12 lg:py-24">
+      <section className="space-y-6 bg-slate-50 py-8 dark:bg-transparent md:py-12 lg:py-24">
         <div className="container max-w-4xl space-y-8 md:space-y-12">
           <div className="space-y-4 text-center">
             <h2 className="text-xl font-bold sm:text-2xl md:text-3xl lg:text-4xl">How it works</h2>
