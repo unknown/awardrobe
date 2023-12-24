@@ -67,7 +67,10 @@ export async function insertProduct(productCode: string, storeHandle: string) {
     await addProductImage(product.id, image);
   }
 
-  // TODO: revalidate path
+  // TODO: relocate this?
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
+  const url = new URL("/api/products/revalidate", baseUrl);
+  await fetch(url.toString());
 }
 
 export async function updateProduct(product: ProductWithLatestPrice) {
