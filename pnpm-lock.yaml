@@ -376,8 +376,8 @@ importers:
   packages/meilisearch-types:
     dependencies:
       meilisearch:
-        specifier: ^0.34.2
-        version: 0.34.2
+        specifier: ^0.36.0
+        version: 0.36.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -5570,8 +5570,8 @@ packages:
     resolution: {integrity: sha512-4vRUvPyxdO8cWULGTh9dZWL2tZK6LDBvj+OGHBER7poH9Qdt7kXEoj20wiz4lQUbUXQZFjPbe5mVDo9nutizCw==}
     dev: false
 
-  /meilisearch@0.34.2:
-    resolution: {integrity: sha512-bbiq8pr+3yyOLU+9qdnNX7CEUQCFNs13Vgrne1iNXVnnRxj9aPRpWP8Kh8o0mdQ2tVKJKGZ7MN5rCGm6qvu52A==}
+  /meilisearch@0.36.0:
+    resolution: {integrity: sha512-swcvEYrct0/zsGj3jlbPm1OYxbH14IURnlysKlXywNicIQ5EMkSYLYCLCwOuBKAaGcdISWdgdylH9TXVLegmOQ==}
     dependencies:
       cross-fetch: 3.1.8
     transitivePeerDependencies:
