@@ -1,7 +1,12 @@
 import { getAdapter, ProductDetails, VariantAttribute, VariantInfo } from "@awardrobe/adapters";
-import { createProduct, createProductVariant, ProductWithLatestPrice } from "@awardrobe/db";
+import {
+  createLatestPrice,
+  createProduct,
+  createProductVariant,
+  ProductWithLatestPrice,
+} from "@awardrobe/db";
 import { addProduct } from "@awardrobe/meilisearch-types";
-import { Price, prisma } from "@awardrobe/prisma-types";
+import { Price } from "@awardrobe/prisma-types";
 
 import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
@@ -38,13 +43,9 @@ export async function insertProduct(productCode: string, storeHandle: string) {
       continue;
     }
 
-    await prisma.price.create({
-      data: {
-        priceInCents: variantInfo.priceInCents,
-        inStock: variantInfo.inStock,
-        productVariant: { connect: { id: variant.id } },
-        latestInProductVariant: { connect: { id: variant.id } },
-      },
+    await createLatestPrice({
+      variantId: variant.id,
+      variantInfo,
     });
   }
 
