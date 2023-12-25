@@ -34,7 +34,7 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
     >
       {DateRanges.map((range) => (
         <ToggleGroupItem
-          className="data-[state=on]:bg-background data-[state=active]:shadow"
+          className="data-[state=on]:bg-background data-[state=on]:shadow"
           key={range}
           value={range}
         >
