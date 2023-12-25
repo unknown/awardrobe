@@ -23,7 +23,7 @@ async function main() {
 
   await boss.schedule("update-products-frequent", "*/10 * * * *");
   await boss.schedule("update-products-periodic", "0 0 * * *");
-  await boss.schedule("update-products-list", "12 0 * * *");
+  await boss.schedule("update-products-list", "0 12 * * *");
 
   await boss.work("update-products-frequent", async () => {
     const products = await findProducts({ numNotified: { gte: 1 } });
