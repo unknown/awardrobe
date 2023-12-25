@@ -19,12 +19,15 @@ import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
 import { VariantFlags } from "./types";
 
+// TODO: relocate this?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
 if (!baseUrl) {
   throw new Error("Missing NEXT_PUBLIC_SITE_URL");
 }
-
 console.log(`Using ${baseUrl} as base URL`);
+
+const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
+console.log(`Using ${revalidateUrl.toString()} as revalidate URL`);
 
 export async function insertProduct(productCode: string, storeHandle: string) {
   const details = await getUpdatedDetails({ storeHandle, productCode }).catch((error) => {
@@ -74,9 +77,7 @@ export async function insertProduct(productCode: string, storeHandle: string) {
     await addProductImage(product.id, image);
   }
 
-  // TODO: relocate this?
-  const url = new URL("/api/products/revalidate", baseUrl);
-  await fetch(url.toString());
+  await fetch(revalidateUrl.toString());
 }
 
 export async function updateProduct(product: ProductWithLatestPrice) {
