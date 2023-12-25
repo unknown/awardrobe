@@ -19,6 +19,13 @@ import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
 import { VariantFlags } from "./types";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+if (!baseUrl) {
+  throw new Error("Missing NEXT_PUBLIC_SITE_URL");
+}
+
+console.log(`Using ${baseUrl} as base URL`);
+
 export async function insertProduct(productCode: string, storeHandle: string) {
   const details = await getUpdatedDetails({ storeHandle, productCode }).catch((error) => {
     console.error(`Failed to get details while inserting product ${productCode}\n${error}`);
@@ -68,7 +75,6 @@ export async function insertProduct(productCode: string, storeHandle: string) {
   }
 
   // TODO: relocate this?
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
   const url = new URL("/api/products/revalidate", baseUrl);
   await fetch(url.toString());
 }
