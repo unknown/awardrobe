@@ -1,8 +1,11 @@
 import axios from "axios";
 
-// TODO: throw if env vars are not set
 const MEDIA_WORKER_URL = process.env.MEDIA_WORKER_URL;
 const MEDIA_WORKER_SECRET = process.env.MEDIA_WORKER_SECRET;
+
+if (!MEDIA_WORKER_URL || !MEDIA_WORKER_SECRET) {
+  throw new Error("Missing MEDIA_WORKER_URL or MEDIA_WORKER_SECRET");
+}
 
 export function getProductPath(productId: string) {
   return `/product/${productId}`;
