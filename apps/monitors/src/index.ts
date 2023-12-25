@@ -23,7 +23,7 @@ async function main() {
 
   await boss.schedule("update-products-frequent", "*/10 * * * *");
   await boss.schedule("update-products-periodic", "0 0 * * *");
-  await boss.schedule("update-products-list", "0 0 * * *");
+  await boss.schedule("update-products-list", "12 0 * * *");
 
   await boss.work("update-products-frequent", async () => {
     const products = await findProducts({ numNotified: { gte: 1 } });
@@ -63,18 +63,7 @@ async function main() {
     async (job: Job<{ productId: string }>) => {
       const { productId } = job.data;
 
-      const product = await findProductWithLatestPrice(productId).catch((error) => {
-        console.error(`Failed to find product ${productId}\n${error}`);
-        return null;
-      });
-
-      if (!product) {
-        return;
-      }
-
-      await updateProduct(product).catch((error) => {
-        console.error(`Failed to update product\n${error}`);
-      });
+      await updateProduct(productId);
     },
   );
 
@@ -89,11 +78,8 @@ async function main() {
     async (job: Job<{ productCode: string; storeHandle: string }>) => {
       const { productCode, storeHandle } = job.data;
 
-      await insertProduct(productCode, storeHandle)
-        .then(() => console.log(`Inserted ${productCode} for ${storeHandle}`))
-        .catch((error) => {
-          console.error(`Failed to insert product\n${error}`);
-        });
+      const product = await insertProduct(productCode, storeHandle);
+      console.log(`Inserted ${product.name} for ${storeHandle}`);
     },
   );
 
@@ -110,10 +96,7 @@ async function main() {
       }
 
       const limit = process.env.NODE_ENV === "production" ? undefined : 10;
-      const products = await adapter.getProducts(limit).catch((error) => {
-        console.error(`Failed to get products for ${store.handle}\n${error}`);
-        return [];
-      });
+      const products = await adapter.getProducts(limit);
 
       console.log(`Found ${products.length} products for ${store.handle}`);
 
@@ -129,7 +112,11 @@ async function main() {
           continue;
         }
 
-        await boss.send("insert-product", { productCode, storeHandle: store.handle });
+        await boss.send(
+          "insert-product",
+          { productCode, storeHandle: store.handle },
+          { expireInHours: 6, singletonKey: `${store.handle}:${productCode}` },
+        );
       }
     }
   });

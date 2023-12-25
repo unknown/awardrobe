@@ -9,6 +9,7 @@ import {
   createLatestPrice,
   createProduct,
   createProductVariant,
+  findProductWithLatestPrice,
   ProductWithLatestPrice,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
@@ -24,20 +25,10 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
 if (!baseUrl) {
   throw new Error("Missing NEXT_PUBLIC_SITE_URL");
 }
-console.log(`Using ${baseUrl} as base URL`);
-
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
-console.log(`Using ${revalidateUrl.toString()} as revalidate URL`);
 
 export async function insertProduct(productCode: string, storeHandle: string) {
-  const details = await getUpdatedDetails({ storeHandle, productCode }).catch((error) => {
-    console.error(`Failed to get details while inserting product ${productCode}\n${error}`);
-    return null;
-  });
-
-  if (!details) {
-    return;
-  }
+  const details = await getUpdatedDetails({ storeHandle, productCode });
 
   const product = await createProduct({
     productCode,
@@ -78,20 +69,21 @@ export async function insertProduct(productCode: string, storeHandle: string) {
   }
 
   await fetch(revalidateUrl.toString());
+
+  return product;
 }
 
-export async function updateProduct(product: ProductWithLatestPrice) {
+export async function updateProduct(productId: string) {
+  const product = await findProductWithLatestPrice(productId);
+
+  if (!product) {
+    throw new Error(`Failed to find product ${productId}`);
+  }
+
   const details = await getUpdatedDetails({
     storeHandle: product.store.handle,
     productCode: product.productCode,
-  }).catch((error) => {
-    console.error(`Failed to get updated details for ${product.name}\n${error}`);
-    return null;
   });
-
-  if (!details) {
-    return;
-  }
 
   const allVariantsCallbacks = details.variants.map(async (variantInfo) => {
     const productVariant = await getProductVariant(product, variantInfo);
@@ -104,11 +96,7 @@ export async function updateProduct(product: ProductWithLatestPrice) {
       }
 
       const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
-      return callback.catch((error) =>
-        console.error(
-          `Failed to run ${flag} callback for ${product.name} (${variantInfo.attributes})\n${error}`,
-        ),
-      );
+      return callback;
     });
 
     await Promise.all(singleVariantCallbacks);
