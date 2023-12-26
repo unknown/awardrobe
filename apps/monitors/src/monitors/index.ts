@@ -27,6 +27,7 @@ if (!baseUrl) {
 }
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
 
+// TODO: DIRE NEED OF BETTER ERROR HANDLING
 export async function insertProduct(productCode: string, storeHandle: string) {
   const details = await getUpdatedDetails({ storeHandle, productCode });
 
@@ -71,12 +72,16 @@ export async function insertProduct(productCode: string, storeHandle: string) {
 
   const revalidatePromise = fetch(revalidateUrl.toString());
 
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     ...addLatestPricePromises,
     addProductToSearchPromise,
     addImagePromise,
     revalidatePromise,
   ]);
+
+  if (results.some((result) => result.status === "rejected")) {
+    throw new Error("Partial product insert");
+  }
 
   return product;
 }
@@ -107,10 +112,10 @@ export async function updateProduct(productId: string) {
       return callback;
     });
 
-    await Promise.all(singleVariantCallbacks);
+    await Promise.allSettled(singleVariantCallbacks);
   });
 
-  await Promise.all(allVariantsCallbacks);
+  await Promise.allSettled(allVariantsCallbacks);
 }
 
 async function getUpdatedDetails(options: {
