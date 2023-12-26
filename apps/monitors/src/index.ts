@@ -1,7 +1,7 @@
 import PgBoss, { Job } from "pg-boss";
 
 import { getAdapter } from "@awardrobe/adapters";
-import { findProducts, findProductWithLatestPrice, findStores } from "@awardrobe/db";
+import { findProducts, findStores } from "@awardrobe/db";
 import { prisma } from "@awardrobe/prisma-types";
 import { proxies } from "@awardrobe/proxies";
 

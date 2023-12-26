@@ -37,7 +37,7 @@ export async function insertProduct(productCode: string, storeHandle: string) {
     variants: details.variants,
   });
 
-  for (const variantInfo of details.variants) {
+  const addLatestPricePromises = details.variants.map(async (variantInfo) => {
     const variantAttributesMap = attributesToMap(variantInfo.attributes);
     const variant = product.variants.find((variant) => {
       const variantAttributes = variant.attributes as VariantAttribute[];
@@ -48,27 +48,35 @@ export async function insertProduct(productCode: string, storeHandle: string) {
       console.error(
         `Failed to find variant ${JSON.stringify(variantInfo.attributes)} for ${product.name}`,
       );
-      continue;
+      return;
     }
 
-    await createLatestPrice({
+    return createLatestPrice({
       variantId: variant.id,
       variantInfo,
     });
-  }
+  });
 
-  await addProduct({
+  const addProductToSearchPromise = addProduct({
     id: product.id,
     name: product.name,
     storeName: product.store.name,
   });
 
-  if (details.imageUrl) {
-    const image = await downloadImage(details.imageUrl);
-    await addProductImage(product.id, image);
-  }
+  const addImagePromise = details.imageUrl
+    ? downloadImage(details.imageUrl).then((imageBuffer) =>
+        addProductImage(product.id, imageBuffer),
+      )
+    : undefined;
 
-  await fetch(revalidateUrl.toString());
+  const revalidatePromise = fetch(revalidateUrl.toString());
+
+  await Promise.allSettled([
+    ...addLatestPricePromises,
+    addProductToSearchPromise,
+    addImagePromise,
+    revalidatePromise,
+  ]);
 
   return product;
 }
