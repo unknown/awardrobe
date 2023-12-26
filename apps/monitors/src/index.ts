@@ -24,6 +24,8 @@ async function main() {
   await boss.schedule("update-products-periodic", "0 0 * * *");
   await boss.schedule("update-products-list", "0 12 * * *");
 
+  boss.on("error", (error) => console.error(error));
+
   await boss.work("update-products-frequent", async () => {
     const products = await findProducts({ numNotified: { gte: 1 } });
     console.log(`[Frequent] Updating ${products.length} products`);
@@ -34,6 +36,7 @@ async function main() {
         data: { productId: product.id },
         singletonKey: product.id,
         priority: 10,
+        expireInSeconds: 3 * 60 * 60,
       })),
     );
   });
@@ -47,6 +50,7 @@ async function main() {
         name: "update-product",
         data: { productId: product.id },
         singletonKey: product.id,
+        expireInSeconds: 3 * 60 * 60,
       })),
     );
   });
