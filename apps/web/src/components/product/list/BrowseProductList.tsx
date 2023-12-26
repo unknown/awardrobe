@@ -37,6 +37,7 @@ export async function BrowseProductList({ query, page }: BrowseProductListProps)
           >
             Previous
           </Link>
+          {pageStart > 1 ? <span className="px-2">...</span> : null}
           {[...Array(pageEnd - pageStart + 1)].map((_, index) => {
             const page = pageStart + index;
             const isCurrentPage = page === searchResponse.page;
@@ -53,6 +54,7 @@ export async function BrowseProductList({ query, page }: BrowseProductListProps)
               </Link>
             );
           })}
+          {pageEnd < searchResponse.totalPages ? <span className="px-2">...</span> : null}
           <Link
             className={buttonVariants({ variant: "ghost", size: "sm" })}
             href={`/browse?q=${query}&page=${Math.min(searchResponse.totalPages, page + 1)}`}
