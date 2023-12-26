@@ -54,6 +54,20 @@ export async function findProductWithLatestPrice(
   });
 }
 
+export async function findProductsByProductCodes(options: {
+  productCodes: string[];
+  storeHandle: string;
+}) {
+  const { productCodes, storeHandle } = options;
+
+  return await prisma.product.findMany({
+    where: {
+      productCode: { in: productCodes },
+      store: { handle: storeHandle },
+    },
+  });
+}
+
 export async function findFollowingProducts(options: {
   userId: string;
   includeFollowingVariants?: boolean;

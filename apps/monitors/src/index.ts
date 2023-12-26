@@ -1,8 +1,7 @@
 import PgBoss, { Job } from "pg-boss";
 
 import { getAdapter } from "@awardrobe/adapters";
-import { findProducts, findStores } from "@awardrobe/db";
-import { prisma } from "@awardrobe/prisma-types";
+import { findProducts, findProductsByProductCodes, findStores } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
 import { insertProduct, updateProduct } from "./monitors";
@@ -96,28 +95,27 @@ async function main() {
       }
 
       const limit = process.env.NODE_ENV === "production" ? undefined : 10;
-      const products = await adapter.getProducts(limit);
+      const productCodes = await adapter.getProducts(limit);
+      const products = await findProductsByProductCodes({
+        productCodes,
+        storeHandle: store.handle,
+      });
+      const existingProductCodes = new Set(products.map((product) => product.productCode));
 
-      console.log(`Found ${products.length} products for ${store.handle}`);
+      console.log(
+        `Inserting ${existingProductCodes.size - productCodes.length} products for ${store.handle}`,
+      );
 
-      for (const productCode of products) {
-        const product = await prisma.product.findFirst({
-          where: {
-            productCode,
-            store: { handle: store.handle },
-          },
-        });
-
-        if (product) {
-          continue;
-        }
-
-        await boss.send(
-          "insert-product",
-          { productCode, storeHandle: store.handle },
-          { expireInHours: 6, singletonKey: `${store.handle}:${productCode}` },
-        );
-      }
+      await boss.insert(
+        productCodes
+          .filter((productCode) => !existingProductCodes.has(productCode))
+          .map((productCode) => ({
+            name: "insert-product",
+            data: { productCode, storeHandle: store.handle },
+            singletonKey: `${store.handle}:${productCode}`,
+            expireInSeconds: 3 * 60 * 60,
+          })),
+      );
     }
   });
 }
