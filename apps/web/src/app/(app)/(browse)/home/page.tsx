@@ -10,10 +10,7 @@ import { PageControls } from "@/components/HomepageControls";
 import { ProductList } from "@/components/product/list/ProductList";
 import { ProductSearchbar } from "@/components/product/list/ProductListControls";
 import { authOptions } from "@/utils/auth";
-
-const Pages = ["Featured", "Following"] as const;
-type Page = (typeof Pages)[number];
-const isPage = (page: any): page is Page => Pages.includes(page as Page);
+import { isPage, Page, Pages } from "./types";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);

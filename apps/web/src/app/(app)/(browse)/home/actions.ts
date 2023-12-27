@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/utils/auth";
+import { Page } from "./types";
 
-// TODO: page type
-export async function updateHomepage(page: string) {
+export async function updateHomepage(page: Page) {
   if (page === "Following") {
     const session = await getServerSession(authOptions);
     if (!session) {
