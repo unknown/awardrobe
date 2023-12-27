@@ -36,8 +36,8 @@ export async function ProductList({ products }: ProductListProps) {
         const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
         return (
-          <div className="relative rounded-md border p-4 md:p-3">
-            <Link key={product.id} href={`/product/${product.id}`} prefetch={false}>
+          <div key={product.id} className="relative rounded-md border p-4 md:p-3">
+            <Link href={`/product/${product.id}`} prefetch={false}>
               <img className="rounded-sm" src={mediaUrl} alt={`Image of ${product.name}`} />
             </Link>
             {hasNotification ? (
