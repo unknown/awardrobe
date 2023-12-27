@@ -27,7 +27,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           const signInResult = await signIn("email", {
             email,
             redirect: false,
-            callbackUrl: "/browse",
+            callbackUrl: "/home",
           });
           setIsLoading(false);
 
