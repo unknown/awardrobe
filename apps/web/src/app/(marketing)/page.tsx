@@ -60,7 +60,7 @@ export default async function IndexPage() {
             </p>
           </div>
           <div className="space-x-4 pt-14">
-            <Link href="/browse">
+            <Link href="/home">
               <Button size="lg" className="h-12 px-8 text-sm sm:text-base">
                 Get started
               </Button>

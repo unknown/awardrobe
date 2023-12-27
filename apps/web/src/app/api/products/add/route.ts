@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
     await Promise.all([addPromise, addImagePromise]);
 
-    revalidatePath("/(app)/(browse)/browse", "page");
+    revalidatePath("/(app)/home", "page");
 
     return NextResponse.json<AddProductResponse>({
       status: "success",

@@ -16,7 +16,7 @@ export function ProductListControls({ searchQuery }: ProductListControlsProps) {
 
   const debouncedSearch = useRef(
     debounce(async (query) => {
-      router.push(`/browse?q=${query}`);
+      router.push(`/home?q=${query}`);
     }, 1000),
   ).current;
 
@@ -37,7 +37,7 @@ export function ProductListControls({ searchQuery }: ProductListControlsProps) {
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             debouncedSearch.cancel();
-            router.push(`/browse?q=${event.currentTarget.value}`);
+            router.push(`/home?q=${event.currentTarget.value}`);
           }
         }}
       />
