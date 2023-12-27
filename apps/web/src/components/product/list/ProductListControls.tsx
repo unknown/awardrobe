@@ -17,7 +17,7 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
   const debouncedSearch = useRef(
     debounce(async (query) => {
       router.push(`/search?q=${query}`);
-    }, 1000),
+    }, 2000),
   ).current;
 
   useEffect(() => {
