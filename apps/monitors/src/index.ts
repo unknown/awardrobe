@@ -106,19 +106,19 @@ async function main() {
       });
       const existingProductCodes = new Set(products.map((product) => product.productCode));
 
-      console.log(
-        `Inserting ${existingProductCodes.size - productCodes.length} products for ${store.handle}`,
+      const newProductCodes = productCodes.filter(
+        (productCode) => !existingProductCodes.has(productCode),
       );
 
+      console.log(`Inserting ${newProductCodes.length} products for ${store.handle}`);
+
       await boss.insert(
-        productCodes
-          .filter((productCode) => !existingProductCodes.has(productCode))
-          .map((productCode) => ({
-            name: "insert-product",
-            data: { productCode, storeHandle: store.handle },
-            singletonKey: `${store.handle}:${productCode}`,
-            expireInSeconds: 3 * 60 * 60,
-          })),
+        newProductCodes.map((productCode) => ({
+          name: "insert-product",
+          data: { productCode, storeHandle: store.handle },
+          singletonKey: `${store.handle}:${productCode}`,
+          expireInSeconds: 3 * 60 * 60,
+        })),
       );
     }
   });
