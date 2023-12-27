@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { findFollowingProducts } from "@awardrobe/db";
 import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
-import { PageControls } from "@/app/(app)/home/PageControls";
+import { PageControls } from "@/components/HomepageControls";
 import { ProductList } from "@/components/product/list/ProductList";
 import { ProductListControls } from "@/components/product/list/ProductListControls";
 import { authOptions } from "@/utils/auth";

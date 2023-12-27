@@ -19,9 +19,7 @@ export function PageControls({ currPage, pages }: PageControlsProps) {
             "hover:bg-muted flex-1 p-3 transition-colors",
             currPage === page ? "underline underline-offset-8" : null,
           )}
-          onClick={async () => {
-            await updateHomepage(page);
-          }}
+          onClick={async () => await updateHomepage(page)}
         >
           {page}
         </button>
