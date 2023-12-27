@@ -3,10 +3,11 @@
 import { twMerge } from "tailwind-merge";
 
 import { updateHomepage } from "@/app/(app)/(browse)/home/actions";
+import { Page } from "@/app/(app)/(browse)/home/types";
 
 export type PageControlsProps = {
-  currPage: string;
-  pages: string[];
+  currPage: Page;
+  pages: Page[];
 };
 
 export function PageControls({ currPage, pages }: PageControlsProps) {
