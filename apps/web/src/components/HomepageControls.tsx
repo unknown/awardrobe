@@ -2,7 +2,7 @@
 
 import { twMerge } from "tailwind-merge";
 
-import { updateHomepage } from "@/app/(app)/home/actions";
+import { updateHomepage } from "@/app/(app)/(browse)/home/actions";
 
 export type PageControlsProps = {
   currPage: string;
