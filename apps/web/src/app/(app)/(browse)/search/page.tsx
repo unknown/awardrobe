@@ -6,7 +6,7 @@ import { Skeleton } from "@ui/Skeleton";
 import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
 import { ProductList } from "@/components/product/list/ProductList";
-import { ProductListControls } from "@/components/product/list/ProductListControls";
+import { ProductSearchbar } from "@/components/product/list/ProductListControls";
 
 type SearchPageProps = {
   searchParams: {
@@ -21,7 +21,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <Fragment>
-      <ProductListControls searchQuery={query} />
+      <ProductSearchbar searchQuery={query} useDebounce />
       <Suspense
         key={`${query}-${page}`}
         fallback={

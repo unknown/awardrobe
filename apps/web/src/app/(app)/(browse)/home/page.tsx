@@ -8,7 +8,7 @@ import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
 import { PageControls } from "@/components/HomepageControls";
 import { ProductList } from "@/components/product/list/ProductList";
-import { ProductListControls } from "@/components/product/list/ProductListControls";
+import { ProductSearchbar } from "@/components/product/list/ProductListControls";
 import { authOptions } from "@/utils/auth";
 
 const Pages = ["Featured", "Following"] as const;
@@ -44,7 +44,7 @@ export default async function HomePage() {
   return (
     <Fragment>
       <PageControls currPage={page} pages={[...Pages]} />
-      <ProductListControls searchQuery={""} />
+      <ProductSearchbar searchQuery={""} />
       <ProductList products={products} />
     </Fragment>
   );

@@ -5,13 +5,12 @@ import { useRouter } from "next/navigation";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
 
-import { AddProductDialog } from "@/components/product/AddProductDialog";
-
-type ProductListControlsProps = {
+export type ProductSearchbarProps = {
   searchQuery: string;
+  useDebounce?: boolean;
 };
 
-export function ProductListControls({ searchQuery }: ProductListControlsProps) {
+export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSearchbarProps) {
   const router = useRouter();
 
   const debouncedSearch = useRef(
@@ -27,26 +26,18 @@ export function ProductListControls({ searchQuery }: ProductListControlsProps) {
   }, [debouncedSearch]);
 
   return (
-    <div className="flex gap-2">
-      <Input
-        type="search"
-        className="flex-1"
-        placeholder="Search"
-        defaultValue={searchQuery}
-        onChange={(event) => debouncedSearch(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            debouncedSearch.cancel();
-            router.push(`/search?q=${event.currentTarget.value}`);
-          }
-        }}
-      />
-      <AddProductDialog
-        onAddProduct={({ id }) => {
-          router.refresh();
-          router.push(`/product/${id}`);
-        }}
-      />
-    </div>
+    <Input
+      type="search"
+      className="flex-1"
+      placeholder="Search"
+      defaultValue={searchQuery}
+      onChange={(event) => useDebounce && debouncedSearch(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          debouncedSearch.cancel();
+          router.push(`/search?q=${event.currentTarget.value}`);
+        }
+      }}
+    />
   );
 }
