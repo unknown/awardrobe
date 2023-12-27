@@ -3,6 +3,7 @@ import { Bell } from "@icons/Bell";
 import { getServerSession } from "next-auth";
 
 import { findNotificationsByUser } from "@awardrobe/db";
+import { getProductPath } from "@awardrobe/media-store";
 import { Product } from "@awardrobe/meilisearch-types";
 
 import { authOptions } from "@/utils/auth";
@@ -30,18 +31,25 @@ export async function ProductList({ products }: ProductListProps) {
         const hasNotification = notifications.some(
           (notification) => notification.productVariant.productId === product.id,
         );
+
+        const mediaStorePath = getProductPath(product.id);
+        const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
+
         return (
-          <Link key={product.id} href={`/product/${product.id}`} prefetch={false}>
-            <div className="relative flex h-full flex-col gap-1 rounded-md border p-4 md:p-3">
-              {hasNotification ? (
-                <div className="absolute right-4 top-4 md:right-3 md:top-3">
-                  <Bell className="h-4 w-4" strokeWidth={2} />
-                </div>
-              ) : null}
+          <div className="relative rounded-md border p-4 md:p-3">
+            <Link key={product.id} href={`/product/${product.id}`} prefetch={false}>
+              <img className="rounded-sm" src={mediaUrl} alt={`Image of ${product.name}`} />
+            </Link>
+            {hasNotification ? (
+              <div className="absolute right-5 top-5 m-0 rounded-full bg-white p-1.5 text-black shadow">
+                <Bell className="h-4 w-4" strokeWidth={2} />
+              </div>
+            ) : null}
+            <div className="mt-3">
               <p className="text-muted-foreground text-sm">{product.storeName}</p>
               <p>{product.name}</p>
             </div>
-          </Link>
+          </div>
         );
       })}
     </div>
