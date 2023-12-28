@@ -5,8 +5,8 @@ import { Skeleton } from "@ui/Skeleton";
 
 import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
+import { ProductSearchbar } from "@/components/product/controls/ProductListControls";
 import { ProductList } from "@/components/product/list/ProductList";
-import { ProductSearchbar } from "@/components/product/list/ProductListControls";
 
 type SearchPageProps = {
   searchParams: {

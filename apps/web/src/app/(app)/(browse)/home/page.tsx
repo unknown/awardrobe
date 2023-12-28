@@ -7,8 +7,8 @@ import { findFollowingProducts } from "@awardrobe/db";
 import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
 import { PageControls } from "@/components/HomepageControls";
+import { ProductSearchbar } from "@/components/product/controls/ProductListControls";
 import { ProductList } from "@/components/product/list/ProductList";
-import { ProductSearchbar } from "@/components/product/list/ProductListControls";
 import { authOptions } from "@/utils/auth";
 import { isPage, Page, Pages } from "./types";
 

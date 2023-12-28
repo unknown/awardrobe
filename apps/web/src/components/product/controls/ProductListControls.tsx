@@ -6,6 +6,7 @@ import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
 import { toast } from "sonner";
 
+import { AddProductResponse } from "@/app/api/products/add/route";
 import { FindProductResponse } from "@/app/api/products/find/route";
 
 export type ProductSearchbarProps = {
@@ -31,27 +32,62 @@ async function findProduct(productUrl: string) {
       productUrl,
     }),
   });
-  return (await response.json()) as FindProductResponse;
+  return response;
+}
+
+async function addProduct(productUrl: string) {
+  const response = await fetch("/api/products/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productUrl,
+    }),
+  });
+  return response;
 }
 
 export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  const addProductAction = async (productUrl: string) => {
+    setLoading(true);
+    const response = (await addProduct(productUrl).then((response) =>
+      response.json(),
+    )) as AddProductResponse;
+    setLoading(false);
+
+    if (response.status === "error") {
+      toast("Could not add product", {
+        description: response.error,
+      });
+      return;
+    }
+
+    router.push(`/product/${response.product.id}`);
+  };
+
   const doSearch = async (query: string) => {
     if (isUrl(query)) {
       setLoading(true);
       const response = await findProduct(query);
+      const responseBody = (await response.json()) as FindProductResponse;
       setLoading(false);
 
-      if (response.status === "error") {
+      if (responseBody.status === "error") {
         toast("Could not find product", {
-          description: response.error,
+          description: responseBody.error,
+          action:
+            response.status === 404
+              ? { label: "Add product", onClick: () => addProductAction(query) }
+              : undefined,
         });
         return;
       }
 
-      router.push(`/product/${response.product.id}`);
+      router.push(`/product/${responseBody.product.id}`);
     } else {
       router.push(`/search?q=${query}`);
     }
