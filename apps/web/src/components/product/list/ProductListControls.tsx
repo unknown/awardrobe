@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
-import debounce from "lodash.debounce";
 import { toast } from "sonner";
 
 import { FindProductResponse } from "@/app/api/products/find/route";
 
 export type ProductSearchbarProps = {
   searchQuery: string;
-  useDebounce?: boolean;
 };
 
 const isUrl = (query: string) => {
@@ -36,7 +33,7 @@ async function findProduct(productUrl: string) {
   return (await response.json()) as FindProductResponse;
 }
 
-export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSearchbarProps) {
+export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
 
   const doSearch = async (query: string) => {
@@ -54,14 +51,6 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
     }
   };
 
-  const debouncedSearch = useRef(debounce(doSearch, 2000)).current;
-
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
-
   return (
     <div className="relative">
       <Search className="text-muted-foreground absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
@@ -70,10 +59,8 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
         className="pl-8"
         placeholder="Search (product name or URL)"
         defaultValue={searchQuery}
-        onChange={useDebounce ? (event) => debouncedSearch(event.target.value) : undefined}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
-            debouncedSearch.cancel();
             doSearch(event.currentTarget.value);
           }
         }}

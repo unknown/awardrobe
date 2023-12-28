@@ -220,9 +220,6 @@ importers:
       d3-array:
         specifier: ^3.2.4
         version: 3.2.4
-      lodash.debounce:
-        specifier: ^4.0.8
-        version: 4.0.8
       next:
         specifier: ^14.0.3
         version: 14.0.3(react-dom@18.2.0)(react@18.2.0)

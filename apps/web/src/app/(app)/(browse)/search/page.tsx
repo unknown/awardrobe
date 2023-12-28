@@ -21,7 +21,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <Fragment>
-      <ProductSearchbar searchQuery={query} useDebounce />
+      <ProductSearchbar searchQuery={query} />
       <Suspense
         key={`${query}-${page}`}
         fallback={
