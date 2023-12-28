@@ -9,18 +9,14 @@ import { toast } from "sonner";
 import { AddProductResponse } from "@/app/api/products/add/route";
 import { FindProductResponse } from "@/app/api/products/find/route";
 
-export type ProductSearchbarProps = {
-  searchQuery: string;
-};
-
-const isUrl = (query: string) => {
+function isUrl(query: string) {
   try {
     new URL(query);
     return true;
   } catch (e) {
     return false;
   }
-};
+}
 
 async function findProduct(productUrl: string) {
   const response = await fetch("/api/products/find", {
@@ -47,6 +43,10 @@ async function addProduct(productUrl: string) {
   });
   return response;
 }
+
+export type ProductSearchbarProps = {
+  searchQuery: string;
+};
 
 export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
