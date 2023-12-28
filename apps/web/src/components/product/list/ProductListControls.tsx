@@ -1,30 +1,61 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
-import debounce from "lodash.debounce";
+import { toast } from "sonner";
+
+import { FindProductResponse } from "@/app/api/products/find/route";
 
 export type ProductSearchbarProps = {
   searchQuery: string;
-  useDebounce?: boolean;
 };
 
-export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSearchbarProps) {
+const isUrl = (query: string) => {
+  try {
+    new URL(query);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+async function findProduct(productUrl: string) {
+  const response = await fetch("/api/products/find", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productUrl,
+    }),
+  });
+  return (await response.json()) as FindProductResponse;
+}
+
+export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const debouncedSearch = useRef(
-    debounce(async (query) => {
+  const doSearch = async (query: string) => {
+    if (isUrl(query)) {
+      setLoading(true);
+      const response = await findProduct(query);
+      setLoading(false);
+
+      if (response.status === "error") {
+        toast("Could not find product", {
+          description: response.error,
+        });
+        return;
+      }
+
+      router.push(`/product/${response.product.id}`);
+    } else {
       router.push(`/search?q=${query}`);
-    }, 2000),
-  ).current;
-
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
+    }
+  };
 
   return (
     <div className="relative">
@@ -32,15 +63,14 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
       <Input
         type="search"
         className="pl-8"
-        placeholder="Search"
+        placeholder="Search (product name or URL)"
         defaultValue={searchQuery}
-        onChange={(event) => useDebounce && debouncedSearch(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
-            debouncedSearch.cancel();
-            router.push(`/search?q=${event.currentTarget.value}`);
+            doSearch(event.currentTarget.value);
           }
         }}
+        disabled={loading}
       />
     </div>
   );
