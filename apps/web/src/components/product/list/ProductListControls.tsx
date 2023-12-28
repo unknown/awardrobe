@@ -6,19 +6,52 @@ import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
 
+import { FindProductResponse } from "@/app/api/products/find/route";
+
 export type ProductSearchbarProps = {
   searchQuery: string;
   useDebounce?: boolean;
 };
 
+const isUrl = (query: string) => {
+  try {
+    new URL(query);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+async function findProduct(productUrl: string) {
+  const response = await fetch("/api/products/find", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productUrl,
+    }),
+  });
+  return (await response.json()) as FindProductResponse;
+}
+
 export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSearchbarProps) {
   const router = useRouter();
 
-  const debouncedSearch = useRef(
-    debounce(async (query) => {
+  const doSearch = async (query: string) => {
+    if (isUrl(query)) {
+      const response = await findProduct(query);
+      if (response.status === "success") {
+        router.push(`/product/${response.product.id}`);
+      } else if (response.status === "error") {
+        console.error(response.error);
+      }
+    } else {
       router.push(`/search?q=${query}`);
-    }, 2000),
-  ).current;
+    }
+  };
+
+  const debouncedSearch = useRef(debounce(doSearch, 2000)).current;
 
   useEffect(() => {
     return () => {
@@ -34,11 +67,11 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
         className="pl-8"
         placeholder="Search"
         defaultValue={searchQuery}
-        onChange={(event) => useDebounce && debouncedSearch(event.target.value)}
+        onChange={useDebounce ? (event) => debouncedSearch(event.target.value) : undefined}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             debouncedSearch.cancel();
-            router.push(`/search?q=${event.currentTarget.value}`);
+            doSearch(event.currentTarget.value);
           }
         }}
       />
