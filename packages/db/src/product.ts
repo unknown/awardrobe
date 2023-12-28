@@ -29,10 +29,25 @@ export type FindProductOptions = {
 };
 
 export async function findProducts(options: FindProductOptions = {}): Promise<Product[]> {
+  const { numNotified } = options;
+
   return await prisma.product.findMany({
-    where: {
-      numNotified: options.numNotified,
-    },
+    where: { numNotified },
+  });
+}
+
+export type FindFeaturedProductsOptions = {
+  limit?: number;
+};
+
+export async function findFeaturedProducts(options: FindFeaturedProductsOptions = {}) {
+  const { limit = 24 } = options;
+
+  return await prisma.product.findMany({
+    where: { numNotified: { gte: 1 } },
+    orderBy: { numNotified: "desc" },
+    include: { store: true },
+    take: limit,
   });
 }
 
@@ -63,6 +78,20 @@ export async function findProductsByProductCodes(options: {
   return await prisma.product.findMany({
     where: {
       productCode: { in: productCodes },
+      store: { handle: storeHandle },
+    },
+  });
+}
+
+export async function findProductByProductCode(options: {
+  productCode: string;
+  storeHandle: string;
+}) {
+  const { productCode, storeHandle } = options;
+
+  return await prisma.product.findFirst({
+    where: {
+      productCode,
       store: { handle: storeHandle },
     },
   });

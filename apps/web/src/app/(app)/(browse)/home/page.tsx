@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
-import { findFollowingProducts } from "@awardrobe/db";
-import { Product, searchProducts } from "@awardrobe/meilisearch-types";
+import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
 
 import { PageControls } from "@/components/HomepageControls";
 import { ProductSearchbar } from "@/components/product/controls/ProductListControls";
@@ -23,26 +22,24 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  const products: Product[] =
+  const products =
     page === "Featured"
-      ? await searchProducts({
-          page: 1,
-          query: "",
-          hitsPerPage: 24,
-        }).then((response) => response.hits as Product[])
+      ? await findFeaturedProducts({ limit: 24 })
       : session
-        ? (await findFollowingProducts({ userId: session.user.id })).map(({ id, name, store }) => ({
-            id,
-            name,
-            storeName: store.name,
-          }))
+        ? await findFollowingProducts({ userId: session.user.id })
         : [];
 
   return (
     <Fragment>
       <PageControls currPage={page} pages={[...Pages]} />
       <ProductSearchbar searchQuery={""} />
-      <ProductList products={products} />
+      <ProductList
+        products={products.map(({ id, name, store }) => ({
+          id,
+          name,
+          storeName: store.name,
+        }))}
+      />
     </Fragment>
   );
 }
