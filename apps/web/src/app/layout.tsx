@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 
 import "@/styles/globals.css";
 
+import { Toaster } from "@ui/Toaster";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -36,6 +38,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body className="bg-background min-h-screen font-sans antialiased">
         <ThemeProvider attribute="class" enableSystem>
           {children}
+          <Toaster />
           <Analytics />
           <SpeedInsights />
         </ThemeProvider>

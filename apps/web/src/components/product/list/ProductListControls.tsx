@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
 import debounce from "lodash.debounce";
+import { toast } from "sonner";
 
 import { FindProductResponse } from "@/app/api/products/find/route";
 
@@ -44,7 +45,9 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
       if (response.status === "success") {
         router.push(`/product/${response.product.id}`);
       } else if (response.status === "error") {
-        console.error(response.error);
+        toast("Could not find product", {
+          description: response.error,
+        });
       }
     } else {
       router.push(`/search?q=${query}`);
@@ -65,7 +68,7 @@ export function ProductSearchbar({ searchQuery, useDebounce = false }: ProductSe
       <Input
         type="search"
         className="pl-8"
-        placeholder="Search"
+        placeholder="Search (product name or URL)"
         defaultValue={searchQuery}
         onChange={useDebounce ? (event) => debouncedSearch(event.target.value) : undefined}
         onKeyDown={(event) => {
