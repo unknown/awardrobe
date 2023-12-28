@@ -44,7 +44,6 @@ export async function findFeaturedProducts(options: FindFeaturedProductsOptions 
   const { limit = 24 } = options;
 
   return await prisma.product.findMany({
-    where: { numNotified: { gte: 1 } },
     orderBy: { numNotified: "desc" },
     include: { store: true },
     take: limit,
