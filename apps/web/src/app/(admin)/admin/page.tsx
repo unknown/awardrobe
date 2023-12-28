@@ -16,9 +16,6 @@ export default async function AdminPage() {
   const users = await prisma.user.findMany({
     include: { _count: { select: { productNotifications: true } } },
   });
-  const products = await prisma.product.findMany({
-    include: { _count: { select: { variants: true } } },
-  });
   const numPrices = await prisma.price.count();
 
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -52,28 +49,6 @@ export default async function AdminPage() {
                   >
                     {user.emailVerified ? formatTimeAgo(user.emailVerified) : "n/a"}
                   </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <h2 className="text-lg font-bold">Products ({products.length})</h2>
-        <p className="text-muted-foreground text-sm">Products and the number of variants.</p>
-        <table className="mt-3 table-auto border-collapse border">
-          <thead>
-            <tr>
-              <th className="border px-2 text-left font-semibold">Product</th>
-              <th className="border px-2 text-left font-semibold"># of Variants</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              return (
-                <tr key={product.id}>
-                  <td className="border px-2">{product.name}</td>
-                  <td className="border px-2">{product._count.variants}</td>
                 </tr>
               );
             })}
