@@ -20,7 +20,7 @@
     "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "dotenv-cli": "^7.3.0",
-    "prisma": "^5.7.0",
+    "prisma": "^5.7.1",
     "typescript": "^5.3.3"
   }
 }
