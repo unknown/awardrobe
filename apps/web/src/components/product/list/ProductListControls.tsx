@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
@@ -35,17 +36,22 @@ async function findProduct(productUrl: string) {
 
 export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const doSearch = async (query: string) => {
     if (isUrl(query)) {
+      setLoading(true);
       const response = await findProduct(query);
-      if (response.status === "success") {
-        router.push(`/product/${response.product.id}`);
-      } else if (response.status === "error") {
+      setLoading(false);
+
+      if (response.status === "error") {
         toast("Could not find product", {
           description: response.error,
         });
+        return;
       }
+
+      router.push(`/product/${response.product.id}`);
     } else {
       router.push(`/search?q=${query}`);
     }
@@ -64,6 +70,7 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
             doSearch(event.currentTarget.value);
           }
         }}
+        disabled={loading}
       />
     </div>
   );
