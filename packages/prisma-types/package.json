@@ -14,7 +14,7 @@
     "dev": "pnpm with-env prisma studio --browser none"
   },
   "dependencies": {
-    "@prisma/client": "^5.7.0"
+    "@prisma/client": "^5.7.1"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
