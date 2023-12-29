@@ -70,6 +70,10 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   };
 
   const doSearch = async (query: string) => {
+    if (query.length === 0) {
+      return;
+    }
+
     if (isUrl(query)) {
       setLoading(true);
       const response = await findProduct(query);
