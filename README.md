@@ -2,14 +2,14 @@
 
 # Awardrobe
 
-**Open source clothes price tracker**
+**Shop for clothes smarter**
 
 </div>
 
-**Awardrobe** is an open source monitoring app that helps users keep track of price and stock changes of the clothes they want to buy.
+**Awardrobe** tracks product listings to help users get the best deals while shopping for clothes online.
 
 <div align="center">
-    <a href="https://getawardrobe.com/product/clk8pthma0001ma08fy4tu777?variantId=clk8pthmc000uma08h5upigtd" target="_blank" rel="noopener">
+    <a href="https://www.awardrobe.co/product/clk8pthma0001ma08fy4tu777?Color=5+Light+Blue&Length=Regular&variantId=clk8pthmc000uma08h5upigtd&Size=M" target="_blank" rel="noopener">
         <img src="./public/screenshot.png" alt="Screenshot of Linen Button-Up Shirt on Awardrobe" width="320" >
     </a>
 </div>
