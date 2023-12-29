@@ -1,8 +1,7 @@
 import parse from "node-html-parser";
 
-import { proxies } from "@awardrobe/proxies";
+import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { axios } from "../../utils/axios";
 import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
 import { Product, productSchema } from "./schemas";
@@ -28,8 +27,7 @@ export const ZaraUS: StoreAdapter = {
   },
 
   async getProductCode(url: string) {
-    const { httpsAgent } = proxies.getRandomProxy();
-    const initialResponse = await axios.get(url, { httpsAgent });
+    const initialResponse = await proxiedAxios.get(url);
 
     const initialRoot = parse(initialResponse.data);
     const challengeRegex = /URL='(.*)'/;
@@ -43,7 +41,7 @@ export const ZaraUS: StoreAdapter = {
     }
     const challengeUrl = `https://www.zara.com${challengeRoute}`;
 
-    const productResponse = await axios.get(challengeUrl, { httpsAgent });
+    const productResponse = await proxiedAxios.get(challengeUrl);
     const root = parse(productResponse.data);
 
     const htmlId = root.querySelector("html")?.getAttribute("id");
@@ -54,9 +52,8 @@ export const ZaraUS: StoreAdapter = {
 
   async getProductDetails(productCode: string) {
     const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
-    const { httpsAgent } = proxies.getRandomProxy();
     const params = { locale: "en_US" };
-    const productResponse = await axios.get(productEndpoint, { httpsAgent, params });
+    const productResponse = await proxiedAxios.get(productEndpoint, { params });
     const timestamp = new Date();
 
     const product = productSchema.parse(productResponse.data);

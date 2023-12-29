@@ -1,6 +1,5 @@
-import { proxies } from "@awardrobe/proxies";
+import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
@@ -30,10 +29,9 @@ export const UniqloUS: StoreAdapter = {
     const increment = 100;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
-      const { httpsAgent } = proxies.getRandomProxy();
       const params = { offset, limit: Math.min(total - offset, increment), httpFailure: true };
 
-      const productsResponse = await axios.get(productsEndpoint, { httpsAgent, params });
+      const productsResponse = await proxiedAxios.get(productsEndpoint, { params });
 
       const productsData = productsSchema.parse(productsResponse.data);
       if (productsData.status === "nok") {
@@ -61,9 +59,8 @@ export const UniqloUS: StoreAdapter = {
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-    const { httpsAgent } = proxies.getRandomProxy();
 
-    const searchResponse = await axios.get(detailsEndpoint, { httpsAgent });
+    const searchResponse = await proxiedAxios.get(detailsEndpoint);
 
     const detailsResult = detailsSchema.parse(searchResponse.data);
     if (detailsResult.status === "nok") {
@@ -76,11 +73,10 @@ export const UniqloUS: StoreAdapter = {
   async getProductDetails(productCode: string) {
     const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
-    const { httpsAgent } = proxies.getRandomProxy();
 
     const [l2sResponse, detailsResponse] = await Promise.all([
-      axios.get(l2sEndpoint, { httpsAgent }),
-      axios.get(detailsEndpoint, { httpsAgent }),
+      proxiedAxios.get(l2sEndpoint),
+      proxiedAxios.get(detailsEndpoint),
     ]);
     const timestamp = new Date();
 

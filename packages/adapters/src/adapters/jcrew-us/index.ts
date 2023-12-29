@@ -1,6 +1,5 @@
-import { proxies } from "@awardrobe/proxies";
+import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
 import { productInfoSchema } from "./schemas";
@@ -27,14 +26,13 @@ export const JCrewUS: StoreAdapter = {
 
   async getProductDetails(productCode: string) {
     const productEndpoint = `https://app.jcrew.com/browse/products/${productCode}`;
-    const { httpsAgent } = proxies.getRandomProxy();
     const params = {
       "country-code": "US",
       display: "standard",
       expand: "availability,prices,variations,set_products",
       locale: "en-US",
     };
-    const productResponse = await axios.get(productEndpoint, { httpsAgent, headers, params });
+    const productResponse = await proxiedAxios.get(productEndpoint, { headers, params });
     const timestamp = new Date();
 
     const productInfo = productInfoSchema.parse(productResponse.data);
