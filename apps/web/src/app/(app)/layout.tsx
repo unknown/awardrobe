@@ -1,82 +1,40 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { User } from "@icons/User";
-import { Avatar, AvatarFallback } from "@ui/Avatar";
-import { Button } from "@ui/Button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@ui/DropdownMenu";
-import { getServerSession } from "next-auth";
 
 import { Footer } from "@/components/Footer";
-import { NavBar } from "@/components/NavBar";
-import { authOptions } from "@/utils/auth";
+import { ProductSearchbar } from "@/components/product/controls/ProductSearchbar";
+import { UserAccountNav } from "@/components/UserAccountNav";
 
 interface ProductLayout {
   children: React.ReactNode;
+  params: {
+    query?: string;
+  };
 }
 
-export default async function ProductLayout({ children }: ProductLayout) {
+export default async function ProductLayout({ children, params }: ProductLayout) {
+  const query = params.query ?? "";
   return (
     <div className="flex min-h-screen flex-col space-y-6">
       <header className="bg-background sticky top-0 z-10 border-b">
         <div className="container flex h-16 items-center justify-between py-4">
-          <NavBar homePath="/home" />
-          <Suspense>
-            <NavBarButton />
-          </Suspense>
+          <div className="flex flex-1 gap-4">
+            <Link href="/home" className="flex items-center">
+              <span className="inline-block font-bold">Awardrobe</span>
+            </Link>
+          </div>
+          <div className="container w-full max-w-4xl">
+            <ProductSearchbar searchQuery={query} />
+          </div>
+          <div className="flex flex-1 justify-end">
+            <Suspense>
+              <UserAccountNav />
+            </Suspense>
+          </div>
         </div>
       </header>
       <main className="flex-1">{children}</main>
       <Footer className="border-t" />
     </div>
-  );
-}
-
-const NavBarButton = async () => {
-  const session = await getServerSession(authOptions);
-  return session ? <ProfileButton email={session.user.email ?? null} /> : <LoginButton />;
-};
-
-type ProfileButtonProps = { email: string | null };
-
-function ProfileButton({ email }: ProfileButtonProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Avatar className="h-8 w-8">
-          <AvatarFallback>
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        {email ? <DropdownMenuLabel>{email}</DropdownMenuLabel> : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">Settings</Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/api/auth/signout">Sign Out</Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function LoginButton() {
-  return (
-    <Link href="/login">
-      <Button>Login</Button>
-    </Link>
   );
 }

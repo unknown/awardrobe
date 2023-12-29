@@ -9,18 +9,14 @@ import { toast } from "sonner";
 import { AddProductResponse } from "@/app/api/products/add/route";
 import { FindProductResponse } from "@/app/api/products/find/route";
 
-export type ProductSearchbarProps = {
-  searchQuery: string;
-};
-
-const isUrl = (query: string) => {
+function isUrl(query: string) {
   try {
     new URL(query);
     return true;
   } catch (e) {
     return false;
   }
-};
+}
 
 async function findProduct(productUrl: string) {
   const response = await fetch("/api/products/find", {
@@ -48,6 +44,10 @@ async function addProduct(productUrl: string) {
   return response;
 }
 
+export type ProductSearchbarProps = {
+  searchQuery: string;
+};
+
 export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -70,6 +70,10 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
   };
 
   const doSearch = async (query: string) => {
+    if (query.length === 0) {
+      return;
+    }
+
     if (isUrl(query)) {
       setLoading(true);
       const response = await findProduct(query);
@@ -89,7 +93,7 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
 
       router.push(`/product/${responseBody.product.id}`);
     } else {
-      router.push(`/search?q=${query}`);
+      router.push(`/search/${query}/`);
     }
   };
 
@@ -98,7 +102,7 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
       <Search className="text-muted-foreground absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
       <Input
         type="search"
-        className="pl-8"
+        className={"pl-8"}
         placeholder="Search (product name or URL)"
         defaultValue={searchQuery}
         onKeyDown={(event) => {
