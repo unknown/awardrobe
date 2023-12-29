@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth";
 import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
 
 import { PageControls } from "@/components/HomepageControls";
-import { ProductSearchbar } from "@/components/product/controls/ProductListControls";
 import { ProductList } from "@/components/product/list/ProductList";
 import { authOptions } from "@/utils/auth";
 import { isPage, Page, Pages } from "./types";
@@ -32,7 +31,6 @@ export default async function HomePage() {
   return (
     <Fragment>
       <PageControls currPage={page} pages={[...Pages]} />
-      <ProductSearchbar searchQuery={""} />
       <ProductList
         products={products.map(({ id, name, store }) => ({
           id,

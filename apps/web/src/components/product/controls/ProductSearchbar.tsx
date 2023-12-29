@@ -89,7 +89,7 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
 
       router.push(`/product/${responseBody.product.id}`);
     } else {
-      router.push(`/search?q=${query}`);
+      router.push(`/search/${query}/`);
     }
   };
 
@@ -98,7 +98,7 @@ export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
       <Search className="text-muted-foreground absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2" />
       <Input
         type="search"
-        className="pl-8"
+        className={"pl-8"}
         placeholder="Search (product name or URL)"
         defaultValue={searchQuery}
         onKeyDown={(event) => {

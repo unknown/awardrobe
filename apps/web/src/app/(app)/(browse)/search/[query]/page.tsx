@@ -5,23 +5,23 @@ import { Skeleton } from "@ui/Skeleton";
 
 import { Product, searchProducts } from "@awardrobe/meilisearch-types";
 
-import { ProductSearchbar } from "@/components/product/controls/ProductListControls";
 import { ProductList } from "@/components/product/list/ProductList";
 
 type SearchPageProps = {
+  params: {
+    query: string;
+  };
   searchParams: {
-    q?: string;
     page?: string;
   };
 };
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams.q ?? "";
+export default async function SearchPage({ params, searchParams }: SearchPageProps) {
+  const query = params.query ?? "";
   const page = Number(searchParams.page) || 1;
 
   return (
     <Fragment>
-      <ProductSearchbar searchQuery={query} />
       <Suspense
         key={`${query}-${page}`}
         fallback={
