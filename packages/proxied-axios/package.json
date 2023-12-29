@@ -1,5 +1,5 @@
 {
-  "name": "@awardrobe/adapters",
+  "name": "@awardrobe/proxied-axios",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,11 +10,10 @@
     "clean": "rm -rf .turbo node_modules dist"
   },
   "dependencies": {
-    "node-html-parser": "^6.1.11",
-    "zod": "^3.22.4"
+    "@awardrobe/proxies": "workspace:^",
+    "axios": "^1.6.2"
   },
   "devDependencies": {
-    "@awardrobe/proxied-axios": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
     "typescript": "^5.3.3"

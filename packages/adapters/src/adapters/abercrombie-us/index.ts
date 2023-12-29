@@ -1,8 +1,7 @@
 import parse from "node-html-parser";
 
-import { proxies } from "@awardrobe/proxies";
+import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { axios } from "../../utils/axios";
 import { dollarsToCents, toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
@@ -40,8 +39,7 @@ export const AbercrombieUS: StoreAdapter = {
         rows: Math.min(total - offset, increment),
         swatches: false,
       };
-      const { httpsAgent } = proxies.getRandomProxy();
-      const searchResponse = await axios.get(searchEndpoint, { httpsAgent, params });
+      const searchResponse = await proxiedAxios.get(searchEndpoint, { params });
 
       const { products, stats } = searchSchema.parse(searchResponse.data);
 
@@ -65,9 +63,7 @@ export const AbercrombieUS: StoreAdapter = {
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-    const { httpsAgent } = proxies.getRandomProxy();
-
-    const productResponse = await axios.get(productEndpoint, { httpsAgent });
+    const productResponse = await proxiedAxios.get(productEndpoint);
 
     const root = parse(productResponse.data);
     const collectionId = root
@@ -79,9 +75,7 @@ export const AbercrombieUS: StoreAdapter = {
 
   async getProductDetails(productCode: string) {
     const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-    const { httpsAgent } = proxies.getRandomProxy();
-
-    const collectionResponse = await axios.get(collectionEndpoint, { httpsAgent });
+    const collectionResponse = await proxiedAxios.get(collectionEndpoint);
     const timestamp = new Date();
 
     const { products } = collectionSchema.parse(collectionResponse.data);

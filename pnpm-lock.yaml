@@ -290,12 +290,6 @@ importers:
 
   packages/adapters:
     dependencies:
-      '@awardrobe/proxies':
-        specifier: workspace:^
-        version: link:../proxies
-      axios:
-        specifier: ^1.6.2
-        version: 1.6.2
       node-html-parser:
         specifier: ^6.1.11
         version: 6.1.11
@@ -303,6 +297,9 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
+      '@awardrobe/proxied-axios':
+        specifier: workspace:^
+        version: link:../proxied-axios
       '@awardrobe/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
@@ -419,6 +416,25 @@ importers:
       prisma:
         specifier: ^5.7.1
         version: 5.7.1
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
+  packages/proxied-axios:
+    dependencies:
+      '@awardrobe/proxies':
+        specifier: workspace:^
+        version: link:../proxies
+      axios:
+        specifier: ^1.6.2
+        version: 1.6.2
+    devDependencies:
+      '@awardrobe/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^20.10.3
+        version: 20.10.3
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
