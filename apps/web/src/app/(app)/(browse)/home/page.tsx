@@ -1,12 +1,11 @@
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Skeleton } from "@ui/Skeleton";
 import { getServerSession } from "next-auth";
 
-import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
-
 import { PageControls } from "@/components/HomepageControls";
-import { ProductList } from "@/components/product/list/ProductList";
+import { HomeProductList } from "@/components/product/list/HomeProductList";
 import { authOptions } from "@/utils/auth";
 import { isPage, Page, Pages } from "./types";
 
@@ -21,23 +20,21 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  const products =
-    page === "Featured"
-      ? await findFeaturedProducts({ limit: 24 })
-      : session
-        ? await findFollowingProducts({ userId: session.user.id })
-        : [];
-
   return (
     <Fragment>
       <PageControls currPage={page} pages={[...Pages]} />
-      <ProductList
-        products={products.map(({ id, name, store }) => ({
-          id,
-          name,
-          storeName: store.name,
-        }))}
-      />
+      <Suspense
+        key={page}
+        fallback={
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-[48px]" />
+            ))}
+          </div>
+        }
+      >
+        <HomeProductList page={page} />
+      </Suspense>
     </Fragment>
   );
 }
