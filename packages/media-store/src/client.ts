@@ -11,11 +11,14 @@ export function getProductPath(productId: string) {
   return `/product/${productId}`;
 }
 
-export async function addProductImage(productId: string, imageBuffer: Buffer) {
+export async function addProductImage(productId: string, imageFile: File) {
   const path = getProductPath(productId);
   const workerUrl = new URL(path, MEDIA_WORKER_URL).href;
 
-  await axios.put(workerUrl, imageBuffer, {
-    headers: { Authorization: `Bearer ${MEDIA_WORKER_SECRET}` },
-  });
+  const data = new FormData();
+  data.append("file", imageFile);
+
+  const headers = { Authorization: `Bearer ${MEDIA_WORKER_SECRET}` };
+
+  await axios.put(workerUrl, data, { headers });
 }

@@ -33,7 +33,9 @@ export default {
 
     switch (request.method) {
       case "PUT":
-        await env.BUCKET.put(key, request.body);
+        const formData = await request.formData();
+        const file = formData.get("file");
+        await env.BUCKET.put(key, file);
         return new Response(`Object ${key} uploaded successfully!`);
       case "GET":
         const object = await env.BUCKET.get(key);
