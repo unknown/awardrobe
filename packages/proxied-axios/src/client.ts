@@ -1,17 +1,6 @@
-import Axios, { AxiosInstance, ResponseType } from "axios";
+import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { proxies } from "@awardrobe/proxies";
-
-type RequestOptions = {
-  params?: Record<string, string | number | boolean | undefined>;
-  headers?: Record<string, string>;
-  responseType?: ResponseType;
-};
-
-type RequestResponse<TResponse> = {
-  data: TResponse;
-  status: number;
-};
 
 export class ProxiedClient {
   private readonly axios: AxiosInstance;
@@ -29,19 +18,15 @@ export class ProxiedClient {
 
   public async get<T = any>(
     url: string,
-    options: RequestOptions = {},
-  ): Promise<RequestResponse<T>> {
-    const { params } = options;
+    options: AxiosRequestConfig = {},
+  ): Promise<AxiosResponse<T>> {
     const { httpsAgent } = proxies.getRandomProxy();
 
-    const { data, status } = await this.axios.get<T>(url, {
+    const response = await this.axios.get<T>(url, {
+      ...options,
       httpsAgent,
-      params,
     });
 
-    return {
-      data,
-      status,
-    };
+    return response;
   }
 }
