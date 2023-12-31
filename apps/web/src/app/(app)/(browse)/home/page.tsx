@@ -1,17 +1,12 @@
 import { Fragment, Suspense } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Skeleton } from "@ui/Skeleton";
 
-import { updateHomepage } from "@/app/(app)/(browse)/home/actions";
 import { PageControls } from "@/components/HomepageControls";
 import { HomeProductList } from "@/components/product/list/HomeProductList";
-import { auth } from "@/utils/auth";
 import { isPage, Page, Pages } from "./types";
 
 export default async function HomePage() {
-  const session = await auth();
-
   const cookiesStore = cookies();
   const cookiesPage = cookiesStore.get("page")?.value;
   const page: Page = isPage(cookiesPage) ? cookiesPage : "Featured";
