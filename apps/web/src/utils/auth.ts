@@ -1,5 +1,6 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import NextAuth, { NextAuthConfig, type DefaultSession } from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import NextAuth from "next-auth";
+import type { DefaultSession, NextAuthConfig } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
 import { resend, SignInEmail } from "@awardrobe/emails";
