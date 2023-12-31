@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, boolean, datetime, index, int, mysqlTable, serial } from "drizzle-orm/mysql-core";
+import { boolean, datetime, index, int, mysqlTable, serial } from "drizzle-orm/mysql-core";
 
 import { productVariants } from "./product-variants";
 
@@ -7,7 +7,7 @@ export const prices = mysqlTable(
   "Price",
   {
     id: serial("id").primaryKey(),
-    productVariantId: bigint("productVariantId", { mode: "bigint" }).notNull(),
+    productVariantId: int("productVariantId").notNull(),
     timestamp: datetime("timestamp", { mode: "date", fsp: 3 }).notNull(),
     priceInCents: int("priceInCents").notNull(),
     inStock: boolean("inStock").notNull(),

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, json, mysqlTable, serial, text } from "drizzle-orm/mysql-core";
+import { index, int, json, mysqlTable, serial, text } from "drizzle-orm/mysql-core";
 
 import { prices } from "./prices";
 import { productNotifications } from "./product-notifications";
@@ -9,10 +9,10 @@ export const productVariants = mysqlTable(
   "ProductVariant",
   {
     id: serial("id").primaryKey(),
-    productId: bigint("productId", { mode: "bigint" }).notNull(),
+    productId: int("productId").notNull(),
     productUrl: text("productUrl").notNull(),
     attributes: json("attributes").notNull(),
-    latestPriceId: bigint("latestPriceId", { mode: "bigint" }),
+    latestPriceId: int("latestPriceId"),
   },
   (productVariant) => ({
     productIdIx: index("productIdIx").on(productVariant.productId),

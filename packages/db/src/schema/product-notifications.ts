@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   datetime,
   index,
@@ -18,8 +17,8 @@ export const productNotifications = mysqlTable(
   "ProductNotification",
   {
     id: serial("id").primaryKey(),
-    userId: varchar("userId", { length: 255 }).notNull(), // TODO: change to bigint
-    productVariantId: bigint("productVariantId", { mode: "bigint" }).notNull(),
+    userId: varchar("userId", { length: 255 }).notNull(), // TODO: change to int
+    productVariantId: int("productVariantId").notNull(),
     priceInCents: int("priceInCents").notNull(),
     restock: boolean("restock").notNull(),
     priceDrop: boolean("priceDrop").notNull(),
