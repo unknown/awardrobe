@@ -16,11 +16,6 @@ export default async function HomePage() {
   const cookiesPage = cookiesStore.get("page")?.value;
   const page: Page = isPage(cookiesPage) ? cookiesPage : "Featured";
 
-  if (page === "Following" && !session) {
-    await updateHomepage("Featured");
-    redirect("/login");
-  }
-
   return (
     <Fragment>
       <PageControls currPage={page} pages={[...Pages]} />

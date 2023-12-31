@@ -11,6 +11,10 @@ type HomeProductListProps = {
 export async function HomeProductList({ page }: HomeProductListProps) {
   const session = await auth();
 
+  if (page === "Following" && !session) {
+    return <p className="text-center">Sign in to see the products you follow.</p>;
+  }
+
   const products =
     page === "Featured"
       ? await findFeaturedProducts({ limit: 24 })
