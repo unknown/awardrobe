@@ -37,7 +37,7 @@ export async function ProductList({ products }: ProductListProps) {
 
         return (
           <div key={product.id} className="relative rounded-md border p-4 md:p-3">
-            <Link href={`/product/${product.id}`} prefetch={false}>
+            <Link href={`/product/${product.id}`}>
               <img className="rounded-sm" src={mediaUrl} alt={`Image of ${product.name}`} />
             </Link>
             {hasNotification ? (
