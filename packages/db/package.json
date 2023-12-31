@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
-    "@awardrobe/prisma-types": "workspace:^"
+    "@awardrobe/prisma-types": "workspace:^",
+    "@planetscale/database": "^1.13.0",
+    "drizzle-orm": "^0.29.2"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
