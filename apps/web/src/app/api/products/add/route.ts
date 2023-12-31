@@ -1,6 +1,5 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct } from "@awardrobe/db";
@@ -8,7 +7,7 @@ import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 import { Prisma, Product } from "@awardrobe/prisma-types";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 type AddProductRequest = {
   productUrl: string;
@@ -27,7 +26,7 @@ type AddProductError = {
 export type AddProductResponse = AddProductSuccess | AddProductError;
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user.id) {
     return NextResponse.json<AddProductResponse>(

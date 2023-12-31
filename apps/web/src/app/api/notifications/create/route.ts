@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
 import { createNotification, NotificationWithVariant } from "@awardrobe/db";
 import { Prisma } from "@awardrobe/prisma-types";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 export type AddNotificationRequest = {
   variantId: string;
@@ -26,7 +25,7 @@ type AddNotificationError = {
 export type AddNotificationResponse = AddNotificationSuccess | AddNotificationError;
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user.id) {
     return NextResponse.json<AddNotificationError>(

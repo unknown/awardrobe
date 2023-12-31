@@ -11,12 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@ui/DropdownMenu";
-import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 export async function UserAccountNav() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   return session ? <ProfileButton email={session.user.email ?? null} /> : <LoginButton />;
 }
 

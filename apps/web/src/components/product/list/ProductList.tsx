@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { Bell } from "@icons/Bell";
-import { getServerSession } from "next-auth";
 
 import { findNotificationsByUser } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 import { Product } from "@awardrobe/meilisearch-types";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 export type ProductListProps = {
   products: Product[];
@@ -17,7 +16,7 @@ export async function ProductList({ products }: ProductListProps) {
     return <p className="text-center">No matching products found.</p>;
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const notifications = session
     ? await findNotificationsByUser({
         userId: session.user.id,

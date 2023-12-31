@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth/next";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 import { findFollowingProducts } from "@awardrobe/db";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user.id) {
     redirect("/login");
