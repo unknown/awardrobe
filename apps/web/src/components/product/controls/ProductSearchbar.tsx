@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
 import { Input } from "@ui/Input";
 import { toast } from "sonner";
@@ -44,13 +44,13 @@ async function addProduct(productUrl: string) {
   return response;
 }
 
-export type ProductSearchbarProps = {
-  searchQuery: string;
-};
-
-export function ProductSearchbar({ searchQuery }: ProductSearchbarProps) {
+export function ProductSearchbar() {
   const router = useRouter();
+  const params = useParams<{ query?: string }>();
+
   const [loading, setLoading] = useState(false);
+
+  const searchQuery = params.query ?? "";
 
   const addProductAction = async (productUrl: string) => {
     setLoading(true);
