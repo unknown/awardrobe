@@ -1,24 +1,29 @@
 import { relations } from "drizzle-orm";
-import { int, mysqlTable, text } from "drizzle-orm/mysql-core";
+import { bigint, index, int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
 
 import { productVariants } from "./product-variants";
 import { stores } from "./stores";
 
-export const products = mysqlTable("Product", {
-  id: text("id").primaryKey(),
-  storeId: text("storeId").notNull(),
-  productCode: text("productCode").notNull(),
-  name: text("name").notNull(),
-  numNotified: int("numNotified").notNull(),
-});
+export const products = mysqlTable(
+  "Product",
+  {
+    id: serial("id").primaryKey(),
+    storeId: bigint("storeId", { mode: "bigint" }).notNull(),
+    productCode: varchar("productCode", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    numNotified: int("numNotified").notNull(),
+  },
+  (product) => ({
+    storeIdProductCodeUnq: unique("storeIdProductCodeUnq").on(product.storeId, product.productCode),
+    storeIdIx: index("storeIdIx").on(product.storeId),
+  }),
+);
 
-export const productsRelations = relations(products, (helpers) => {
-  return {
-    variants: helpers.many(productVariants, { relationName: "ProductToProductVariant" }),
-    store: helpers.one(stores, {
-      relationName: "ProductToStore",
-      fields: [products.storeId],
-      references: [stores.id],
-    }),
-  };
-});
+export const productsRelations = relations(products, ({ many, one }) => ({
+  variants: many(productVariants, { relationName: "ProductToProductVariant" }),
+  store: one(stores, {
+    relationName: "ProductToStore",
+    fields: [products.storeId],
+    references: [stores.id],
+  }),
+}));
