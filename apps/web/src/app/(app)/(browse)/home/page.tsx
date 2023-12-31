@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Skeleton } from "@ui/Skeleton";
 import { getServerSession } from "next-auth";
 
+import { updateHomepage } from "@/app/(app)/(browse)/home/actions";
 import { PageControls } from "@/components/HomepageControls";
 import { HomeProductList } from "@/components/product/list/HomeProductList";
 import { authOptions } from "@/utils/auth";
@@ -17,6 +18,7 @@ export default async function HomePage() {
   const page: Page = isPage(cookiesPage) ? cookiesPage : "Featured";
 
   if (page === "Following" && !session) {
+    await updateHomepage("Featured");
     redirect("/login");
   }
 

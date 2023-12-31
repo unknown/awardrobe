@@ -7,13 +7,9 @@ import { UserAccountNav } from "@/components/UserAccountNav";
 
 interface ProductLayout {
   children: React.ReactNode;
-  params: {
-    query?: string;
-  };
 }
 
-export default async function ProductLayout({ children, params }: ProductLayout) {
-  const query = params.query ?? "";
+export default async function ProductLayout({ children }: ProductLayout) {
   return (
     <div className="flex min-h-screen flex-col space-y-6">
       <header className="bg-background sticky top-0 z-10 border-b">
@@ -24,7 +20,7 @@ export default async function ProductLayout({ children, params }: ProductLayout)
             </Link>
           </div>
           <div className="container w-full max-w-4xl">
-            <ProductSearchbar searchQuery={query} />
+            <ProductSearchbar />
           </div>
           <div className="flex flex-1 justify-end">
             <Suspense>
