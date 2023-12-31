@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@ui/Button";
-import { getServerSession } from "next-auth/next";
 
 import { LoginForm } from "@/components/LoginForm";
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (session?.user.id) {
     redirect("/home");

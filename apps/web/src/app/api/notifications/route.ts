@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
 import { findNotificationsByUser, NotificationWithVariant } from "@awardrobe/db";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 type GetNotificationsRequest = {
   productId: string;
@@ -22,7 +21,7 @@ type GetNotificationsError = {
 export type GetNotificationsResponse = GetNotificationsSuccess | GetNotificationsError;
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user.id) {
     return NextResponse.json<GetNotificationsError>(

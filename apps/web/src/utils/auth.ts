@@ -1,5 +1,6 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { NextAuthOptions, type DefaultSession } from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import NextAuth from "next-auth";
+import type { DefaultSession, NextAuthConfig } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
 import { resend, SignInEmail } from "@awardrobe/emails";
@@ -13,7 +14,7 @@ declare module "next-auth" {
   }
 }
 
-export const authOptions: NextAuthOptions = {
+export const config = {
   adapter: PrismaAdapter(prisma),
   pages: { signIn: "/login" },
   providers: [
@@ -39,5 +40,6 @@ export const authOptions: NextAuthOptions = {
       };
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+} satisfies NextAuthConfig;
+
+export const { handlers, auth, signIn, signOut } = NextAuth(config);

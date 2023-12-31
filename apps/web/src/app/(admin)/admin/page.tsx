@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 import { prisma } from "@awardrobe/prisma-types";
 
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 import { formatDate, formatTimeAgo } from "@/utils/utils";
 
 export default async function AdminPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session) {
     notFound();

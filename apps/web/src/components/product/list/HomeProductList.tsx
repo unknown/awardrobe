@@ -1,17 +1,15 @@
-import { getServerSession } from "next-auth";
-
 import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
 
 import { Page } from "@/app/(app)/(browse)/home/types";
 import { ProductList } from "@/components/product/list/ProductList";
-import { authOptions } from "@/utils/auth";
+import { auth } from "@/utils/auth";
 
 type HomeProductListProps = {
   page: Page;
 };
 
 export async function HomeProductList({ page }: HomeProductListProps) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   const products =
     page === "Featured"
