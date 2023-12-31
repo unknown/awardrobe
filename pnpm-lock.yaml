@@ -320,9 +320,6 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../adapters
-      '@awardrobe/prisma-types':
-        specifier: workspace:^
-        version: link:../prisma-types
       '@planetscale/database':
         specifier: ^1.13.0
         version: 1.13.0

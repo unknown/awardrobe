@@ -1,5 +1,6 @@
-import { prisma } from "@awardrobe/prisma-types";
+import { db } from "./db";
+import { Store } from "./schema/types";
 
-export async function findStores() {
-  return await prisma.store.findMany();
+export function findStores(): Promise<Store[]> {
+  return db.query.stores.findMany();
 }

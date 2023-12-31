@@ -1,30 +1,51 @@
-import { VariantInfo } from "@awardrobe/adapters";
-import { prisma } from "@awardrobe/prisma-types";
+import { and, asc, eq, gte } from "drizzle-orm";
 
-export async function findPrices(options: { variantId: string; startDate: string }) {
-  return await prisma.price.findMany({
-    where: {
-      productVariantId: options.variantId,
-      timestamp: { gte: options.startDate },
-    },
-    orderBy: { timestamp: "asc" },
-    take: 1000,
+import { VariantInfo } from "@awardrobe/adapters";
+
+import { db } from "./db";
+import { prices } from "./schema/prices";
+import { Price } from "./schema/types";
+
+export type FindPriceOptions = {
+  variantId: number;
+  startDate: Date;
+};
+
+export function findPrices(options: FindPriceOptions): Promise<Price[]> {
+  const { variantId, startDate } = options;
+
+  return db.query.prices.findMany({
+    where: and(eq(prices.productVariantId, variantId), gte(prices.timestamp, startDate)),
+    orderBy: asc(prices.timestamp),
+    limit: 1000,
   });
 }
 
-export async function createLatestPrice(options: { variantId: string; variantInfo: VariantInfo }) {
+export type CreateLatestPriceOptions = {
+  variantId: number;
+  variantInfo: VariantInfo;
+};
+
+export async function createLatestPrice(options: CreateLatestPriceOptions): Promise<Price> {
   const {
     variantId,
     variantInfo: { timestamp, priceInCents, inStock },
   } = options;
 
-  await prisma.price.create({
-    data: {
-      timestamp,
-      priceInCents,
-      inStock,
-      productVariant: { connect: { id: variantId } },
-      latestInProductVariant: { connect: { id: variantId } },
-    },
+  const pricesTable = await db.insert(prices).values({
+    timestamp,
+    priceInCents,
+    productVariantId: variantId,
+    inStock,
   });
+
+  const created = await db.query.prices.findFirst({
+    where: eq(prices.id, Number(pricesTable.insertId)),
+  });
+
+  if (!created) {
+    throw new Error("Could not create price");
+  }
+
+  return created;
 }

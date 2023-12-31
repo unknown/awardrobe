@@ -1,38 +1,81 @@
-import { VariantInfo } from "@awardrobe/adapters";
-import { Prisma, prisma, Product } from "@awardrobe/prisma-types";
+import { and, desc, eq, exists, gte, inArray, lte } from "drizzle-orm";
 
-export async function createProduct(options: {
+import { db } from "./db";
+import { productNotifications } from "./schema/product-notifications";
+import { productVariants } from "./schema/product-variants";
+import { products } from "./schema/products";
+import type { Product, ProductVariant, Store } from "./schema/types";
+
+export type CreateProductOptions = {
   name: string;
   productCode: string;
-  storeHandle: string;
-  variants: VariantInfo[];
-}) {
-  const { name, productCode, storeHandle, variants } = options;
+  storeId: number;
+};
 
-  return await prisma.product.create({
-    data: {
-      name,
-      productCode,
-      store: { connect: { handle: storeHandle } },
-      variants: {
-        createMany: {
-          data: variants.map(({ attributes, productUrl }) => ({ attributes, productUrl })),
-        },
-      },
-    },
-    include: { store: true, variants: true },
+export async function createProduct(options: CreateProductOptions): Promise<Product> {
+  const { name, productCode, storeId } = options;
+
+  const productTable = await db.insert(products).values({
+    name,
+    productCode,
+    storeId,
   });
+
+  const created = await db.query.products.findFirst({
+    where: eq(products.id, Number(productTable.insertId)),
+  });
+
+  if (!created) {
+    throw new Error("Could not create product");
+  }
+
+  return created;
 }
 
 export type FindProductOptions = {
-  numNotified?: { gte?: number; lte?: number };
+  productId: number;
 };
 
-export async function findProducts(options: FindProductOptions = {}): Promise<Product[]> {
+export function findProduct(options: FindProductOptions): Promise<Product | undefined> {
+  const { productId } = options;
+
+  return db.query.products.findFirst({
+    where: eq(products.id, productId),
+  });
+}
+
+export type FindNotifiedProductsOptions = {
+  numNotified?: { lte?: number; gte?: number };
+};
+
+export function findNotifiedProducts(
+  options: FindNotifiedProductsOptions = {},
+): Promise<Product[]> {
   const { numNotified } = options;
 
-  return await prisma.product.findMany({
-    where: { numNotified },
+  return db.query.products.findMany({
+    where: and(
+      numNotified?.lte ? lte(products.numNotified, numNotified.lte) : undefined,
+      numNotified?.gte ? gte(products.numNotified, numNotified.gte) : undefined,
+    ),
+  });
+}
+
+export type FindProductsWithUsersNotificationsOptions = {
+  userId: string;
+  productIds?: number[];
+};
+
+export function findProductsWithUsersNotifications(
+  options: FindProductsWithUsersNotificationsOptions,
+) {
+  const { userId, productIds } = options;
+
+  return db.query.products.findMany({
+    where: and(
+      exists(db.select().from(productNotifications).where(eq(productNotifications.userId, userId))),
+      productIds ? inArray(products.id, productIds) : undefined,
+    ),
   });
 }
 
@@ -40,92 +83,70 @@ export type FindFeaturedProductsOptions = {
   limit?: number;
 };
 
-export async function findFeaturedProducts(options: FindFeaturedProductsOptions = {}) {
+export type ProductWithStore = Product & { store: Store };
+
+export function findFeaturedProducts(
+  options: FindFeaturedProductsOptions = {},
+): Promise<ProductWithStore[]> {
   const { limit = 24 } = options;
 
-  return await prisma.product.findMany({
-    orderBy: { numNotified: "desc" },
-    include: { store: true },
-    take: limit,
+  return db.query.products.findMany({
+    limit,
+    orderBy: desc(products.numNotified),
+    with: { store: true },
   });
 }
 
-const productWithLatestPrice = Prisma.validator<Prisma.ProductDefaultArgs>()({
-  include: {
-    variants: { include: { latestPrice: true } },
-    store: true,
-  },
-});
-
-export type ProductWithLatestPrice = Prisma.ProductGetPayload<typeof productWithLatestPrice>;
-
-export async function findProductWithLatestPrice(
-  productId: string,
-): Promise<ProductWithLatestPrice | null> {
-  return await prisma.product.findUnique({
-    ...productWithLatestPrice,
-    where: { id: productId },
-  });
-}
-
-export async function findProductsByProductCodes(options: {
+export type FindProductsByProductCodesOptions = {
   productCodes: string[];
-  storeHandle: string;
-}) {
-  const { productCodes, storeHandle } = options;
+  storeId: number;
+};
 
-  return await prisma.product.findMany({
-    where: {
-      productCode: { in: productCodes },
-      store: { handle: storeHandle },
-    },
+export function findProductsByProductCodes(options: FindProductsByProductCodesOptions) {
+  const { productCodes, storeId } = options;
+
+  return db.query.products.findMany({
+    where: and(inArray(products.productCode, productCodes), eq(products.storeId, storeId)),
   });
 }
 
-export async function findProductByProductCode(options: {
-  productCode: string;
-  storeHandle: string;
-}) {
-  const { productCode, storeHandle } = options;
-
-  return await prisma.product.findFirst({
-    where: {
-      productCode,
-      store: { handle: storeHandle },
-    },
-  });
-}
-
-export async function findFollowingProducts(options: {
+export type FindFollowingProductsOptions = {
   userId: string;
-  includeFollowingVariants?: boolean;
-}) {
-  const { userId, includeFollowingVariants } = options;
+};
 
-  return await prisma.product.findMany({
-    where: { variants: { some: { notifications: { some: { userId } } } } },
-    include: {
-      store: true,
-      variants: includeFollowingVariants
-        ? {
-            where: { notifications: { some: { userId } } },
-          }
-        : undefined,
-    },
+export function findFollowingProducts(options: FindFollowingProductsOptions): Promise<Product[]> {
+  const { userId } = options;
+
+  return db.query.products.findMany({
+    where: exists(
+      db
+        .select()
+        .from(productVariants)
+        .where(
+          exists(
+            db.select().from(productNotifications).where(eq(productNotifications.userId, userId)),
+          ),
+        ),
+    ),
   });
 }
 
-const productWithVariants = Prisma.validator<Prisma.ProductDefaultArgs>()({
-  include: { variants: true, store: true },
-});
+export type FullProduct = Product & {
+  variants: ProductVariant[];
+  store: Store;
+};
 
-export type ProductWithVariants = Prisma.ProductGetPayload<typeof productWithVariants>;
+export type FindProductWithVariantsOptions = {
+  productId: number;
+};
 
 export async function findProductWithVariants(
-  productId: string,
-): Promise<ProductWithVariants | null> {
-  return await prisma.product.findUnique({
-    ...productWithVariants,
-    where: { id: productId },
+  options: FindProductWithVariantsOptions,
+): Promise<FullProduct | undefined> {
+  const { productId } = options;
+
+  return db.query.products.findFirst({
+    where: eq(products.id, productId),
+    with: { variants: true, store: true },
   });
 }
