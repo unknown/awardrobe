@@ -50,7 +50,7 @@ export function ProductSearchbar() {
 
   const [loading, setLoading] = useState(false);
 
-  const searchQuery = params.query ?? "";
+  const searchQuery = params.query ? decodeURIComponent(params.query) : "";
 
   const addProductAction = async (productUrl: string) => {
     setLoading(true);
