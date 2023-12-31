@@ -11,7 +11,7 @@ export const products = mysqlTable(
     storeId: int("storeId").notNull(),
     productCode: varchar("productCode", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    numNotified: int("numNotified").notNull(),
+    numNotified: int("numNotified").default(0).notNull(),
   },
   (product) => ({
     storeIdProductCodeUnq: unique("storeIdProductCodeUnq").on(product.storeId, product.productCode),
