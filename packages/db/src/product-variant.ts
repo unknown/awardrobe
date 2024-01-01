@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { VariantInfo } from "@awardrobe/adapters";
 
@@ -35,6 +35,51 @@ export async function createProductVariant(
   await createLatestPrice({ variantId: created.id, variantInfo });
 
   return created;
+}
+
+export type CreateProductVariantsOptions = {
+  productId: number;
+  variantInfos: VariantInfo[];
+};
+
+export async function createProductVariants(options: CreateProductVariantsOptions): Promise<void> {
+  const { productId, variantInfos } = options;
+
+  await db.insert(productVariants).values(
+    variantInfos.map((variantInfo) => ({
+      productId,
+      attributes: variantInfo.attributes,
+      productUrl: variantInfo.productUrl,
+    })),
+  );
+
+  const created = await db.query.productVariants.findMany({
+    where: (productVariants) =>
+      and(
+        eq(productVariants.productId, productId),
+        inArray(
+          sql`${productVariants.attributes}`,
+          variantInfos.map((v) => sql`cast(${JSON.stringify(v.attributes)} as json)`),
+        ),
+      ),
+  });
+
+  await Promise.all(
+    created.map((productVariant) => {
+      // TODO: hacky toString comparison
+      const variantInfo = variantInfos.find(
+        (v) => v.attributes.toString() === productVariant.attributes.toString(),
+      );
+      if (!variantInfo) {
+        // TODO: log error
+        return;
+      }
+      return createLatestPrice({
+        variantInfo,
+        variantId: productVariant.id,
+      });
+    }),
+  );
 }
 
 export type FindProductVariants = {

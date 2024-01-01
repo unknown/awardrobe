@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
-import { createProduct, createProductVariant, findStore, Product } from "@awardrobe/db";
+import { createProduct, createProductVariants, findStore, Product } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -81,11 +81,10 @@ export async function POST(req: Request) {
       storeId: store.id,
     });
 
-    const createVariantsPromise = Promise.allSettled(
-      details.variants.map(async (variantInfo) =>
-        createProductVariant({ variantInfo, productId: product.id }),
-      ),
-    );
+    const createVariantsPromise = createProductVariants({
+      productId: product.id,
+      variantInfos: details.variants,
+    });
 
     const addProductToSearchPromise = addProduct({
       id: product.id.toString(),

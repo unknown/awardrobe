@@ -8,6 +8,7 @@ import {
 import {
   createProduct,
   createProductVariant,
+  createProductVariants,
   findProductVariants,
   Price,
   ProductVariantWithPrice,
@@ -38,11 +39,10 @@ export async function insertProduct(productCode: string, store: Store) {
     name: details.name,
   });
 
-  const createVariantsPromise = Promise.allSettled(
-    details.variants.map(async (variantInfo) =>
-      createProductVariant({ variantInfo, productId: product.id }),
-    ),
-  );
+  const createVariantsPromise = createProductVariants({
+    productId: product.id,
+    variantInfos: details.variants,
+  });
 
   const addProductToSearchPromise = addProduct({
     id: product.id.toString(),
