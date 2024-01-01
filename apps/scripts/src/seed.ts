@@ -1,29 +1,80 @@
-import { AbercrombieUS, downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
+import { downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
+import {
+  and,
+  createProduct,
+  createProductVariant,
+  createStore,
+  db,
+  eq,
+  findStore,
+  schema,
+} from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
-import { prisma } from "@awardrobe/prisma-types";
+
+async function populateMeilisearch() {
+  console.log("Populating Meilisearch");
+
+  const products = await db.query.products.findMany({ with: { store: true } });
+
+  const productDocuments: Product[] = products.map(({ id, name, store }) => ({
+    id: id.toString(),
+    name,
+    storeName: store.name,
+  }));
+
+  await meilisearch.index("products").deleteAllDocuments();
+  await meilisearch.index("products").addDocuments(productDocuments, { primaryKey: "id" });
+}
+
+async function addProduct(storeId: number, productCode: string, details: ProductDetails) {
+  const existingProduct = await db.query.products.findFirst({
+    where: and(eq(schema.products.storeId, storeId), eq(schema.products.productCode, productCode)),
+  });
+
+  if (existingProduct) {
+    console.log(`Product ${productCode} already exists`);
+    return;
+  }
+
+  const product = await createProduct({
+    productCode,
+    storeId,
+    name: details.name,
+  });
+
+  await Promise.allSettled(
+    details.variants.map(async (variantInfo) =>
+      createProductVariant({ variantInfo, productId: product.id }),
+    ),
+  );
+
+  if (details.imageUrl) {
+    await downloadImage(details.imageUrl)
+      .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
+      .catch(() => console.error(`Failed to add image for ${productCode}`));
+  } else {
+    console.log(`No image found for ${productCode}`);
+  }
+
+  return product;
+}
 
 async function seedUniqloUS() {
   console.log("Seeding Uniqlo US");
-  const uniqlo = await prisma.store.upsert({
-    where: { handle: "uniqlo-us" },
-    update: {},
-    create: {
-      name: "Uniqlo US",
-      shortenedName: "Uniqlo",
-      handle: "uniqlo-us",
-      externalUrl: "https://www.uniqlo.com/",
-    },
-  });
+
+  const uniqlo = await findStore({ storeHandle: "uniqlo-us" });
+  if (!uniqlo) {
+    throw new Error("Could not find Uniqlo US store");
+  }
 
   const productCodes = [
-    "E457264-000",
-    "E457967-000",
-    "E453056-000",
-    "E457263-000",
-    "E457212-000",
-    "E455498-000",
-    "E450251-000",
+    "E459592-000",
+    "E462197-000",
+    "E465185-000",
+    "E460662-000",
+    "E464854-000",
+    "E463996-000",
   ];
 
   for (const productCode of productCodes) {
@@ -36,97 +87,59 @@ async function seedUniqloUS() {
       continue;
     }
 
-    await addProduct(uniqlo.id, productCode, details);
+    const product = await addProduct(uniqlo.id, productCode, details);
+    if (product) {
+      console.log(`Added ${product.name} for ${uniqlo.name}`);
+    }
   }
 }
 
-async function seedAbercrombieUS() {
-  console.log("Seeding Abercrombie & Fitch US");
-  const abercrombie = await prisma.store.upsert({
-    where: { handle: "abercrombie-us" },
-    update: {},
-    create: {
+async function seedStores() {
+  const stores = [
+    {
+      handle: "abercrombie-us",
       name: "Abercrombie & Fitch US",
       shortenedName: "Abercrombie",
-      handle: "abercrombie-us",
-      externalUrl: "https://www.abercrombie.com/",
+      externalUrl: "https://www.abercrombie.com/shop/us",
     },
-  });
+    {
+      handle: "jcrew-us",
+      name: "J.Crew US",
+      shortenedName: "J.Crew",
+      externalUrl: "https://www.jcrew.com/",
+    },
+    {
+      handle: "uniqlo-us",
+      name: "Uniqlo US",
+      shortenedName: "Uniqlo",
+      externalUrl: "https://www.uniqlo.com/us/en/",
+    },
+    {
+      handle: "zara-us",
+      name: "Zara US",
+      shortenedName: "Zara",
+      externalUrl: "https://www.zara.com/us/",
+    },
+  ];
 
-  const productCodes = ["511064"];
+  return Promise.allSettled(
+    stores.map(async (store) => {
+      const existingStore = await findStore({ storeHandle: store.handle });
 
-  for (const productCode of productCodes) {
-    const details = await AbercrombieUS.getProductDetails(productCode).catch((error) => {
-      console.error(`Failed to get product details for ${productCode}\n${error}`);
-      return null;
-    });
+      if (existingStore) {
+        return;
+      }
 
-    if (!details) {
-      continue;
-    }
-
-    await addProduct(abercrombie.id, productCode, details);
-  }
-}
-
-async function populateMeilisearch() {
-  console.log("Populating Meilisearch");
-
-  const products = await prisma.product.findMany({ include: { store: true } });
-
-  const productDocuments: Product[] = products.map(({ id, name, store }) => ({
-    id,
-    name,
-    storeName: store.name,
-  }));
-
-  await meilisearch.index("products").deleteAllDocuments();
-  await meilisearch.index("products").addDocuments(productDocuments, { primaryKey: "id" });
+      await createStore(store);
+      console.log(`Added store ${store.name}`);
+    }),
+  );
 }
 
 async function main() {
+  await seedStores();
   await seedUniqloUS();
-  await seedAbercrombieUS();
   await populateMeilisearch();
 }
 
-async function addProduct(storeId: string, productCode: string, details: ProductDetails) {
-  const { name, variants, imageUrl } = details;
-
-  const product = await prisma.product.upsert({
-    where: { storeId_productCode: { storeId, productCode } },
-    update: {},
-    create: {
-      productCode,
-      name,
-      storeId,
-      variants: {
-        createMany: {
-          data: variants.map(({ attributes, productUrl }) => ({
-            attributes,
-            productUrl,
-          })),
-        },
-      },
-    },
-  });
-
-  if (!imageUrl) {
-    console.log(`No image found for ${productCode}`);
-    return;
-  }
-
-  await downloadImage(imageUrl)
-    .then(async (imageBuffer) => addProductImage(product.id, imageBuffer))
-    .catch(() => console.error(`Failed to add image for ${productCode}`));
-}
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+void main();

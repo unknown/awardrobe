@@ -1,6 +1,5 @@
 import { VariantInfo } from "@awardrobe/adapters";
-import { ProductWithLatestPrice } from "@awardrobe/db";
-import { ProductVariant } from "@awardrobe/prisma-types";
+import { Product, ProductVariant } from "@awardrobe/db";
 
 export type VariantFlags = {
   isOutdated: boolean;
@@ -9,7 +8,7 @@ export type VariantFlags = {
 };
 
 export type UpdateVariantCallback = (options: {
-  product: ProductWithLatestPrice;
+  product: Product;
   variantInfo: VariantInfo;
   productVariant: ProductVariant;
 }) => Promise<void>;

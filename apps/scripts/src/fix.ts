@@ -1,9 +1,10 @@
 import { downloadImage, getAdapter } from "@awardrobe/adapters";
+import { db } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
-import { prisma } from "@awardrobe/prisma-types";
 
 async function main() {
-  const products = await prisma.product.findMany({ include: { store: true } });
+  const products = await db.query.products.findMany({ with: { store: true } });
+
   console.log(`Fixing ${products.length} products`);
 
   for (const product of products) {
@@ -29,7 +30,7 @@ async function main() {
     }
 
     await downloadImage(details.imageUrl)
-      .then(async (imageBuffer) => addProductImage(product.id, imageBuffer))
+      .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
       .then(() => console.log(`Added image for ${product.store.handle} ${product.productCode}`))
       .catch(() => console.error("Failed to add image"));
   }

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import { VariantAttribute } from "@awardrobe/adapters";
 import { findPrices, findProductWithVariants } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
@@ -22,15 +21,15 @@ export default async function ProductPage({
   params,
   searchParams: { range, ...attributesParams },
 }: ProductPageProps) {
-  const product = await findProductWithVariants(params.productId);
+  const productId = Number(params.productId);
+  const product = await findProductWithVariants({ productId });
 
   if (!product) {
     notFound();
   }
 
   const productOptions: Record<string, string[]> = {};
-  product.variants.forEach((variant) => {
-    const attributes = variant.attributes as VariantAttribute[];
+  product.variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
       const values = productOptions[name] ?? [];
       if (!values.includes(value)) {
@@ -42,8 +41,7 @@ export default async function ProductPage({
 
   const variant =
     (Object.keys(attributesParams).length > 0
-      ? product.variants.find((variant) => {
-          const attributes = variant.attributes as VariantAttribute[];
+      ? product.variants.find(({ attributes }) => {
           if (attributes.length !== Object.keys(attributesParams).length) {
             return false;
           }
@@ -54,8 +52,7 @@ export default async function ProductPage({
   const initialDateRange = range ?? "7d";
   const initialAttributes: Record<string, string> = {};
   if (variant) {
-    const attributes = variant.attributes as VariantAttribute[];
-    attributes.forEach(({ name, value }) => {
+    variant.attributes.forEach(({ name, value }) => {
       initialAttributes[name] = value;
     });
   } else {
@@ -69,7 +66,7 @@ export default async function ProductPage({
   const pricesPromise = variant
     ? findPrices({
         variantId: variant.id,
-        startDate: getDateFromRange(initialDateRange).toISOString(),
+        startDate: getDateFromRange(initialDateRange),
       })
     : null;
 
@@ -84,7 +81,7 @@ export default async function ProductPage({
         }))
       : null;
 
-  const mediaStorePath = getProductPath(product.id);
+  const mediaStorePath = getProductPath(product.id.toString());
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
   return (

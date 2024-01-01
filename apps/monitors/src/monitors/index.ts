@@ -6,15 +6,17 @@ import {
   VariantInfo,
 } from "@awardrobe/adapters";
 import {
-  createLatestPrice,
   createProduct,
   createProductVariant,
-  findProductWithLatestPrice,
-  ProductWithLatestPrice,
+  createProductVariants,
+  findProductVariants,
+  Price,
+  ProductVariantWithPrice,
+  ProductWithStore,
+  Store,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
-import { Price } from "@awardrobe/prisma-types";
 
 import { shallowEquals } from "../utils/utils";
 import { updateVariantCallbacks } from "./callbacks";
@@ -28,52 +30,36 @@ if (!baseUrl) {
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
 
 // TODO: DIRE NEED OF BETTER ERROR HANDLING
-export async function insertProduct(productCode: string, storeHandle: string) {
-  const details = await getUpdatedDetails({ storeHandle, productCode });
+export async function insertProduct(productCode: string, store: Store) {
+  const details = await getUpdatedDetails({ productCode, storeHandle: store.handle });
 
   const product = await createProduct({
     productCode,
-    storeHandle,
+    storeId: store.id,
     name: details.name,
-    variants: details.variants,
   });
 
-  const addLatestPricePromises = details.variants.map(async (variantInfo) => {
-    const variantAttributesMap = attributesToMap(variantInfo.attributes);
-    const variant = product.variants.find((variant) => {
-      const variantAttributes = variant.attributes as VariantAttribute[];
-      return shallowEquals(variantAttributesMap, attributesToMap(variantAttributes));
-    });
-
-    if (!variant) {
-      console.error(
-        `Failed to find variant ${JSON.stringify(variantInfo.attributes)} for ${product.name}`,
-      );
-      return;
-    }
-
-    return createLatestPrice({
-      variantId: variant.id,
-      variantInfo,
-    });
+  const createVariantsPromise = createProductVariants({
+    productId: product.id,
+    variantInfos: details.variants,
   });
 
   const addProductToSearchPromise = addProduct({
-    id: product.id,
+    id: product.id.toString(),
     name: product.name,
-    storeName: product.store.name,
+    storeName: store.name,
   });
 
   const addImagePromise = details.imageUrl
     ? downloadImage(details.imageUrl).then((imageBuffer) =>
-        addProductImage(product.id, imageBuffer),
+        addProductImage(product.id.toString(), imageBuffer),
       )
     : undefined;
 
   const revalidatePromise = fetch(revalidateUrl.toString());
 
   const results = await Promise.allSettled([
-    ...addLatestPricePromises,
+    createVariantsPromise,
     addProductToSearchPromise,
     addImagePromise,
     revalidatePromise,
@@ -86,12 +72,8 @@ export async function insertProduct(productCode: string, storeHandle: string) {
   return product;
 }
 
-export async function updateProduct(productId: string) {
-  const product = await findProductWithLatestPrice(productId);
-
-  if (!product) {
-    throw new Error(`Failed to find product ${productId}`);
-  }
+export async function updateProduct(product: ProductWithStore) {
+  const variants = await findProductVariants({ productId: product.id });
 
   const details = await getUpdatedDetails({
     storeHandle: product.store.handle,
@@ -99,7 +81,12 @@ export async function updateProduct(productId: string) {
   });
 
   const allVariantsCallbacks = details.variants.map(async (variantInfo) => {
-    const productVariant = await getProductVariant(product, variantInfo);
+    const productVariant = await getExistingVariant(variants, variantInfo);
+
+    if (!productVariant) {
+      return createProductVariant({ variantInfo, productId: product.id });
+    }
+
     const flags = getFlags(variantInfo, productVariant.latestPrice);
     const options = { product, variantInfo, productVariant };
 
@@ -107,7 +94,6 @@ export async function updateProduct(productId: string) {
       if (!value) {
         return null;
       }
-
       const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
       return callback;
     });
@@ -132,22 +118,12 @@ async function getUpdatedDetails(options: {
   return await adapter.getProductDetails(productCode);
 }
 
-async function getProductVariant(product: ProductWithLatestPrice, variantInfo: VariantInfo) {
+async function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
   const inputAttributeMap = attributesToMap(variantInfo.attributes);
 
-  const existingVariant = product.variants.find((productVariant) => {
-    const variantAttributes = productVariant.attributes as VariantAttribute[];
-    return shallowEquals(inputAttributeMap, attributesToMap(variantAttributes));
-  });
-
-  if (!existingVariant) {
-    console.warn(`Creating new variant: ${JSON.stringify(variantInfo.attributes)}`);
-    const productVariant = await createProductVariant({
-      productId: product.id,
-      variantInfo,
-    });
-    return productVariant;
-  }
+  const existingVariant = variants.find((productVariant) =>
+    shallowEquals(inputAttributeMap, attributesToMap(productVariant.attributes)),
+  );
 
   return existingVariant;
 }

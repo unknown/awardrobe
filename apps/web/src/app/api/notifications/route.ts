@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { findNotificationsByUser, NotificationWithVariant } from "@awardrobe/db";
+import { findUserNotifications, NotificationWithVariant } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
 
 type GetNotificationsRequest = {
-  productId: string;
+  productId: number;
 };
 
 type GetNotificationsSuccess = {
@@ -33,10 +33,7 @@ export async function POST(req: Request) {
   try {
     const { productId }: GetNotificationsRequest = await req.json();
 
-    const notifications = await findNotificationsByUser({
-      userId: session.user.id,
-      productIds: productId ? [productId] : undefined,
-    });
+    const notifications = await findUserNotifications({ productId, userId: session.user.id });
 
     return NextResponse.json<GetNotificationsResponse>({
       status: "success",

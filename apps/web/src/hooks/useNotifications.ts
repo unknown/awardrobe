@@ -11,19 +11,19 @@ import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route
 import { GetNotificationsResponse } from "@/app/api/notifications/route";
 
 export type FetchNotificationsOptions = {
-  productId?: string;
+  productId?: number;
   abortSignal?: AbortSignal;
 };
 
 export type CreateNotificationOptions = {
-  variantId: string;
-  priceInCents: number | null;
+  variantId: number;
+  priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
 };
 
 export type DeleteNotificationOptions = {
-  notificationId: string;
+  notificationId: number;
 };
 
 export function useNotifications() {
@@ -110,7 +110,7 @@ async function createNotification({
 }: CreateNotificationOptions) {
   const body: AddNotificationRequest = {
     variantId,
-    priceInCents: priceInCents ?? undefined,
+    priceInCents,
     priceDrop: priceDrop,
     restock: restock,
   };

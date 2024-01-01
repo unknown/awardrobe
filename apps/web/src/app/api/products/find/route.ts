@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
-import { findProductsByProductCodes } from "@awardrobe/db";
-import { Product } from "@awardrobe/prisma-types";
+import { findProductsByProductCodes, findStore, Product } from "@awardrobe/db";
 
 export type FindProductRequest = {
   productUrl: string;
@@ -30,6 +29,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const store = await findStore({ storeHandle: adapter.storeHandle });
+    if (!store) {
+      return NextResponse.json<FindProductResponse>(
+        { status: "error", error: "Store not yet supported" },
+        { status: 400 },
+      );
+    }
+
     const productCode = await adapter.getProductCode(productUrl);
     if (!productCode) {
       return NextResponse.json<FindProductResponse>(
@@ -40,8 +47,9 @@ export async function POST(req: Request) {
 
     const products = await findProductsByProductCodes({
       productCodes: [productCode],
-      storeHandle: adapter.storeHandle,
+      storeId: store.id,
     });
+
     if (!products[0]) {
       return NextResponse.json<FindProductResponse>(
         { status: "error", error: "Product not found" },

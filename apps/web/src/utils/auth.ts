@@ -1,10 +1,10 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth from "next-auth";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
+import { db } from "@awardrobe/db";
 import { resend, SignInEmail } from "@awardrobe/emails";
-import { prisma } from "@awardrobe/prisma-types";
 
 declare module "next-auth" {
   interface Session {
@@ -15,7 +15,7 @@ declare module "next-auth" {
 }
 
 export const config = {
-  adapter: PrismaAdapter(prisma),
+  adapter: DrizzleAdapter(db),
   pages: { signIn: "/login" },
   providers: [
     EmailProvider({

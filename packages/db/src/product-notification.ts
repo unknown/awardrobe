@@ -1,135 +1,161 @@
-import { Prisma, prisma } from "@awardrobe/prisma-types";
+import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 
-export async function createNotification(options: {
-  variantId: string;
+import { db } from "./db";
+import { productNotifications } from "./schema/product-notifications";
+import { productVariants } from "./schema/product-variants";
+import { NotificationWithUser, NotificationWithVariant, ProductNotification } from "./schema/types";
+
+export type CreateNotificationOptions = {
+  variantId: number;
   userId: string;
-  priceInCents: number | null;
+  priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
-}) {
+};
+
+export async function createNotification(
+  options: CreateNotificationOptions,
+): Promise<NotificationWithVariant> {
   const { variantId, userId, priceInCents, priceDrop, restock } = options;
 
-  const [notification, _] = await prisma.$transaction([
-    prisma.productNotification.create({
-      data: {
-        priceInCents,
-        priceDrop,
-        restock,
-        user: { connect: { id: userId } },
-        productVariant: { connect: { id: variantId } },
-      },
-      include: { productVariant: true },
-    }),
-    prisma.product.updateMany({
-      where: { variants: { some: { id: variantId } } },
-      data: {
-        numNotified: {
-          increment: 1,
-        },
-      },
-    }),
-  ]);
+  const productVariant = await db.query.productVariants.findFirst({
+    where: eq(productVariants.id, variantId),
+  });
 
-  return notification;
+  if (!productVariant) {
+    throw new Error("Product variant does not exist");
+  }
+
+  const notificationsTable = await db.insert(productNotifications).values({
+    userId,
+    priceInCents,
+    priceDrop,
+    restock,
+    productVariantId: variantId,
+    productId: productVariant.productId,
+  });
+
+  const created = await db.query.productNotifications.findFirst({
+    where: eq(productNotifications.id, Number(notificationsTable.insertId)),
+    with: { productVariant: true },
+  });
+
+  if (!created) {
+    throw new Error("Could not create notification");
+  }
+
+  return created;
 }
 
-const notificationWithVariant = Prisma.validator<Prisma.ProductNotificationDefaultArgs>()({
-  include: { productVariant: true },
-});
-
-export type NotificationWithVariant = Prisma.ProductNotificationGetPayload<
-  typeof notificationWithVariant
->;
-
-export async function findNotificationsByUser(options: {
+export type FindUserNotificationOptions = {
   userId: string;
-  productIds?: string[];
-}): Promise<NotificationWithVariant[]> {
-  const { userId, productIds } = options;
+  productId: number;
+};
 
-  return await prisma.productNotification.findMany({
-    where: {
-      userId,
-      productVariant: productIds ? { productId: { in: productIds } } : undefined,
-    },
-    include: { productVariant: true },
+export function findUserNotifications(
+  options: FindUserNotificationOptions,
+): Promise<NotificationWithVariant[]> {
+  const { userId, productId } = options;
+
+  return db.query.productNotifications.findMany({
+    where: (productNotifications) =>
+      and(
+        eq(productNotifications.userId, userId),
+        exists(
+          db
+            .select()
+            .from(productVariants)
+            .where(
+              and(
+                eq(productNotifications.productVariantId, productVariants.id),
+                eq(productVariants.productId, productId),
+              ),
+            ),
+        ),
+      ),
+    with: { productVariant: true },
   });
 }
 
-type NotificationType = "priceDrop" | "restock";
-
-export async function findNotificationsByType(options: {
-  type: NotificationType;
-  variantId: string;
+export type FindNotificationsOptions = {
+  variantId: number;
   priceInCents: number;
-}) {
-  const { type, variantId, priceInCents } = options;
+};
+
+export function findPriceDropNotifications(
+  options: FindNotificationsOptions,
+): Promise<NotificationWithUser[]> {
+  const { variantId, priceInCents } = options;
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
-  const whereInputFromType: Record<NotificationType, Prisma.ProductNotificationWhereInput> = {
-    priceDrop: {
-      priceDrop: true,
-      AND: [
-        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
-        { OR: [{ lastPriceDropPing: null }, { lastPriceDropPing: { lt: yesterday } }] },
-      ],
-    },
-    restock: {
-      restock: true,
-      AND: [
-        { OR: [{ priceInCents: null }, { priceInCents: { gte: priceInCents } }] },
-        { OR: [{ lastRestockPing: null }, { lastRestockPing: { lt: yesterday } }] },
-      ],
-    },
-  };
-
-  return await prisma.productNotification.findMany({
-    include: { user: true },
-    where: {
-      productVariant: { id: variantId },
-      ...whereInputFromType[type],
-    },
+  return db.query.productNotifications.findMany({
+    where: and(
+      eq(productNotifications.priceDrop, true),
+      eq(productNotifications.productVariantId, variantId),
+      gte(productNotifications.priceInCents, priceInCents),
+      or(
+        isNull(productNotifications.lastPriceDropPing),
+        gte(productNotifications.lastPriceDropPing, yesterday),
+      ),
+    ),
+    with: { user: true },
   });
 }
 
-export async function updateLastPingByType(options: {
-  type: NotificationType;
-  notificationIds: string[];
-}) {
-  const { type, notificationIds } = options;
-  const date = new Date();
+export function findRestockNotifications(
+  options: FindNotificationsOptions,
+): Promise<NotificationWithUser[]> {
+  const { variantId, priceInCents } = options;
+  const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
-  const mutationInputFromType: Record<
-    NotificationType,
-    Prisma.ProductNotificationUpdateManyMutationInput
-  > = {
-    priceDrop: { lastPriceDropPing: date },
-    restock: { lastRestockPing: date },
-  };
-
-  return await prisma.productNotification.updateMany({
-    where: { id: { in: notificationIds } },
-    data: mutationInputFromType[type],
+  return db.query.productNotifications.findMany({
+    where: and(
+      eq(productNotifications.restock, true),
+      eq(productNotifications.productVariantId, variantId),
+      gte(productNotifications.priceInCents, priceInCents),
+      or(
+        isNull(productNotifications.lastRestockPing),
+        gte(productNotifications.lastRestockPing, yesterday),
+      ),
+    ),
+    with: { user: true },
   });
 }
 
-export async function deleteNotification(options: { notificationId: string }) {
+export type UpdateNotificationLastPingOptions = {
+  notificationIds: number[];
+};
+
+export async function updatePriceDropLastPing(
+  options: UpdateNotificationLastPingOptions,
+): Promise<void> {
+  const { notificationIds } = options;
+  const now = new Date();
+
+  await db
+    .update(productNotifications)
+    .set({ lastPriceDropPing: now })
+    .where(inArray(productNotifications.id, notificationIds));
+}
+
+export async function updateRestockLastPing(
+  options: UpdateNotificationLastPingOptions,
+): Promise<void> {
+  const { notificationIds } = options;
+  const now = new Date();
+
+  await db
+    .update(productNotifications)
+    .set({ lastRestockPing: now })
+    .where(inArray(productNotifications.id, notificationIds));
+}
+
+type DeleteNotificationOptions = {
+  notificationId: number;
+};
+
+export async function deleteNotification(options: DeleteNotificationOptions) {
   const { notificationId } = options;
 
-  return await prisma.$transaction(async (tx) => {
-    const notification = await prisma.productNotification.delete({
-      where: { id: notificationId },
-    });
-
-    await tx.product.updateMany({
-      where: { variants: { some: { id: notification.productVariantId } } },
-      data: {
-        numNotified: {
-          decrement: 1,
-        },
-      },
-    });
-
-    return notification;
-  });
+  await db.delete(productNotifications).where(eq(productNotifications.id, notificationId));
 }

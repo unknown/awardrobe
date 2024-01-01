@@ -13,8 +13,6 @@ import {
   SelectValue,
 } from "@ui/Select";
 
-import { VariantAttribute } from "@awardrobe/adapters";
-
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { CreateNotificationOptions } from "@/hooks/useNotifications";
 
@@ -23,7 +21,7 @@ export type AddNotificationDialogProps = {
 };
 
 type AddNotificationOptions = {
-  priceInCents: number | null;
+  priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
 };
@@ -60,11 +58,10 @@ export function AddNotificationDialog({ onNotificationCreate }: AddNotificationD
             event.preventDefault();
 
             const variant = product.variants.find((variant) => {
-              const variantAttributes = variant.attributes as VariantAttribute[];
-              if (variantAttributes.length !== Object.keys(attributes).length) return false;
-              return variantAttributes.every(
-                (attribute) => attributes[attribute.name] === attribute.value,
-              );
+              if (variant.attributes.length !== Object.keys(attributes).length) {
+                return false;
+              }
+              return variant.attributes.every(({ name, value }) => attributes[name] === value);
             });
 
             // TODO: handle this better
@@ -120,7 +117,7 @@ export function AddNotificationDialog({ onNotificationCreate }: AddNotificationD
               const value = Math.max(1, parseInt(event.target.value.slice(-8)));
               setOptions((options) => ({
                 ...options,
-                priceInCents: isNaN(value) ? null : value,
+                priceInCents: isNaN(value) ? 0 : value,
               }));
             }}
             onBlur={(event) => {

@@ -19,14 +19,14 @@ export async function HomeProductList({ page }: HomeProductListProps) {
     page === "Featured"
       ? await findFeaturedProducts({ limit: 24 })
       : session
-        ? await findFollowingProducts({ userId: session.user.id })
+        ? await findFollowingProducts({ userId: session.user.id, withStore: true })
         : [];
 
   return (
     <ProductList
       products={products.map(({ id, name, store }) => ({
-        id,
         name,
+        id: id.toString(),
         storeName: store.name,
       }))}
     />
