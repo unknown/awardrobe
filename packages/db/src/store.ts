@@ -19,3 +19,31 @@ export function findStore(options: FindStoreOptions): Promise<Store | undefined>
     where: eq(stores.handle, storeHandle),
   });
 }
+
+export type CreateStoreOptions = {
+  handle: string;
+  name: string;
+  shortenedName: string;
+  externalUrl: string;
+};
+
+export async function createStore(options: CreateStoreOptions): Promise<Store> {
+  const { handle, name, shortenedName, externalUrl } = options;
+
+  const storesTable = await db.insert(stores).values({
+    handle,
+    name,
+    shortenedName,
+    externalUrl,
+  });
+
+  const created = await db.query.stores.findFirst({
+    where: eq(stores.id, Number(storesTable.insertId)),
+  });
+
+  if (!created) {
+    throw new Error("Could not create store");
+  }
+
+  return created;
+}
