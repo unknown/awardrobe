@@ -1,5 +1,14 @@
 import { downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
-import { and, createProduct, createProductVariant, db, eq, schema } from "@awardrobe/db";
+import {
+  and,
+  createProduct,
+  createProductVariant,
+  createStore,
+  db,
+  eq,
+  findStore,
+  schema,
+} from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 
@@ -40,35 +49,32 @@ async function addProduct(storeId: number, productCode: string, details: Product
     ),
   );
 
-  if (!details.imageUrl) {
+  if (details.imageUrl) {
+    await downloadImage(details.imageUrl)
+      .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
+      .catch(() => console.error(`Failed to add image for ${productCode}`));
+  } else {
     console.log(`No image found for ${productCode}`);
-    return;
   }
 
-  await downloadImage(details.imageUrl)
-    .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
-    .catch(() => console.error(`Failed to add image for ${productCode}`));
+  return product;
 }
 
 async function seedUniqloUS() {
   console.log("Seeding Uniqlo US");
 
-  const storesTable = await db
-    .insert(schema.stores)
-    .values({
+  let uniqlo = await findStore({ storeHandle: "uniqlo-us" });
+  if (!uniqlo) {
+    uniqlo = await createStore({
+      handle: "uniqlo-us",
       name: "Uniqlo US",
       shortenedName: "Uniqlo",
-      handle: "uniqlo-us",
-      externalUrl: "https://www.uniqlo.com/",
-    })
-    .onDuplicateKeyUpdate({ set: {} });
-
-  const uniqlo = await db.query.stores.findFirst({
-    where: eq(schema.stores.id, Number(storesTable.insertId)),
-  });
+      externalUrl: "https://www.uniqlo.com/us/en/",
+    });
+  }
 
   if (!uniqlo) {
-    throw new Error("Failed to find Uniqlo");
+    throw new Error("Could not find or create Uniqlo US store");
   }
 
   const productCodes = [
@@ -91,7 +97,10 @@ async function seedUniqloUS() {
       continue;
     }
 
-    await addProduct(uniqlo.id, productCode, details);
+    const product = await addProduct(uniqlo.id, productCode, details);
+    if (product) {
+      console.log(`Added ${product.name} for ${uniqlo.name}`);
+    }
   }
 }
 
