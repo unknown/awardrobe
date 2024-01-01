@@ -1,6 +1,6 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { dollarsToCents, toTitleCase } from "../../utils/formatter";
+import { dollarsToCents } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -113,7 +113,7 @@ export const UniqloUS: StoreAdapter = {
       if (color.display.showFlag) {
         attributes.push({
           name: "Color",
-          value: toTitleCase(`${color.displayCode} ${color.name}`),
+          value: `${color.displayCode} ${color.name}`,
         });
       }
       if (size.display.showFlag) {

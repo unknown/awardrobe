@@ -1,6 +1,6 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { dollarsToCents, toTitleCase } from "../../utils/formatter";
+import { dollarsToCents } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
 import { productInfoSchema } from "./schemas";
 
@@ -48,7 +48,7 @@ export const JCrewUS: StoreAdapter = {
           )?.name;
           return {
             name: attributeName ?? key,
-            value: toTitleCase(attributeValue ?? value),
+            value: attributeValue ?? value,
           };
         });
         return {

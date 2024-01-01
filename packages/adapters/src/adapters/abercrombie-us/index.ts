@@ -2,7 +2,7 @@ import parse from "node-html-parser";
 
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { dollarsToCents, toTitleCase } from "../../utils/formatter";
+import { dollarsToCents } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
@@ -122,7 +122,7 @@ export const AbercrombieUS: StoreAdapter = {
           .map((attribute) => {
             const value =
               attribute.name === "Color"
-                ? toTitleCase(`${attribute.sequence} ${attribute.value}`)
+                ? `${attribute.sequence} ${attribute.value}`
                 : attribute.value;
             return {
               value,
