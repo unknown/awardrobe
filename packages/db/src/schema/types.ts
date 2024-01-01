@@ -17,3 +17,13 @@ export type Session = typeof sessions.$inferSelect;
 export type Store = typeof stores.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type VerificationToken = typeof verificationTokens.$inferSelect;
+
+export type NotificationWithUser = ProductNotification & {
+  user: User;
+};
+
+export type ProductWithStore = Product & { store: Store };
+
+export type ProductVariantWithPrice = ProductVariant & {
+  latestPrice: Price | null;
+};

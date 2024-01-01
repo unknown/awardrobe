@@ -3,7 +3,7 @@ import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
-import { ProductNotification, User } from "./schema/types";
+import { NotificationWithUser, ProductNotification } from "./schema/types";
 
 export type CreateNotificationOptions = {
   variantId: number;
@@ -35,8 +35,6 @@ export async function createNotification(
     productId: productVariant.productId,
   });
 
-  // TODO: increment numNotified
-
   const created = await db.query.productNotifications.findFirst({
     where: eq(productNotifications.id, Number(notificationsTable.insertId)),
   });
@@ -47,10 +45,6 @@ export async function createNotification(
 
   return created;
 }
-
-export type NotificationWithUser = ProductNotification & {
-  user: User;
-};
 
 export type FindUserNotificationOptions = {
   userId: string;
@@ -162,6 +156,4 @@ export async function deleteNotification(options: DeleteNotificationOptions) {
   const { notificationId } = options;
 
   await db.delete(productNotifications).where(eq(productNotifications.id, notificationId));
-
-  // TODO: decrement numNotified
 }

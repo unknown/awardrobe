@@ -5,11 +5,7 @@ import { VariantInfo } from "@awardrobe/adapters";
 import { db } from "./db";
 import { prices } from "./schema/prices";
 import { productVariants } from "./schema/product-variants";
-import { Price, ProductVariant } from "./schema/types";
-
-export type ProductVariantWithPrice = ProductVariant & {
-  latestPrice: Price | null;
-};
+import { ProductVariant, ProductVariantWithPrice } from "./schema/types";
 
 export type CreateProductVariantOptions = {
   productId: number;

@@ -4,9 +4,7 @@ import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
 import { products } from "./schema/products";
-import type { Product, ProductVariant, Store } from "./schema/types";
-
-export type ProductWithStore = Product & { store: Store };
+import type { Product, ProductVariant, ProductWithStore, Store } from "./schema/types";
 
 export type CreateProductOptions = {
   name: string;
@@ -136,35 +134,39 @@ export function findProductsByProductCodes(options: FindProductsByProductCodesOp
 
 export type FindFollowingProductsOptions = {
   userId: string;
+  productIds?: number[];
 };
 
 export function findFollowingProducts(
   options: FindFollowingProductsOptions,
 ): Promise<ProductWithStore[]> {
-  const { userId } = options;
+  const { userId, productIds } = options;
 
   return db.query.products.findMany({
     where: (products) =>
-      exists(
-        db
-          .select()
-          .from(productVariants)
-          .where(
-            and(
-              eq(products.id, productVariants.productId),
-              exists(
-                db
-                  .select()
-                  .from(productNotifications)
-                  .where(
-                    and(
-                      eq(productNotifications.userId, userId),
-                      eq(productVariants.id, productNotifications.productVariantId),
+      and(
+        productIds ? inArray(products.id, productIds) : undefined,
+        exists(
+          db
+            .select()
+            .from(productVariants)
+            .where(
+              and(
+                eq(products.id, productVariants.productId),
+                exists(
+                  db
+                    .select()
+                    .from(productNotifications)
+                    .where(
+                      and(
+                        eq(productNotifications.userId, userId),
+                        eq(productVariants.id, productNotifications.productVariantId),
+                      ),
                     ),
-                  ),
+                ),
               ),
             ),
-          ),
+        ),
       ),
     with: { store: true },
   });
