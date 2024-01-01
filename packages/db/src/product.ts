@@ -115,22 +115,34 @@ export type FindFollowingProductsOptions = {
   userId: string;
 };
 
-export function findFollowingProducts(
+export async function findFollowingProducts(
   options: FindFollowingProductsOptions,
 ): Promise<ProductWithStore[]> {
   const { userId } = options;
 
   return db.query.products.findMany({
-    where: exists(
-      db
-        .select()
-        .from(productVariants)
-        .where(
-          exists(
-            db.select().from(productNotifications).where(eq(productNotifications.userId, userId)),
+    where: (products) =>
+      exists(
+        db
+          .select()
+          .from(productVariants)
+          .where(
+            and(
+              eq(products.id, productVariants.productId),
+              exists(
+                db
+                  .select()
+                  .from(productNotifications)
+                  .where(
+                    and(
+                      eq(productNotifications.userId, userId),
+                      eq(productVariants.id, productNotifications.productVariantId),
+                    ),
+                  ),
+              ),
+            ),
           ),
-        ),
-    ),
+      ),
     with: { store: true },
   });
 }
