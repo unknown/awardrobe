@@ -13,13 +13,11 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.3.12",
-    "@auth/prisma-adapter": "^1.0.12",
     "@awardrobe/adapters": "workspace:^",
     "@awardrobe/db": "workspace:^",
     "@awardrobe/emails": "workspace:^",
     "@awardrobe/media-store": "workspace:^",
     "@awardrobe/meilisearch-types": "workspace:^",
-    "@awardrobe/prisma-types": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -53,7 +51,6 @@
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
-    "@prisma/nextjs-monorepo-workaround-plugin": "^5.7.1",
     "@types/d3-array": "^3.2.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.10.3",
