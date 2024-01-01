@@ -18,6 +18,7 @@ export const productNotifications = mysqlTable(
   "productNotification",
   {
     id: serial("id").primaryKey(),
+    publicId: varchar("publicId", { length: 12 }).notNull(),
     userId: varchar("userId", { length: 255 }).notNull(), // TODO: change to int
     productId: int("productId").notNull(),
     productVariantId: int("productVariantId").notNull(),
@@ -28,6 +29,7 @@ export const productNotifications = mysqlTable(
     lastPriceDropPing: datetime("lastPriceDropPing", { mode: "date", fsp: 3 }),
   },
   (productNotification) => ({
+    publicIdIdx: index("publicIdIdx").on(productNotification.publicId),
     userIdProductVariantIdUnq: unique("userIdProductVariantIdUnq").on(
       productNotification.userId,
       productNotification.productVariantId,

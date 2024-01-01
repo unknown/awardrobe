@@ -16,7 +16,8 @@
     "@planetscale/database": "^1.13.0",
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.29.2",
-    "mysql2": "^3.6.5"
+    "mysql2": "^3.6.5",
+    "nanoid": "^5.0.4"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",

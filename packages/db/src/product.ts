@@ -5,6 +5,7 @@ import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
 import { products } from "./schema/products";
 import type { Product, ProductVariant, ProductWithStore, Store } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {
   name: string;
@@ -19,6 +20,7 @@ export async function createProduct(options: CreateProductOptions): Promise<Prod
     name,
     productCode,
     storeId,
+    publicId: generatePublicId(),
   });
 
   const created = await db.query.products.findFirst({

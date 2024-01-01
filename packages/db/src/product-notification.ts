@@ -4,6 +4,7 @@ import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
 import { NotificationWithUser, NotificationWithVariant, ProductNotification } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export type CreateNotificationOptions = {
   variantId: number;
@@ -31,6 +32,7 @@ export async function createNotification(
     priceInCents,
     priceDrop,
     restock,
+    publicId: generatePublicId(),
     productVariantId: variantId,
     productId: productVariant.productId,
   });

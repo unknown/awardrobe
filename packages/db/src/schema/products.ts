@@ -9,11 +9,13 @@ export const products = mysqlTable(
   "product",
   {
     id: serial("id").primaryKey(),
+    publicId: varchar("publicId", { length: 12 }).notNull(),
     storeId: int("storeId").notNull(),
     productCode: varchar("productCode", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
   },
   (product) => ({
+    publicIdIdx: index("publicIdIdx").on(product.publicId),
     storeIdProductCodeUnq: unique("storeIdProductCodeUnq").on(product.storeId, product.productCode),
     storeIdIx: index("storeIdIx").on(product.storeId),
   }),
