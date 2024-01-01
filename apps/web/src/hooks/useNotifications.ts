@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ProductNotification } from "@awardrobe/db";
+import { NotificationWithVariant } from "@awardrobe/db";
 
 import {
   AddNotificationRequest,
@@ -30,7 +30,9 @@ export function useNotifications() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [notificationsData, setNotificationsData] = useState<ProductNotification[] | null>(null);
+  const [notificationsData, setNotificationsData] = useState<NotificationWithVariant[] | null>(
+    null,
+  );
 
   const fetchNotifications = useCallback(async function (options: FetchNotificationsOptions) {
     setLoading(true);

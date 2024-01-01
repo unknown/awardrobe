@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { findUserNotifications, ProductNotification } from "@awardrobe/db";
+import { findUserNotifications, NotificationWithVariant } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
 
@@ -10,7 +10,7 @@ type GetNotificationsRequest = {
 
 type GetNotificationsSuccess = {
   status: "success";
-  notifications: ProductNotification[];
+  notifications: NotificationWithVariant[];
 };
 
 type GetNotificationsError = {

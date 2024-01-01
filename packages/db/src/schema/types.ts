@@ -22,6 +22,10 @@ export type NotificationWithUser = ProductNotification & {
   user: User;
 };
 
+export type NotificationWithVariant = ProductNotification & {
+  productVariant: ProductVariant;
+};
+
 export type ProductWithStore = Product & { store: Store };
 
 export type ProductVariantWithPrice = ProductVariant & {

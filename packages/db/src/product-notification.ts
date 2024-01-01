@@ -3,7 +3,7 @@ import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
-import { NotificationWithUser, ProductNotification } from "./schema/types";
+import { NotificationWithUser, NotificationWithVariant, ProductNotification } from "./schema/types";
 
 export type CreateNotificationOptions = {
   variantId: number;
@@ -15,7 +15,7 @@ export type CreateNotificationOptions = {
 
 export async function createNotification(
   options: CreateNotificationOptions,
-): Promise<ProductNotification> {
+): Promise<NotificationWithVariant> {
   const { variantId, userId, priceInCents, priceDrop, restock } = options;
 
   const productVariant = await db.query.productVariants.findFirst({
@@ -37,6 +37,7 @@ export async function createNotification(
 
   const created = await db.query.productNotifications.findFirst({
     where: eq(productNotifications.id, Number(notificationsTable.insertId)),
+    with: { productVariant: true },
   });
 
   if (!created) {
@@ -53,7 +54,7 @@ export type FindUserNotificationOptions = {
 
 export function findUserNotifications(
   options: FindUserNotificationOptions,
-): Promise<ProductNotification[]> {
+): Promise<NotificationWithVariant[]> {
   const { userId, productId } = options;
 
   return db.query.productNotifications.findMany({
@@ -72,6 +73,7 @@ export function findUserNotifications(
             ),
         ),
       ),
+    with: { productVariant: true },
   });
 }
 

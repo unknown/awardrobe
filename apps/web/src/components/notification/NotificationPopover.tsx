@@ -49,8 +49,11 @@ export function NotificationPopover() {
           {notifications?.length === 0 && "No notifications"}
           <div className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2">
             {notifications?.map((notification) => {
+              const attributes = notification.productVariant.attributes as VariantAttribute[];
+              const description = attributes.map(({ value }) => value).join(" - ");
               return (
                 <Fragment key={notification.id}>
+                  <p>{description}</p>
                   <p>{formatCurrency(notification.priceInCents ?? 0)}</p>
                   <DeleteNotificationButton
                     onNotificationDelete={() => {

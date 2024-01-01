@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createNotification, ProductNotification } from "@awardrobe/db";
+import { createNotification, NotificationWithVariant } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
 
@@ -13,7 +13,7 @@ export type AddNotificationRequest = {
 
 type AddNotificationSuccess = {
   status: "success";
-  notification: ProductNotification;
+  notification: NotificationWithVariant;
 };
 
 type AddNotificationError = {
