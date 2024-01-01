@@ -2,10 +2,9 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
-import { createProduct } from "@awardrobe/db";
+import { createProduct, createProductVariant, findStore, Product } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
-import { Prisma, Product } from "@awardrobe/prisma-types";
 
 import { auth } from "@/utils/auth";
 
@@ -46,7 +45,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const productCode = await adapter.getProductCode(productUrl);
+    const [store, productCode] = await Promise.all([
+      findStore({ storeHandle: adapter.storeHandle }),
+      adapter.getProductCode(productUrl),
+    ]);
+
+    if (!store) {
+      return NextResponse.json<AddProductResponse>(
+        { status: "error", error: "Store not yet supported" },
+        { status: 400 },
+      );
+    }
+
     if (!productCode) {
       return NextResponse.json<AddProductResponse>(
         { status: "error", error: "Error retrieving product code" },
@@ -68,23 +78,28 @@ export async function POST(req: Request) {
     const product = await createProduct({
       productCode,
       name: details.name,
-      variants: details.variants,
-      storeHandle: adapter.storeHandle,
+      storeId: store.id,
     });
 
-    const addPromise = addProduct({
+    const createVariantsPromise = Promise.allSettled(
+      details.variants.map(async (variantInfo) =>
+        createProductVariant({ variantInfo, productId: product.id }),
+      ),
+    );
+
+    const addProductToSearchPromise = addProduct({
+      id: product.id.toString(),
       name: details.name,
-      id: product.id,
-      storeName: product.store.name,
+      storeName: store.name,
     });
 
     const addImagePromise = details.imageUrl
       ? downloadImage(details.imageUrl).then((imageBuffer) =>
-          addProductImage(product.id, imageBuffer),
+          addProductImage(product.id.toString(), imageBuffer),
         )
       : undefined;
 
-    await Promise.all([addPromise, addImagePromise]);
+    await Promise.all([createVariantsPromise, addProductToSearchPromise, addImagePromise]);
 
     revalidatePath("/(app)/(browse)/search", "page");
 
@@ -94,17 +109,6 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error(e);
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2002") {
-        return NextResponse.json<AddProductResponse>(
-          {
-            status: "error",
-            error: "Product already exists",
-          },
-          { status: 400 },
-        );
-      }
-    }
     return NextResponse.json<AddProductResponse>(
       { status: "error", error: "Internal server error" },
       { status: 500 },

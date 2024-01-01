@@ -22,7 +22,8 @@ export default async function ProductPage({
   params,
   searchParams: { range, ...attributesParams },
 }: ProductPageProps) {
-  const product = await findProductWithVariants(params.productId);
+  const productId = Number(params.productId);
+  const product = await findProductWithVariants({ productId });
 
   if (!product) {
     notFound();
@@ -69,7 +70,7 @@ export default async function ProductPage({
   const pricesPromise = variant
     ? findPrices({
         variantId: variant.id,
-        startDate: getDateFromRange(initialDateRange).toISOString(),
+        startDate: getDateFromRange(initialDateRange),
       })
     : null;
 
@@ -84,7 +85,7 @@ export default async function ProductPage({
         }))
       : null;
 
-  const mediaStorePath = getProductPath(product.id);
+  const mediaStorePath = getProductPath(product.id.toString());
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
   return (

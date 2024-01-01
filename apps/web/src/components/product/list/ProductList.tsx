@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Bell } from "@icons/Bell";
 
-import { findNotificationsByUser } from "@awardrobe/db";
+import { findFollowingProducts } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 import { Product } from "@awardrobe/meilisearch-types";
 
@@ -17,19 +17,12 @@ export async function ProductList({ products }: ProductListProps) {
   }
 
   const session = await auth();
-  const notifications = session
-    ? await findNotificationsByUser({
-        userId: session.user.id,
-        productIds: products.map((product) => product.id),
-      })
-    : [];
+  const followingProducts = session ? await findFollowingProducts({ userId: session.user.id }) : [];
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
       {products.map((product) => {
-        const hasNotification = notifications.some(
-          (notification) => notification.productVariant.productId === product.id,
-        );
+        const hasNotification = followingProducts.some(({ id }) => id.toString() === product.id);
 
         const mediaStorePath = getProductPath(product.id);
         const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;

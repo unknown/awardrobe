@@ -3,11 +3,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { ProductWithVariants } from "@awardrobe/db";
-import { Price, ProductVariant } from "@awardrobe/prisma-types";
+import { FullProduct, Price, ProductVariant } from "@awardrobe/db";
 
 type ProductInfoContextValue = {
-  product: ProductWithVariants;
+  product: FullProduct;
   productOptions: Record<string, string[]>;
   variant: ProductVariant | null;
   attributes: Record<string, string>;
@@ -18,7 +17,7 @@ type ProductInfoContextValue = {
 
 // TODO: is this the best way to do this?
 export const ProductInfoContext = createContext<ProductInfoContextValue>({
-  product: {} as ProductWithVariants,
+  product: {} as FullProduct,
   productOptions: {},
   variant: null,
   attributes: {},
@@ -28,7 +27,7 @@ export const ProductInfoContext = createContext<ProductInfoContextValue>({
 });
 
 type ProductInfoProviderProps = {
-  product: ProductWithVariants;
+  product: FullProduct;
   productOptions: Record<string, string[]>;
   variant: ProductVariant | null;
   attributes: Record<string, string>;

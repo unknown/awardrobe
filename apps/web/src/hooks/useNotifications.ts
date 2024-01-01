@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { NotificationWithVariant } from "@awardrobe/db";
+import { ProductNotification } from "@awardrobe/db";
 
 import {
   AddNotificationRequest,
@@ -11,28 +11,26 @@ import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route
 import { GetNotificationsResponse } from "@/app/api/notifications/route";
 
 export type FetchNotificationsOptions = {
-  productId?: string;
+  productId?: number;
   abortSignal?: AbortSignal;
 };
 
 export type CreateNotificationOptions = {
-  variantId: string;
-  priceInCents: number | null;
+  variantId: number;
+  priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
 };
 
 export type DeleteNotificationOptions = {
-  notificationId: string;
+  notificationId: number;
 };
 
 export function useNotifications() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [notificationsData, setNotificationsData] = useState<NotificationWithVariant[] | null>(
-    null,
-  );
+  const [notificationsData, setNotificationsData] = useState<ProductNotification[] | null>(null);
 
   const fetchNotifications = useCallback(async function (options: FetchNotificationsOptions) {
     setLoading(true);
@@ -110,7 +108,7 @@ async function createNotification({
 }: CreateNotificationOptions) {
   const body: AddNotificationRequest = {
     variantId,
-    priceInCents: priceInCents ?? undefined,
+    priceInCents,
     priceDrop: priceDrop,
     restock: restock,
   };

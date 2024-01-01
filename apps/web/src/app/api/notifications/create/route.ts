@@ -1,20 +1,19 @@
 import { NextResponse } from "next/server";
 
-import { createNotification, NotificationWithVariant } from "@awardrobe/db";
-import { Prisma } from "@awardrobe/prisma-types";
+import { createNotification, ProductNotification } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
 
 export type AddNotificationRequest = {
-  variantId: string;
-  priceInCents?: number;
+  variantId: number;
+  priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
 };
 
 type AddNotificationSuccess = {
   status: "success";
-  notification: NotificationWithVariant;
+  notification: ProductNotification;
 };
 
 type AddNotificationError = {
@@ -50,7 +49,7 @@ export async function POST(req: Request) {
       priceDrop,
       restock,
       userId: session.user.id,
-      priceInCents: priceInCents ?? null,
+      priceInCents: priceInCents,
     });
 
     return NextResponse.json<AddNotificationSuccess>({
@@ -58,17 +57,7 @@ export async function POST(req: Request) {
       notification,
     });
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === "P2002") {
-        return NextResponse.json<AddNotificationError>(
-          {
-            status: "error",
-            error: "Notificaton for this product already exists",
-          },
-          { status: 400 },
-        );
-      }
-    }
+    console.error(e);
     return NextResponse.json<AddNotificationError>(
       { status: "error", error: "Internal server error" },
       { status: 500 },

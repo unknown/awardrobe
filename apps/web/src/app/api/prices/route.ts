@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { findPrices } from "@awardrobe/db";
-import { Price } from "@awardrobe/prisma-types";
+import { findPrices, Price } from "@awardrobe/db";
 
 type GetPricesRequest = {
-  variantId: string;
+  variantId: number;
   startDate: string;
 };
 
@@ -21,7 +20,8 @@ type GetPricesError = {
 export type GetPricesResponse = GetPricesSuccess | GetPricesError;
 
 export async function POST(req: Request) {
-  const { variantId, startDate }: GetPricesRequest = await req.json();
+  const { variantId, startDate: startDateString }: GetPricesRequest = await req.json();
+  const startDate = new Date(startDateString);
 
   try {
     const prices = await findPrices({ variantId, startDate });

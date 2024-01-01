@@ -25,8 +25,8 @@ export async function HomeProductList({ page }: HomeProductListProps) {
   return (
     <ProductList
       products={products.map(({ id, name, store }) => ({
-        id,
         name,
+        id: id.toString(),
         storeName: store.name,
       }))}
     />

@@ -115,7 +115,9 @@ export type FindFollowingProductsOptions = {
   userId: string;
 };
 
-export function findFollowingProducts(options: FindFollowingProductsOptions): Promise<Product[]> {
+export function findFollowingProducts(
+  options: FindFollowingProductsOptions,
+): Promise<ProductWithStore[]> {
   const { userId } = options;
 
   return db.query.products.findMany({
@@ -129,6 +131,7 @@ export function findFollowingProducts(options: FindFollowingProductsOptions): Pr
           ),
         ),
     ),
+    with: { store: true },
   });
 }
 
