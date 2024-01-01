@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/mysql-core";
 
 import { productVariants } from "./product-variants";
+import { products } from "./products";
 import { users } from "./users";
 
 export const productNotifications = mysqlTable(
@@ -18,6 +19,7 @@ export const productNotifications = mysqlTable(
   {
     id: serial("id").primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull(), // TODO: change to int
+    productId: int("productId").notNull(),
     productVariantId: int("productVariantId").notNull(),
     priceInCents: int("priceInCents").notNull(),
     restock: boolean("restock").notNull(),
@@ -40,6 +42,11 @@ export const productNotificationsRelations = relations(productNotifications, ({ 
     relationName: "ProductNotificationToUser",
     fields: [productNotifications.userId],
     references: [users.id],
+  }),
+  product: one(products, {
+    relationName: "ProductNotificationToProduct",
+    fields: [productNotifications.productId],
+    references: [products.id],
   }),
   productVariant: one(productVariants, {
     relationName: "ProductNotificationToProductVariant",

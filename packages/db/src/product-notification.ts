@@ -3,7 +3,6 @@ import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
-import { products } from "./schema/products";
 import { ProductNotification, User } from "./schema/types";
 
 export type CreateNotificationOptions = {
@@ -19,12 +18,21 @@ export async function createNotification(
 ): Promise<ProductNotification> {
   const { variantId, userId, priceInCents, priceDrop, restock } = options;
 
+  const productVariant = await db.query.productVariants.findFirst({
+    where: eq(productVariants.id, variantId),
+  });
+
+  if (!productVariant) {
+    throw new Error("Product variant does not exist");
+  }
+
   const notificationsTable = await db.insert(productNotifications).values({
     userId,
     priceInCents,
     priceDrop,
     restock,
     productVariantId: variantId,
+    productId: productVariant.productId,
   });
 
   // TODO: increment numNotified

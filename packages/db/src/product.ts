@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, gte, inArray, lte } from "drizzle-orm";
+import { and, count, desc, eq, exists, gte, inArray, lte } from "drizzle-orm";
 
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
@@ -50,16 +50,33 @@ export type FindNotifiedProductsOptions = {
   numNotified?: { lte?: number; gte?: number };
 };
 
-export function findNotifiedProducts(
+export async function findNotifiedProducts(
   options: FindNotifiedProductsOptions = {},
 ): Promise<ProductWithStore[]> {
   const { numNotified } = options;
 
   return db.query.products.findMany({
-    where: and(
-      numNotified?.lte ? lte(products.numNotified, numNotified.lte) : undefined,
-      numNotified?.gte ? gte(products.numNotified, numNotified.gte) : undefined,
-    ),
+    where: (products) =>
+      and(
+        numNotified?.lte
+          ? lte(
+              db
+                .select({ value: count() })
+                .from(productNotifications)
+                .where(eq(productNotifications.productId, products.id)),
+              numNotified.lte,
+            )
+          : undefined,
+        numNotified?.gte
+          ? gte(
+              db
+                .select({ value: count() })
+                .from(productNotifications)
+                .where(eq(productNotifications.productId, products.id)),
+              numNotified.gte,
+            )
+          : undefined,
+      ),
     with: { store: true },
   });
 }
@@ -93,7 +110,13 @@ export function findFeaturedProducts(
 
   return db.query.products.findMany({
     limit,
-    orderBy: desc(products.numNotified),
+    orderBy: (products) =>
+      desc(
+        db
+          .select({ value: count() })
+          .from(productNotifications)
+          .where(eq(productNotifications.productId, products.id)),
+      ),
     with: { store: true },
   });
 }
