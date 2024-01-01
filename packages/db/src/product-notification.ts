@@ -1,7 +1,9 @@
-import { and, eq, gte, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
+import { productVariants } from "./schema/product-variants";
+import { products } from "./schema/products";
 import { ProductNotification, User } from "./schema/types";
 
 export type CreateNotificationOptions = {
@@ -41,6 +43,35 @@ export async function createNotification(
 export type NotificationWithUser = ProductNotification & {
   user: User;
 };
+
+export type FindUserNotificationOptions = {
+  userId: string;
+  productId: number;
+};
+
+export function findUserNotifications(
+  options: FindUserNotificationOptions,
+): Promise<ProductNotification[]> {
+  const { userId, productId } = options;
+
+  return db.query.productNotifications.findMany({
+    where: (productNotifications) =>
+      and(
+        eq(productNotifications.userId, userId),
+        exists(
+          db
+            .select()
+            .from(productVariants)
+            .where(
+              and(
+                eq(productNotifications.productVariantId, productVariants.id),
+                eq(productVariants.productId, productId),
+              ),
+            ),
+        ),
+      ),
+  });
+}
 
 export type FindNotificationsOptions = {
   variantId: number;
