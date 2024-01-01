@@ -2,7 +2,6 @@ import parse from "node-html-parser";
 
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { toTitleCase } from "../../utils/formatter";
 import { StoreAdapter, VariantInfo } from "../types";
 import { Product, productSchema } from "./schemas";
 
@@ -74,8 +73,8 @@ export const ZaraUS: StoreAdapter = {
     });
 
     return {
+      name,
       variants,
-      name: toTitleCase(name),
       description: seo.description,
       imageUrl: getImageUrl(product) ?? undefined,
     };
