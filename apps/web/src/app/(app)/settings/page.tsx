@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { VariantAttribute } from "@awardrobe/adapters";
 import { findFollowingProducts } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
@@ -14,6 +15,7 @@ export default async function ProfilePage() {
 
   const products = await findFollowingProducts({
     userId: session.user.id,
+    withNotifiedVariants: true,
   });
 
   return (
@@ -30,6 +32,17 @@ export default async function ProfilePage() {
             <h3 className="text-lg font-medium">
               <Link href={`/product/${product.id}`}>{product.name}</Link>
             </h3>
+            <div className="space-y-0.5">
+              {product.variants.map((variant) => {
+                const attributes = variant.attributes as VariantAttribute[];
+                const description = attributes.map(({ value }) => value).join(" - ");
+                return (
+                  <p key={variant.id} className="text-muted-foreground text-sm">
+                    {description}
+                  </p>
+                );
+              })}
+            </div>
           </div>
         ))}
       </section>

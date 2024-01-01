@@ -135,12 +135,12 @@ export function findProductsByProductCodes(options: FindProductsByProductCodesOp
 export type FindFollowingProductsOptions = {
   userId: string;
   productIds?: number[];
+  withStore?: boolean;
+  withNotifiedVariants?: boolean;
 };
 
-export function findFollowingProducts(
-  options: FindFollowingProductsOptions,
-): Promise<ProductWithStore[]> {
-  const { userId, productIds } = options;
+export function findFollowingProducts(options: FindFollowingProductsOptions) {
+  const { userId, productIds, withStore, withNotifiedVariants } = options;
 
   return db.query.products.findMany({
     where: (products) =>
@@ -168,7 +168,25 @@ export function findFollowingProducts(
             ),
         ),
       ),
-    with: { store: true },
+    with: {
+      store: withStore || undefined,
+      variants: withNotifiedVariants
+        ? {
+            where: (variants) =>
+              exists(
+                db
+                  .select()
+                  .from(productNotifications)
+                  .where(
+                    and(
+                      eq(productNotifications.userId, userId),
+                      eq(variants.id, productNotifications.productVariantId),
+                    ),
+                  ),
+              ),
+          }
+        : undefined,
+    },
   });
 }
 

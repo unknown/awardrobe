@@ -19,7 +19,7 @@ export async function HomeProductList({ page }: HomeProductListProps) {
     page === "Featured"
       ? await findFeaturedProducts({ limit: 24 })
       : session
-        ? await findFollowingProducts({ userId: session.user.id })
+        ? await findFollowingProducts({ userId: session.user.id, withStore: true })
         : [];
 
   return (
