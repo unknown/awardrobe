@@ -78,7 +78,7 @@ export type FindNotificationsOptions = {
   priceInCents: number;
 };
 
-export async function findPriceDropNotifications(
+export function findPriceDropNotifications(
   options: FindNotificationsOptions,
 ): Promise<NotificationWithUser[]> {
   const { variantId, priceInCents } = options;
@@ -98,7 +98,7 @@ export async function findPriceDropNotifications(
   });
 }
 
-export async function findRestockNotifications(
+export function findRestockNotifications(
   options: FindNotificationsOptions,
 ): Promise<NotificationWithUser[]> {
   const { variantId, priceInCents } = options;

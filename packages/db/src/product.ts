@@ -115,7 +115,7 @@ export type FindFollowingProductsOptions = {
   userId: string;
 };
 
-export async function findFollowingProducts(
+export function findFollowingProducts(
   options: FindFollowingProductsOptions,
 ): Promise<ProductWithStore[]> {
   const { userId } = options;
@@ -156,7 +156,7 @@ export type FindProductWithVariantsOptions = {
   productId: number;
 };
 
-export async function findProductWithVariants(
+export function findProductWithVariants(
   options: FindProductWithVariantsOptions,
 ): Promise<FullProduct | undefined> {
   const { productId } = options;
