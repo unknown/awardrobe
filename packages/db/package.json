@@ -7,16 +7,22 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "clean": "rm -rf .turbo node_modules dist"
+    "clean": "rm -rf .turbo node_modules dist",
+    "dev": "drizzle-kit studio",
+    "db:push": "drizzle-kit push:mysql"
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
     "@planetscale/database": "^1.13.0",
-    "drizzle-orm": "^0.29.2"
+    "dotenv": "^16.3.1",
+    "drizzle-orm": "^0.29.2",
+    "mysql2": "^3.6.5"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
     "@types/node": "^20.10.3",
+    "dotenv-cli": "^7.3.0",
+    "drizzle-kit": "^0.20.9",
     "typescript": "^5.3.3"
   }
 }
