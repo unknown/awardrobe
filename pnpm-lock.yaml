@@ -135,6 +135,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@auth/drizzle-adapter':
+        specifier: ^0.3.12
+        version: 0.3.12
       '@auth/prisma-adapter':
         specifier: ^1.0.12
         version: 1.0.12(@prisma/client@5.7.1)
@@ -533,6 +536,14 @@ packages:
       oauth4webapi: 2.4.0
       preact: 10.11.3
       preact-render-to-string: 5.2.3(preact@10.11.3)
+    dev: false
+
+  /@auth/drizzle-adapter@0.3.12:
+    resolution: {integrity: sha512-6+XCHrDXglKPWKRmHuUA6f27WM40v3+MQyUFf2d+JsA0tuBuwOw6IPp1ycxvOODM6milHyKcjowUfqWW9F9f9Q==}
+    dependencies:
+      '@auth/core': 0.19.0
+    transitivePeerDependencies:
+      - nodemailer
     dev: false
 
   /@auth/prisma-adapter@1.0.12(@prisma/client@5.7.1):
