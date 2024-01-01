@@ -63,28 +63,18 @@ async function addProduct(storeId: number, productCode: string, details: Product
 async function seedUniqloUS() {
   console.log("Seeding Uniqlo US");
 
-  let uniqlo = await findStore({ storeHandle: "uniqlo-us" });
+  const uniqlo = await findStore({ storeHandle: "uniqlo-us" });
   if (!uniqlo) {
-    uniqlo = await createStore({
-      handle: "uniqlo-us",
-      name: "Uniqlo US",
-      shortenedName: "Uniqlo",
-      externalUrl: "https://www.uniqlo.com/us/en/",
-    });
-  }
-
-  if (!uniqlo) {
-    throw new Error("Could not find or create Uniqlo US store");
+    throw new Error("Could not find Uniqlo US store");
   }
 
   const productCodes = [
-    "E457264-000",
-    "E457967-000",
-    "E453056-000",
-    "E457263-000",
-    "E457212-000",
-    "E455498-000",
-    "E450251-000",
+    "E459592-000",
+    "E462197-000",
+    "E465185-000",
+    "E460662-000",
+    "E464854-000",
+    "E463996-000",
   ];
 
   for (const productCode of productCodes) {
@@ -104,7 +94,50 @@ async function seedUniqloUS() {
   }
 }
 
+async function seedStores() {
+  const stores = [
+    {
+      handle: "abercrombie-us",
+      name: "Abercrombie & Fitch US",
+      shortenedName: "Abercrombie",
+      externalUrl: "https://www.abercrombie.com/shop/us",
+    },
+    {
+      handle: "jcrew-us",
+      name: "J.Crew US",
+      shortenedName: "J.Crew",
+      externalUrl: "https://www.jcrew.com/",
+    },
+    {
+      handle: "uniqlo-us",
+      name: "Uniqlo US",
+      shortenedName: "Uniqlo",
+      externalUrl: "https://www.uniqlo.com/us/en/",
+    },
+    {
+      handle: "zara-us",
+      name: "Zara US",
+      shortenedName: "Zara",
+      externalUrl: "https://www.zara.com/us/",
+    },
+  ];
+
+  return Promise.allSettled(
+    stores.map(async (store) => {
+      const existingStore = await findStore({ storeHandle: store.handle });
+
+      if (existingStore) {
+        return;
+      }
+
+      await createStore(store);
+      console.log(`Added store ${store.name}`);
+    }),
+  );
+}
+
 async function main() {
+  await seedStores();
   await seedUniqloUS();
   await populateMeilisearch();
 }
