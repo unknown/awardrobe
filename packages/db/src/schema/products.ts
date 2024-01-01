@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { index, int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
+import {
+  index,
+  int,
+  mysqlTable,
+  serial,
+  unique,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
 import { productNotifications } from "./product-notifications";
 import { productVariants } from "./product-variants";
@@ -15,7 +23,7 @@ export const products = mysqlTable(
     name: varchar("name", { length: 255 }).notNull(),
   },
   (product) => ({
-    publicIdIdx: index("publicIdIdx").on(product.publicId),
+    publicIdIdx: uniqueIndex("publicIdIdx").on(product.publicId),
     storeIdProductCodeUnq: unique("storeIdProductCodeUnq").on(product.storeId, product.productCode),
     storeIdIx: index("storeIdIx").on(product.storeId),
   }),

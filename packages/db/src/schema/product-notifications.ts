@@ -7,6 +7,7 @@ import {
   mysqlTable,
   serial,
   unique,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -29,7 +30,7 @@ export const productNotifications = mysqlTable(
     lastPriceDropPing: datetime("lastPriceDropPing", { mode: "date", fsp: 3 }),
   },
   (productNotification) => ({
-    publicIdIdx: index("publicIdIdx").on(productNotification.publicId),
+    publicIdIdx: uniqueIndex("publicIdIdx").on(productNotification.publicId),
     userIdProductVariantIdUnq: unique("userIdProductVariantIdUnq").on(
       productNotification.userId,
       productNotification.productVariantId,
