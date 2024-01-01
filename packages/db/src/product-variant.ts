@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { VariantInfo } from "@awardrobe/adapters";
 
 import { db } from "./db";
-import { prices } from "./schema/prices";
+import { createLatestPrice } from "./price";
 import { productVariants } from "./schema/product-variants";
 import { ProductVariant, ProductVariantWithPrice } from "./schema/types";
 
@@ -16,7 +16,7 @@ export async function createProductVariant(
   options: CreateProductVariantOptions,
 ): Promise<ProductVariant> {
   const { productId, variantInfo } = options;
-  const { attributes, productUrl, priceInCents, inStock, timestamp } = variantInfo;
+  const { attributes, productUrl } = variantInfo;
 
   const productVariantsTable = await db.insert(productVariants).values({
     productId,
@@ -32,12 +32,7 @@ export async function createProductVariant(
     throw new Error("Could not create product variant");
   }
 
-  await db.insert(prices).values({
-    timestamp,
-    priceInCents,
-    inStock,
-    productVariantId: created.id,
-  });
+  await createLatestPrice({ variantId: created.id, variantInfo });
 
   return created;
 }

@@ -4,6 +4,7 @@ import { VariantInfo } from "@awardrobe/adapters";
 
 import { db } from "./db";
 import { prices } from "./schema/prices";
+import { productVariants } from "./schema/product-variants";
 import { Price } from "./schema/types";
 
 export type FindPriceOptions = {
@@ -35,8 +36,8 @@ export async function createLatestPrice(options: CreateLatestPriceOptions): Prom
   const pricesTable = await db.insert(prices).values({
     timestamp,
     priceInCents,
-    productVariantId: variantId,
     inStock,
+    productVariantId: variantId,
   });
 
   const created = await db.query.prices.findFirst({
@@ -46,6 +47,13 @@ export async function createLatestPrice(options: CreateLatestPriceOptions): Prom
   if (!created) {
     throw new Error("Could not create price");
   }
+
+  await db
+    .update(productVariants)
+    .set({
+      latestPriceId: created.id,
+    })
+    .where(eq(productVariants.id, variantId));
 
   return created;
 }
