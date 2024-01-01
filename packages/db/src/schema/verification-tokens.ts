@@ -1,7 +1,7 @@
 import { datetime, mysqlTable, primaryKey, varchar } from "drizzle-orm/mysql-core";
 
 export const verificationTokens = mysqlTable(
-  "VerificationToken",
+  "verificationToken",
   {
     identifier: varchar("identifier", { length: 255 }).notNull(),
     token: varchar("token", { length: 255 }).notNull(),

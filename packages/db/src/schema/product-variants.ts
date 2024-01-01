@@ -6,7 +6,7 @@ import { productNotifications } from "./product-notifications";
 import { products } from "./products";
 
 export const productVariants = mysqlTable(
-  "ProductVariant",
+  "productVariant",
   {
     id: serial("id").primaryKey(),
     productId: int("productId").notNull(),

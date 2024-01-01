@@ -4,7 +4,7 @@ import { datetime, index, mysqlTable, varchar } from "drizzle-orm/mysql-core";
 import { users } from "./users";
 
 export const sessions = mysqlTable(
-  "Session",
+  "session",
   {
     sessionToken: varchar("sessionToken", { length: 255 }).notNull().primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull(),

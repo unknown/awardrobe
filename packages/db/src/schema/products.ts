@@ -5,7 +5,7 @@ import { productVariants } from "./product-variants";
 import { stores } from "./stores";
 
 export const products = mysqlTable(
-  "Product",
+  "product",
   {
     id: serial("id").primaryKey(),
     storeId: int("storeId").notNull(),

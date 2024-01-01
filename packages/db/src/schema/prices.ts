@@ -4,7 +4,7 @@ import { boolean, datetime, index, int, mysqlTable, serial } from "drizzle-orm/m
 import { productVariants } from "./product-variants";
 
 export const prices = mysqlTable(
-  "Price",
+  "price",
   {
     id: serial("id").primaryKey(),
     productVariantId: int("productVariantId").notNull(),

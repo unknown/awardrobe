@@ -5,7 +5,7 @@ import { accounts } from "./accounts";
 import { productNotifications } from "./product-notifications";
 import { sessions } from "./sessions";
 
-export const users = mysqlTable("User", {
+export const users = mysqlTable("user", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),

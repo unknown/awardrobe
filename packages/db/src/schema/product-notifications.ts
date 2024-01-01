@@ -14,7 +14,7 @@ import { productVariants } from "./product-variants";
 import { users } from "./users";
 
 export const productNotifications = mysqlTable(
-  "ProductNotification",
+  "productNotification",
   {
     id: serial("id").primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull(), // TODO: change to int

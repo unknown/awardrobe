@@ -4,7 +4,7 @@ import { index, int, mysqlTable, primaryKey, varchar } from "drizzle-orm/mysql-c
 import { users } from "./users";
 
 export const accounts = mysqlTable(
-  "Account",
+  "account",
   {
     userId: varchar("userId", { length: 255 }).notNull(),
     type: varchar("type", { length: 255 }).notNull(),

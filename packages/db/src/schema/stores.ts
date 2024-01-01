@@ -4,7 +4,7 @@ import { mysqlTable, serial, text, unique, varchar } from "drizzle-orm/mysql-cor
 import { products } from "./products";
 
 export const stores = mysqlTable(
-  "Store",
+  "store",
   {
     id: serial("id").primaryKey(),
     handle: varchar("handle", { length: 255 }).notNull(),
