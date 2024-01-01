@@ -6,6 +6,8 @@ import { productVariants } from "./schema/product-variants";
 import { products } from "./schema/products";
 import type { Product, ProductVariant, Store } from "./schema/types";
 
+export type ProductWithStore = Product & { store: Store };
+
 export type CreateProductOptions = {
   name: string;
   productCode: string;
@@ -50,7 +52,7 @@ export type FindNotifiedProductsOptions = {
 
 export function findNotifiedProducts(
   options: FindNotifiedProductsOptions = {},
-): Promise<Product[]> {
+): Promise<ProductWithStore[]> {
   const { numNotified } = options;
 
   return db.query.products.findMany({
@@ -58,6 +60,7 @@ export function findNotifiedProducts(
       numNotified?.lte ? lte(products.numNotified, numNotified.lte) : undefined,
       numNotified?.gte ? gte(products.numNotified, numNotified.gte) : undefined,
     ),
+    with: { store: true },
   });
 }
 
@@ -82,8 +85,6 @@ export function findProductsWithUsersNotifications(
 export type FindFeaturedProductsOptions = {
   limit?: number;
 };
-
-export type ProductWithStore = Product & { store: Store };
 
 export function findFeaturedProducts(
   options: FindFeaturedProductsOptions = {},

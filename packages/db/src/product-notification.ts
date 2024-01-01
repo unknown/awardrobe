@@ -2,7 +2,7 @@ import { and, eq, gte, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
-import { ProductNotification } from "./schema/types";
+import { ProductNotification, User } from "./schema/types";
 
 export type CreateNotificationOptions = {
   variantId: number;
@@ -38,6 +38,10 @@ export async function createNotification(
   return created;
 }
 
+export type NotificationWithUser = ProductNotification & {
+  user: User;
+};
+
 export type FindNotificationsOptions = {
   variantId: number;
   priceInCents: number;
@@ -45,7 +49,7 @@ export type FindNotificationsOptions = {
 
 export async function findPriceDropNotifications(
   options: FindNotificationsOptions,
-): Promise<ProductNotification[]> {
+): Promise<NotificationWithUser[]> {
   const { variantId, priceInCents } = options;
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
@@ -59,12 +63,13 @@ export async function findPriceDropNotifications(
         gte(productNotifications.lastPriceDropPing, yesterday),
       ),
     ),
+    with: { user: true },
   });
 }
 
 export async function findRestockNotifications(
   options: FindNotificationsOptions,
-): Promise<ProductNotification[]> {
+): Promise<NotificationWithUser[]> {
   const { variantId, priceInCents } = options;
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
 
@@ -78,6 +83,7 @@ export async function findRestockNotifications(
         gte(productNotifications.lastRestockPing, yesterday),
       ),
     ),
+    with: { user: true },
   });
 }
 

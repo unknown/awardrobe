@@ -1,7 +1,13 @@
 import PgBoss, { Job } from "pg-boss";
 
 import { getAdapter } from "@awardrobe/adapters";
-import { findProducts, findProductsByProductCodes, findStores } from "@awardrobe/db";
+import {
+  findNotifiedProducts,
+  findProductsByProductCodes,
+  findStores,
+  ProductWithStore,
+  Store,
+} from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
 import { insertProduct, updateProduct } from "./monitors";
@@ -27,14 +33,14 @@ async function main() {
   boss.on("error", (error) => console.error(error));
 
   await boss.work("update-products-frequent", async () => {
-    const products = await findProducts({ numNotified: { gte: 1 } });
+    const products = await findNotifiedProducts({ numNotified: { gte: 1 } });
     console.log(`[Frequent] Updating ${products.length} products`);
 
     await boss.insert(
       products.map((product) => ({
         name: "update-product",
-        data: { productId: product.id },
-        singletonKey: product.id,
+        data: { product },
+        singletonKey: product.id.toString(),
         priority: 10,
         expireInSeconds: 3 * 60 * 60,
       })),
@@ -42,14 +48,14 @@ async function main() {
   });
 
   await boss.work("update-products-periodic", async () => {
-    const products = await findProducts({ numNotified: { lte: 0 } });
+    const products = await findNotifiedProducts({ numNotified: { lte: 0 } });
     console.log(`[Daily] Updating ${products.length} products`);
 
     await boss.insert(
       products.map((product) => ({
         name: "update-product",
-        data: { productId: product.id },
-        singletonKey: product.id,
+        data: { product },
+        singletonKey: product.id.toString(),
         expireInSeconds: 3 * 60 * 60,
       })),
     );
@@ -63,10 +69,10 @@ async function main() {
       teamRefill: true,
       newJobCheckInterval: 500,
     },
-    async (job: Job<{ productId: string }>) => {
-      const { productId } = job.data;
+    async (job: Job<{ product: ProductWithStore }>) => {
+      const { product } = job.data;
 
-      await updateProduct(productId);
+      await updateProduct(product);
     },
   );
 
@@ -78,11 +84,11 @@ async function main() {
       teamRefill: true,
       newJobCheckInterval: 2000,
     },
-    async (job: Job<{ productCode: string; storeHandle: string }>) => {
-      const { productCode, storeHandle } = job.data;
+    async (job: Job<{ productCode: string; store: Store }>) => {
+      const { productCode, store } = job.data;
 
-      const product = await insertProduct(productCode, storeHandle);
-      console.log(`Inserted ${product.name} for ${storeHandle}`);
+      const product = await insertProduct(productCode, store);
+      console.log(`Inserted ${product.name} for ${store.name}`);
     },
   );
 
@@ -102,7 +108,7 @@ async function main() {
       const productCodes = await adapter.getProducts(limit);
       const products = await findProductsByProductCodes({
         productCodes,
-        storeHandle: store.handle,
+        storeId: store.id,
       });
       const existingProductCodes = new Set(products.map((product) => product.productCode));
 
@@ -115,7 +121,7 @@ async function main() {
       await boss.insert(
         newProductCodes.map((productCode) => ({
           name: "insert-product",
-          data: { productCode, storeHandle: store.handle },
+          data: { productCode, store },
           singletonKey: `${store.handle}:${productCode}`,
           expireInSeconds: 3 * 60 * 60,
         })),

@@ -1,4 +1,10 @@
-import { createLatestPrice, findNotificationsByType, updateLastPingByType } from "@awardrobe/db";
+import {
+  createLatestPrice,
+  findPriceDropNotifications,
+  findRestockNotifications,
+  updatePriceDropLastPing,
+  updateRestockLastPing,
+} from "@awardrobe/db";
 import { PriceNotificationEmail, resend, StockNotificationEmail } from "@awardrobe/emails";
 
 import { UpdateVariantCallback, VariantFlags } from "./types";
@@ -31,14 +37,12 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
 
   console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
 
-  const notifications = await findNotificationsByType({
-    type: "priceDrop",
+  const notifications = await findPriceDropNotifications({
     priceInCents,
     variantId: productVariant.id,
   });
 
-  await updateLastPingByType({
-    type: "priceDrop",
+  await updatePriceDropLastPing({
     notificationIds: notifications.map((notification) => notification.id),
   });
 
@@ -75,14 +79,12 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
 
   console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
 
-  const notifications = await findNotificationsByType({
-    type: "restock",
+  const notifications = await findRestockNotifications({
     priceInCents,
     variantId: productVariant.id,
   });
 
-  await updateLastPingByType({
-    type: "restock",
+  await updateRestockLastPing({
     notificationIds: notifications.map((notification) => notification.id),
   });
 
