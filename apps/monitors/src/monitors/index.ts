@@ -121,10 +121,9 @@ async function getUpdatedDetails(options: {
 async function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
   const inputAttributeMap = attributesToMap(variantInfo.attributes);
 
-  const existingVariant = variants.find((productVariant) => {
-    const variantAttributes = productVariant.attributes as VariantAttribute[];
-    return shallowEquals(inputAttributeMap, attributesToMap(variantAttributes));
-  });
+  const existingVariant = variants.find((productVariant) =>
+    shallowEquals(inputAttributeMap, attributesToMap(productVariant.attributes)),
+  );
 
   return existingVariant;
 }

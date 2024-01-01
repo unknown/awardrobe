@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import { VariantAttribute } from "@awardrobe/adapters";
 import { findPrices, findProductWithVariants } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
@@ -30,8 +29,7 @@ export default async function ProductPage({
   }
 
   const productOptions: Record<string, string[]> = {};
-  product.variants.forEach((variant) => {
-    const attributes = variant.attributes as VariantAttribute[];
+  product.variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
       const values = productOptions[name] ?? [];
       if (!values.includes(value)) {
@@ -43,8 +41,7 @@ export default async function ProductPage({
 
   const variant =
     (Object.keys(attributesParams).length > 0
-      ? product.variants.find((variant) => {
-          const attributes = variant.attributes as VariantAttribute[];
+      ? product.variants.find(({ attributes }) => {
           if (attributes.length !== Object.keys(attributesParams).length) {
             return false;
           }
@@ -55,8 +52,7 @@ export default async function ProductPage({
   const initialDateRange = range ?? "7d";
   const initialAttributes: Record<string, string> = {};
   if (variant) {
-    const attributes = variant.attributes as VariantAttribute[];
-    attributes.forEach(({ name, value }) => {
+    variant.attributes.forEach(({ name, value }) => {
       initialAttributes[name] = value;
     });
   } else {

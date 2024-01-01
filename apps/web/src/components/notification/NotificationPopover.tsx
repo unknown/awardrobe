@@ -5,8 +5,6 @@ import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@ui/Popover";
 
-import { VariantAttribute } from "@awardrobe/adapters";
-
 import { AddNotificationDialog } from "@/components/notification/AddNotificationDialog";
 import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
@@ -45,19 +43,21 @@ export function NotificationPopover() {
             <h4 className="font-medium leading-none">Notifications</h4>
             <p className="text-muted-foreground text-sm">Manage your product alerts.</p>
           </div>
-          {notifications === null && "Loading..."}
-          {notifications?.length === 0 && "No notifications"}
+          {notifications === null
+            ? "Loading..."
+            : notifications.length === 0
+              ? "No notifications"
+              : null}
           <div className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2">
-            {notifications?.map((notification) => {
-              const attributes = notification.productVariant.attributes as VariantAttribute[];
-              const description = attributes.map(({ value }) => value).join(" - ");
+            {notifications?.map(({ id, priceInCents, productVariant }) => {
+              const description = productVariant.attributes.map(({ value }) => value).join(" - ");
               return (
-                <Fragment key={notification.id}>
+                <Fragment key={id}>
                   <p>{description}</p>
-                  <p>{formatCurrency(notification.priceInCents ?? 0)}</p>
+                  <p>{formatCurrency(priceInCents ?? 0)}</p>
                   <DeleteNotificationButton
                     onNotificationDelete={() => {
-                      return removeNotification({ notificationId: notification.id });
+                      return removeNotification({ notificationId: id });
                     }}
                   />
                 </Fragment>

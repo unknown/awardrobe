@@ -1,9 +1,20 @@
 import { relations } from "drizzle-orm";
-import { index, int, json, mysqlTable, serial, text } from "drizzle-orm/mysql-core";
+import { customType, index, int, json, mysqlTable, serial, text } from "drizzle-orm/mysql-core";
+
+import { VariantAttribute } from "@awardrobe/adapters";
 
 import { prices } from "./prices";
 import { productNotifications } from "./product-notifications";
 import { products } from "./products";
+
+const attributesType = customType<{ data: VariantAttribute[]; driverData: string }>({
+  dataType() {
+    return "json";
+  },
+  toDriver(value: VariantAttribute[]): string {
+    return JSON.stringify(value);
+  },
+});
 
 export const productVariants = mysqlTable(
   "productVariant",
@@ -11,7 +22,7 @@ export const productVariants = mysqlTable(
     id: serial("id").primaryKey(),
     productId: int("productId").notNull(),
     productUrl: text("productUrl").notNull(),
-    attributes: json("attributes").notNull(),
+    attributes: attributesType("attributes").notNull(),
     latestPriceId: int("latestPriceId"),
   },
   (productVariant) => ({
