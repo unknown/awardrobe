@@ -11,12 +11,12 @@ export function getProductPath(productId: string) {
   return `/product/${productId}`;
 }
 
-export async function addProductImage(productId: string, imageFile: File) {
+export async function addProductImage(productId: string, imageBuffer: Buffer) {
   const path = getProductPath(productId);
   const workerUrl = new URL(path, MEDIA_WORKER_URL).href;
 
   const data = new FormData();
-  data.append("file", imageFile);
+  data.append("file", new Blob([imageBuffer]));
 
   const headers = { Authorization: `Bearer ${MEDIA_WORKER_SECRET}` };
 
