@@ -133,7 +133,7 @@ export function findProductPublic(
 
   return db.query.products.findFirst({
     where: and(eq(products.productCode, productCode), eq(products.storeId, storeId)),
-    columns: { id: false },
+    columns: { id: false, storeId: false },
   });
 }
 
@@ -221,7 +221,10 @@ export function findFullProductPublic(
 
   return db.query.products.findFirst({
     where: eq(products.publicId, productPublicId),
-    columns: { id: false },
-    with: { variants: { columns: { id: false } }, store: { columns: { id: false } } },
+    columns: { id: false, storeId: false },
+    with: {
+      variants: { columns: { id: false, latestPriceId: false, productId: false } },
+      store: { columns: { id: false } },
+    },
   });
 }
