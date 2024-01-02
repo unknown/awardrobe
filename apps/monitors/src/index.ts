@@ -106,6 +106,11 @@ async function main() {
 
       const limit = process.env.NODE_ENV === "production" ? undefined : 10;
       const productCodes = await adapter.getProducts(limit);
+      if (productCodes.length === 0) {
+        console.error(`No products found for ${store.handle}`);
+        continue;
+      }
+
       const products = await findProductsByProductCodes({
         productCodes,
         storeId: store.id,
