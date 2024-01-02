@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { stores } from "./schema/stores";
 import { Store } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export function findStores(): Promise<Store[]> {
   return db.query.stores.findMany();
@@ -35,6 +36,7 @@ export async function createStore(options: CreateStoreOptions): Promise<Store> {
     name,
     shortenedName,
     externalUrl,
+    publicId: generatePublicId(),
   });
 
   const created = await db.query.stores.findFirst({

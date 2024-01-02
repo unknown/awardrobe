@@ -6,6 +6,7 @@ import { db } from "./db";
 import { createLatestPrice } from "./price";
 import { productVariants } from "./schema/product-variants";
 import { ProductVariant, ProductVariantWithPrice } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductVariantOptions = {
   productId: number;
@@ -22,6 +23,7 @@ export async function createProductVariant(
     productId,
     attributes,
     productUrl,
+    publicId: generatePublicId(),
   });
 
   const created = await db.query.productVariants.findFirst({
@@ -48,6 +50,7 @@ export async function createProductVariants(options: CreateProductVariantsOption
   await db.insert(productVariants).values(
     variantInfos.map((variantInfo) => ({
       productId,
+      publicId: generatePublicId(),
       attributes: variantInfo.attributes,
       productUrl: variantInfo.productUrl,
     })),

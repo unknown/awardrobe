@@ -45,14 +45,14 @@ export async function insertProduct(productCode: string, store: Store) {
   });
 
   const addProductToSearchPromise = addProduct({
-    id: product.id.toString(),
+    id: product.publicId,
     name: product.name,
     storeName: store.name,
   });
 
   const addImagePromise = details.imageUrl
     ? downloadImage(details.imageUrl).then((imageBuffer) =>
-        addProductImage(product.id.toString(), imageBuffer),
+        addProductImage(product.publicId, imageBuffer),
       )
     : undefined;
 

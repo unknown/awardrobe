@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
-import { createProduct, createProductVariants, findStore, Product } from "@awardrobe/db";
+import { createProduct, createProductVariants, findStore, Product, Public } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -14,7 +14,7 @@ type AddProductRequest = {
 
 type AddProductSuccess = {
   status: "success";
-  product: Product;
+  product: Public<Product>;
 };
 
 type AddProductError = {
@@ -87,14 +87,14 @@ export async function POST(req: Request) {
     });
 
     const addProductToSearchPromise = addProduct({
-      id: product.id.toString(),
+      id: product.publicId,
       name: details.name,
       storeName: store.name,
     });
 
     const addImagePromise = details.imageUrl
       ? downloadImage(details.imageUrl).then((imageBuffer) =>
-          addProductImage(product.id.toString(), imageBuffer),
+          addProductImage(product.publicId, imageBuffer),
         )
       : undefined;
 
@@ -102,9 +102,11 @@ export async function POST(req: Request) {
 
     revalidatePath("/(app)/(browse)/search", "page");
 
+    const { id: _, ...publicProduct } = product;
+
     return NextResponse.json<AddProductResponse>({
       status: "success",
-      product,
+      product: publicProduct,
     });
   } catch (e) {
     console.error(e);

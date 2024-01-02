@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { createNotification, NotificationWithVariant } from "@awardrobe/db";
+import { createNotification, NotificationWithVariant, Public } from "@awardrobe/db";
 
 import { auth } from "@/utils/auth";
 
 export type AddNotificationRequest = {
-  variantId: number;
+  variantPublicId: string;
   priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
@@ -13,7 +13,7 @@ export type AddNotificationRequest = {
 
 type AddNotificationSuccess = {
   status: "success";
-  notification: NotificationWithVariant;
+  notification: Public<NotificationWithVariant>;
 };
 
 type AddNotificationError = {
@@ -33,7 +33,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const { variantId, priceInCents, priceDrop, restock }: AddNotificationRequest = await req.json();
+  const { variantPublicId, priceInCents, priceDrop, restock }: AddNotificationRequest =
+    await req.json();
 
   // TODO: better validation
   if (!priceDrop && !restock) {
@@ -45,9 +46,9 @@ export async function POST(req: Request) {
 
   try {
     const notification = await createNotification({
-      variantId,
       priceDrop,
       restock,
+      variantPublicId,
       userId: session.user.id,
       priceInCents: priceInCents,
     });

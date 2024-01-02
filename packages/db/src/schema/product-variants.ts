@@ -1,5 +1,14 @@
 import { relations } from "drizzle-orm";
-import { customType, index, int, json, mysqlTable, serial, text } from "drizzle-orm/mysql-core";
+import {
+  customType,
+  index,
+  int,
+  mysqlTable,
+  serial,
+  text,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
@@ -20,12 +29,14 @@ export const productVariants = mysqlTable(
   "productVariant",
   {
     id: serial("id").primaryKey(),
+    publicId: varchar("publicId", { length: 12 }).notNull(),
     productId: int("productId").notNull(),
     productUrl: text("productUrl").notNull(),
     attributes: attributesType("attributes").notNull(),
     latestPriceId: int("latestPriceId"),
   },
   (productVariant) => ({
+    publicIdIdx: uniqueIndex("publicIdIdx").on(productVariant.publicId),
     productIdIx: index("productIdIx").on(productVariant.productId),
   }),
 );

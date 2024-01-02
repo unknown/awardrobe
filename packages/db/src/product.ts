@@ -4,7 +4,8 @@ import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
 import { products } from "./schema/products";
-import type { Product, ProductVariant, ProductWithStore, Store } from "./schema/types";
+import type { FullProduct, Product, ProductWithStore, Public } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {
   name: string;
@@ -19,6 +20,7 @@ export async function createProduct(options: CreateProductOptions): Promise<Prod
     name,
     productCode,
     storeId,
+    publicId: generatePublicId(),
   });
 
   const created = await db.query.products.findFirst({
@@ -119,12 +121,30 @@ export function findFeaturedProducts(
   });
 }
 
+export type FindProductPublicOptions = {
+  productCode: string;
+  storeId: number;
+};
+
+export function findProductPublic(
+  options: FindProductPublicOptions,
+): Promise<Public<Product> | undefined> {
+  const { productCode, storeId } = options;
+
+  return db.query.products.findFirst({
+    where: and(eq(products.productCode, productCode), eq(products.storeId, storeId)),
+    columns: { id: false },
+  });
+}
+
 export type FindProductsByProductCodesOptions = {
   productCodes: string[];
   storeId: number;
 };
 
-export function findProductsByProductCodes(options: FindProductsByProductCodesOptions) {
+export function findProductsByProductCodes(
+  options: FindProductsByProductCodesOptions,
+): Promise<Product[]> {
   const { productCodes, storeId } = options;
 
   return db.query.products.findMany({
@@ -134,18 +154,18 @@ export function findProductsByProductCodes(options: FindProductsByProductCodesOp
 
 export type FindFollowingProductsOptions = {
   userId: string;
-  productIds?: number[];
+  productPublicIds?: string[];
   withStore?: boolean;
   withNotifiedVariants?: boolean;
 };
 
 export function findFollowingProducts(options: FindFollowingProductsOptions) {
-  const { userId, productIds, withStore, withNotifiedVariants } = options;
+  const { userId, productPublicIds, withStore, withNotifiedVariants } = options;
 
   return db.query.products.findMany({
     where: (products) =>
       and(
-        productIds ? inArray(products.id, productIds) : undefined,
+        productPublicIds ? inArray(products.publicId, productPublicIds) : undefined,
         exists(
           db
             .select()
@@ -190,22 +210,18 @@ export function findFollowingProducts(options: FindFollowingProductsOptions) {
   });
 }
 
-export type FullProduct = Product & {
-  variants: ProductVariant[];
-  store: Store;
-};
-
 export type FindProductWithVariantsOptions = {
-  productId: number;
+  productPublicId: string;
 };
 
-export function findProductWithVariants(
+export function findFullProductPublic(
   options: FindProductWithVariantsOptions,
-): Promise<FullProduct | undefined> {
-  const { productId } = options;
+): Promise<Public<FullProduct> | undefined> {
+  const { productPublicId } = options;
 
   return db.query.products.findFirst({
-    where: eq(products.id, productId),
-    with: { variants: true, store: true },
+    where: eq(products.publicId, productPublicId),
+    columns: { id: false },
+    with: { variants: { columns: { id: false } }, store: { columns: { id: false } } },
   });
 }
