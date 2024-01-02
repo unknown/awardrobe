@@ -24,11 +24,11 @@ export function NotificationPopover() {
   useEffect(() => {
     const abortController = new AbortController();
     const abortSignal = abortController.signal;
-    fetchNotifications({ abortSignal, productId: product.id });
+    fetchNotifications({ abortSignal, productPublicId: product.publicId });
     return () => {
       abortController.abort();
     };
-  }, [fetchNotifications, product.id]);
+  }, [fetchNotifications, product.publicId]);
 
   return (
     <Popover>
@@ -49,16 +49,16 @@ export function NotificationPopover() {
               ? "No notifications"
               : null}
           <div className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2">
-            {notifications?.map(({ id, priceInCents, productVariant }) => {
+            {notifications?.map(({ publicId, priceInCents, productVariant }) => {
               const description = productVariant.attributes.map(({ value }) => value).join(" - ");
               return (
-                <Fragment key={id}>
+                <Fragment key={publicId}>
                   <p>{description}</p>
                   <p>{formatCurrency(priceInCents ?? 0)}</p>
                   <DeleteNotificationButton
-                    onNotificationDelete={() => {
-                      return removeNotification({ notificationId: id });
-                    }}
+                    onNotificationDelete={() =>
+                      removeNotification({ notificationPublicId: publicId })
+                    }
                   />
                 </Fragment>
               );

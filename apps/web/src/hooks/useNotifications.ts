@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { NotificationWithVariant } from "@awardrobe/db";
+import { NotificationWithVariant, Public } from "@awardrobe/db";
 
 import {
   AddNotificationRequest,
@@ -11,28 +11,28 @@ import { DeleteNotificationResponse } from "@/app/api/notifications/delete/route
 import { GetNotificationsResponse } from "@/app/api/notifications/route";
 
 export type FetchNotificationsOptions = {
-  productId?: number;
+  productPublicId: string;
   abortSignal?: AbortSignal;
 };
 
 export type CreateNotificationOptions = {
-  variantId: number;
+  variantPublicId: string;
   priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
 };
 
 export type DeleteNotificationOptions = {
-  notificationId: number;
+  notificationPublicId: string;
 };
 
 export function useNotifications() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [notificationsData, setNotificationsData] = useState<NotificationWithVariant[] | null>(
-    null,
-  );
+  const [notificationsData, setNotificationsData] = useState<
+    Public<NotificationWithVariant>[] | null
+  >(null);
 
   const fetchNotifications = useCallback(async function (options: FetchNotificationsOptions) {
     setLoading(true);
@@ -67,8 +67,9 @@ export function useNotifications() {
       if (result.status === "success") {
         setNotificationsData(
           (notifications) =>
-            notifications?.filter((notification) => notification.id !== options.notificationId) ??
-            [],
+            notifications?.filter(
+              (notification) => notification.publicId !== options.notificationPublicId,
+            ) ?? [],
         );
         router.refresh();
         return true;
@@ -92,24 +93,24 @@ export function useNotifications() {
   };
 }
 
-async function getNotifications({ productId, abortSignal }: FetchNotificationsOptions) {
+async function getNotifications({ productPublicId, abortSignal }: FetchNotificationsOptions) {
   const response = await fetch("/api/notifications", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId }),
+    body: JSON.stringify({ productPublicId }),
     signal: abortSignal,
   });
   return (await response.json()) as GetNotificationsResponse;
 }
 
 async function createNotification({
-  variantId,
+  variantPublicId,
   priceDrop,
   priceInCents,
   restock,
 }: CreateNotificationOptions) {
   const body: AddNotificationRequest = {
-    variantId,
+    variantPublicId,
     priceInCents,
     priceDrop: priceDrop,
     restock: restock,
@@ -122,11 +123,11 @@ async function createNotification({
   return (await response.json()) as AddNotificationResponse;
 }
 
-async function deleteNotification({ notificationId }: DeleteNotificationOptions) {
+async function deleteNotification({ notificationPublicId }: DeleteNotificationOptions) {
   const response = await fetch("/api/notifications/delete", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ notificationId }),
+    body: JSON.stringify({ notificationPublicId }),
   });
   return (await response.json()) as DeleteNotificationResponse;
 }

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { findPrices, findProductWithVariants } from "@awardrobe/db";
+import { findFullProductPublic, findPublicPrices } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
 import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
@@ -21,8 +21,7 @@ export default async function ProductPage({
   params,
   searchParams: { range, ...attributesParams },
 }: ProductPageProps) {
-  const productId = Number(params.productId);
-  const product = await findProductWithVariants({ productId });
+  const product = await findFullProductPublic({ productPublicId: params.productId });
 
   if (!product) {
     notFound();
@@ -63,14 +62,12 @@ export default async function ProductPage({
     });
   }
 
-  const pricesPromise = variant
-    ? findPrices({
-        variantId: variant.id,
+  const prices = variant
+    ? await findPublicPrices({
+        variantPublicId: variant.publicId,
         startDate: getDateFromRange(initialDateRange),
       })
     : null;
-
-  const prices = await pricesPromise;
   const lastPrice = prices?.at(-1);
   const chartPrices: ChartPrice[] | null =
     prices !== null && lastPrice
@@ -81,7 +78,7 @@ export default async function ProductPage({
         }))
       : null;
 
-  const mediaStorePath = getProductPath(product.id.toString());
+  const mediaStorePath = getProductPath(product.publicId);
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
   return (

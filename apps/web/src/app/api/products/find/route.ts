@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAdapterFromUrl } from "@awardrobe/adapters";
-import { findProductsByProductCodes, findStore, Product } from "@awardrobe/db";
+import { findProductPublic, findStore, Product, Public } from "@awardrobe/db";
 
 export type FindProductRequest = {
   productUrl: string;
@@ -10,7 +10,7 @@ export type FindProductRequest = {
 export type FindProductResponse =
   | {
       status: "success";
-      product: Product;
+      product: Public<Product>;
     }
   | {
       status: "error";
@@ -45,19 +45,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const products = await findProductsByProductCodes({
-      productCodes: [productCode],
-      storeId: store.id,
-    });
+    const product = await findProductPublic({ productCode, storeId: store.id });
 
-    if (!products[0]) {
+    if (!product) {
       return NextResponse.json<FindProductResponse>(
         { status: "error", error: "Product not found" },
         { status: 404 },
       );
     }
 
-    return NextResponse.json<FindProductResponse>({ status: "success", product: products[0] });
+    return NextResponse.json<FindProductResponse>({ status: "success", product });
   } catch (e) {
     console.error(e);
     return NextResponse.json<FindProductResponse>(

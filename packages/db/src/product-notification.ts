@@ -3,11 +3,12 @@ import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariants } from "./schema/product-variants";
-import { NotificationWithUser, NotificationWithVariant, ProductNotification } from "./schema/types";
+import { products } from "./schema/products";
+import { NotificationWithUser, NotificationWithVariant, Public } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateNotificationOptions = {
-  variantId: number;
+  variantPublicId: string;
   userId: string;
   priceInCents: number;
   priceDrop: boolean;
@@ -16,11 +17,11 @@ export type CreateNotificationOptions = {
 
 export async function createNotification(
   options: CreateNotificationOptions,
-): Promise<NotificationWithVariant> {
-  const { variantId, userId, priceInCents, priceDrop, restock } = options;
+): Promise<Public<NotificationWithVariant>> {
+  const { variantPublicId, userId, priceInCents, priceDrop, restock } = options;
 
   const productVariant = await db.query.productVariants.findFirst({
-    where: eq(productVariants.id, variantId),
+    where: eq(productVariants.publicId, variantPublicId),
   });
 
   if (!productVariant) {
@@ -33,13 +34,14 @@ export async function createNotification(
     priceDrop,
     restock,
     publicId: generatePublicId(),
-    productVariantId: variantId,
     productId: productVariant.productId,
+    productVariantId: productVariant.id,
   });
 
   const created = await db.query.productNotifications.findFirst({
     where: eq(productNotifications.id, Number(notificationsTable.insertId)),
-    with: { productVariant: true },
+    columns: { id: false },
+    with: { productVariant: { columns: { id: false } } },
   });
 
   if (!created) {
@@ -51,13 +53,21 @@ export async function createNotification(
 
 export type FindUserNotificationOptions = {
   userId: string;
-  productId: number;
+  productPublicId: string;
 };
 
-export function findUserNotifications(
+export async function findUserNotifications(
   options: FindUserNotificationOptions,
-): Promise<NotificationWithVariant[]> {
-  const { userId, productId } = options;
+): Promise<Public<NotificationWithVariant>[]> {
+  const { userId, productPublicId } = options;
+
+  const product = await db.query.products.findFirst({
+    where: eq(products.publicId, productPublicId),
+  });
+
+  if (!product) {
+    throw new Error("Product does not exist");
+  }
 
   return db.query.productNotifications.findMany({
     where: (productNotifications) =>
@@ -70,11 +80,12 @@ export function findUserNotifications(
             .where(
               and(
                 eq(productNotifications.productVariantId, productVariants.id),
-                eq(productVariants.productId, productId),
+                eq(productVariants.productId, product.id),
               ),
             ),
         ),
       ),
+    columns: { id: false },
     with: { productVariant: true },
   });
 }
@@ -153,11 +164,13 @@ export async function updateRestockLastPing(
 }
 
 type DeleteNotificationOptions = {
-  notificationId: number;
+  notificationPublicId: string;
 };
 
 export async function deleteNotification(options: DeleteNotificationOptions) {
-  const { notificationId } = options;
+  const { notificationPublicId } = options;
 
-  await db.delete(productNotifications).where(eq(productNotifications.id, notificationId));
+  await db
+    .delete(productNotifications)
+    .where(eq(productNotifications.publicId, notificationPublicId));
 }

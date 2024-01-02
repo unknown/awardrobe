@@ -29,7 +29,7 @@ export default async function ProfilePage() {
         {products.map((product) => (
           <div key={product.id}>
             <h3 className="text-lg font-medium">
-              <Link href={`/product/${product.id}`}>{product.name}</Link>
+              <Link href={`/product/${product.publicId}`}>{product.name}</Link>
             </h3>
             <div className="space-y-0.5">
               {product.variants.map(({ id, attributes }) => {

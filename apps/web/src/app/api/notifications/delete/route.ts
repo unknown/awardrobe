@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { deleteNotification } from "@awardrobe/db";
 
 type DeleteNotificationRequest = {
-  notificationId: number;
+  notificationPublicId: string;
 };
 
 type DeleteNotificationSuccess = {
@@ -19,9 +19,9 @@ export type DeleteNotificationResponse = DeleteNotificationSuccess | DeleteNotif
 
 export async function POST(req: Request) {
   try {
-    const { notificationId }: DeleteNotificationRequest = await req.json();
+    const { notificationPublicId }: DeleteNotificationRequest = await req.json();
 
-    await deleteNotification({ notificationId });
+    await deleteNotification({ notificationPublicId });
 
     return NextResponse.json<DeleteNotificationResponse>({
       status: "success",

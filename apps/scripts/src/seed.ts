@@ -17,9 +17,9 @@ async function populateMeilisearch() {
 
   const products = await db.query.products.findMany({ with: { store: true } });
 
-  const productDocuments: Product[] = products.map(({ id, name, store }) => ({
-    id: id.toString(),
+  const productDocuments: Product[] = products.map(({ publicId, name, store }) => ({
     name,
+    id: publicId,
     storeName: store.name,
   }));
 
@@ -51,7 +51,7 @@ async function addProduct(storeId: number, productCode: string, details: Product
 
   if (details.imageUrl) {
     await downloadImage(details.imageUrl)
-      .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
+      .then(async (imageBuffer) => addProductImage(product.publicId, imageBuffer))
       .catch(() => console.error(`Failed to add image for ${productCode}`));
   } else {
     console.log(`No image found for ${productCode}`);

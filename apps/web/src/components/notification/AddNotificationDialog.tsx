@@ -69,7 +69,7 @@ export function AddNotificationDialog({ onNotificationCreate }: AddNotificationD
 
             setLoading(true);
             const success = await onNotificationCreate({
-              variantId: variant.id,
+              variantPublicId: variant.publicId,
               priceInCents: options.priceInCents,
               priceDrop: options.priceDrop,
               restock: options.restock,

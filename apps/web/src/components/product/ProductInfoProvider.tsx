@@ -3,21 +3,21 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { FullProduct, Price, ProductVariant } from "@awardrobe/db";
+import { FullProduct, Price, ProductVariant, Public } from "@awardrobe/db";
 
 type ProductInfoContextValue = {
-  product: FullProduct;
+  product: Public<FullProduct>;
   productOptions: Record<string, string[]>;
-  variant: ProductVariant | null;
+  variant: Public<ProductVariant> | null;
   attributes: Record<string, string>;
-  prices: Price[] | null;
+  prices: Public<Price>[] | null;
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
 };
 
 // TODO: is this the best way to do this?
 export const ProductInfoContext = createContext<ProductInfoContextValue>({
-  product: {} as FullProduct,
+  product: {} as Public<FullProduct>,
   productOptions: {},
   variant: null,
   attributes: {},
@@ -27,11 +27,11 @@ export const ProductInfoContext = createContext<ProductInfoContextValue>({
 });
 
 type ProductInfoProviderProps = {
-  product: FullProduct;
+  product: Public<FullProduct>;
   productOptions: Record<string, string[]>;
-  variant: ProductVariant | null;
+  variant: Public<ProductVariant> | null;
   attributes: Record<string, string>;
-  prices: Price[] | null;
+  prices: Public<Price>[] | null;
   children: React.ReactNode;
 };
 

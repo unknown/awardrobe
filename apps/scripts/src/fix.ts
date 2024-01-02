@@ -30,7 +30,7 @@ async function main() {
     }
 
     await downloadImage(details.imageUrl)
-      .then(async (imageBuffer) => addProductImage(product.id.toString(), imageBuffer))
+      .then(async (imageBuffer) => addProductImage(product.publicId, imageBuffer))
       .then(() => console.log(`Added image for ${product.store.handle} ${product.productCode}`))
       .catch(() => console.error("Failed to add image"));
   }

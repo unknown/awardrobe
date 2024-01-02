@@ -66,7 +66,7 @@ export function ProductSearchbar() {
       return;
     }
 
-    router.push(`/product/${response.product.id}`);
+    router.push(`/product/${response.product.publicId}`);
   };
 
   const doSearch = async (query: string) => {
@@ -91,7 +91,7 @@ export function ProductSearchbar() {
         return;
       }
 
-      router.push(`/product/${responseBody.product.id}`);
+      router.push(`/product/${responseBody.product.publicId}`);
     } else {
       router.push(`/search/${query}/`);
     }
