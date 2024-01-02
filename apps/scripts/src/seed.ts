@@ -2,7 +2,7 @@ import { downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
 import {
   and,
   createProduct,
-  createProductVariant,
+  createProductVariants,
   createStore,
   db,
   eq,
@@ -43,11 +43,10 @@ async function addProduct(storeId: number, productCode: string, details: Product
     name: details.name,
   });
 
-  await Promise.allSettled(
-    details.variants.map(async (variantInfo) =>
-      createProductVariant({ variantInfo, productId: product.id }),
-    ),
-  );
+  await createProductVariants({
+    productId: product.id,
+    variantInfos: details.variants,
+  });
 
   if (details.imageUrl) {
     await downloadImage(details.imageUrl)
