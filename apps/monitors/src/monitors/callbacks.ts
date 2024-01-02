@@ -30,7 +30,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
-  const url = new URL(`/product/${product.id}`, baseUrl);
+  const url = new URL(`/product/${product.publicId}`, baseUrl);
   attributes.forEach(({ name, value }) => {
     url.searchParams.set(name, value);
   });
@@ -72,7 +72,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
-  const url = new URL(`/product/${product.id}`, baseUrl);
+  const url = new URL(`/product/${product.publicId}`, baseUrl);
   attributes.forEach(({ name, value }) => {
     url.searchParams.set(name, value);
   });
