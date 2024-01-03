@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Container, Heading, Section, Text } from "@react-email/components";
+import { Button, Container, Heading, Section, Text } from "jsx-email";
 
 import { BaseLayout } from "../components/BaseLayout";
 import { formatPrice } from "../utils/currency";

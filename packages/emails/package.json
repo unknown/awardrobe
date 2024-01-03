@@ -8,12 +8,12 @@
   },
   "scripts": {
     "clean": "rm -rf .react-email .turbo node_modules dist",
-    "emails:preview": "email dev --dir src/emails --port 3001"
+    "emails:preview": "email preview ./src/emails --port 3001"
   },
   "dependencies": {
     "@react-email/components": "0.0.12",
+    "jsx-email": "^1.7.0",
     "react": "^18.2.0",
-    "react-email": "^1.10.0",
     "resend": "^2.1.0"
   },
   "devDependencies": {
