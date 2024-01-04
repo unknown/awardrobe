@@ -5,7 +5,7 @@ import {
   updatePriceDropLastPing,
   updateRestockLastPing,
 } from "@awardrobe/db";
-import { PriceNotificationEmail, resend, StockNotificationEmail } from "@awardrobe/emails";
+import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
 
 import { UpdateVariantCallback, VariantFlags } from "./types";
 
@@ -46,6 +46,15 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
     notificationIds: notifications.map((notification) => notification.id),
   });
 
+  const renderedEmail = await render(
+    PriceNotificationEmail({
+      description,
+      priceInCents,
+      productName: product.name,
+      productUrl: url.toString(),
+    }),
+  );
+
   await Promise.allSettled(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
@@ -53,12 +62,7 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
         to: [notification.user.email],
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Price drop",
-        react: PriceNotificationEmail({
-          description,
-          priceInCents,
-          productName: product.name,
-          productUrl: url.toString(),
-        }),
+        html: renderedEmail,
       });
     }),
   );
@@ -88,6 +92,15 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
     notificationIds: notifications.map((notification) => notification.id),
   });
 
+  const renderedEmail = await render(
+    StockNotificationEmail({
+      description,
+      priceInCents,
+      productName: product.name,
+      productUrl: url.toString(),
+    }),
+  );
+
   await Promise.allSettled(
     notifications.map(async (notification) => {
       if (!notification.user.email) return;
@@ -95,12 +108,7 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
         to: [notification.user.email],
         from: "Awardrobe <notifications@getawardrobe.com>",
         subject: "Item back in stock",
-        react: StockNotificationEmail({
-          description,
-          priceInCents,
-          productName: product.name,
-          productUrl: url.toString(),
-        }),
+        html: renderedEmail,
       });
     }),
   );
