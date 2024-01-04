@@ -1,5 +1,5 @@
 import React from "react";
-import { Body, Head, Html, Preview, Tailwind } from "jsx-email";
+import { Body, Head, Html, Preview, Tailwind } from "@react-email/components";
 
 type BaseLayoutProps = {
   children: React.ReactNode;

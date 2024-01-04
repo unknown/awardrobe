@@ -1,4 +1,4 @@
-import { render } from "jsx-email";
+import { render } from "@react-email/components";
 
 import PriceNotificationEmail, { PriceNotificationEmailProps } from "./emails/PriceNotification";
 import SignInEmail, { SignInEmailProps } from "./emails/SignIn";
