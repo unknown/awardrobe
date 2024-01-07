@@ -2,7 +2,8 @@ import PgBoss, { Job } from "pg-boss";
 
 import { getAdapter } from "@awardrobe/adapters";
 import {
-  findNotifiedProducts,
+  findFrequentProducts,
+  findPeriodicProducts,
   findProductsByProductCodes,
   findStores,
   ProductWithStore,
@@ -33,7 +34,7 @@ async function main() {
   boss.on("error", (error) => console.error(error));
 
   await boss.work("update-products-frequent", async () => {
-    const products = await findNotifiedProducts({ numNotified: { gte: 1 } });
+    const products = await findFrequentProducts();
     console.log(`[Frequent] Updating ${products.length} products`);
 
     await boss.insert(
@@ -48,8 +49,8 @@ async function main() {
   });
 
   await boss.work("update-products-periodic", async () => {
-    const products = await findNotifiedProducts({ numNotified: { lte: 0 } });
-    console.log(`[Daily] Updating ${products.length} products`);
+    const products = await findPeriodicProducts();
+    console.log(`[Periodic] Updating ${products.length} products`);
 
     await boss.insert(
       products.map((product) => ({
