@@ -1,26 +1,36 @@
-import { useState } from "react";
-import { Button, ButtonProps } from "@ui/Button";
+import { Button } from "@ui/Button";
+import { toast } from "sonner";
 
-type DeleteNotificationButtonProps = ButtonProps & {
-  onNotificationDelete: () => Promise<boolean>;
+import { ProductNotification, Public } from "@awardrobe/db";
+
+import { api } from "@/trpc/react";
+
+type DeleteNotificationButtonProps = {
+  notification: Public<ProductNotification>;
 };
 
-export function DeleteNotificationButton({
-  onNotificationDelete,
-  ...props
-}: DeleteNotificationButtonProps) {
-  const [loading, setLoading] = useState(false);
+export function DeleteNotificationButton({ notification }: DeleteNotificationButtonProps) {
+  const utils = api.useUtils();
+  const removeNotification = api.notifications.delete.useMutation({
+    onSuccess: async () => {
+      await utils.notifications.invalidate();
+    },
+    onError: (err) => {
+      toast.error(
+        err.data?.code === "UNAUTHORIZED"
+          ? "You must be logged in to delete a notification"
+          : "Failed to delete post",
+      );
+    },
+  });
 
   return (
     <Button
-      {...props}
       variant="destructive"
       onClick={async () => {
-        setLoading(true);
-        await onNotificationDelete();
-        setLoading(false);
+        removeNotification.mutate({ notificationPublicId: notification.publicId });
       }}
-      disabled={loading}
+      disabled={removeNotification.isPending}
     >
       Remove
     </Button>

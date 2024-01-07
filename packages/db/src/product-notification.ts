@@ -160,6 +160,7 @@ export async function updateRestockLastPing(
 }
 
 type DeleteNotificationOptions = {
+  userId: string;
   notificationPublicId: string;
 };
 
