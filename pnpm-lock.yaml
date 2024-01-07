@@ -138,6 +138,9 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters
+      '@awardrobe/auth':
+        specifier: workspace:^
+        version: link:../../packages/auth
       '@awardrobe/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -296,6 +299,31 @@ importers:
       '@awardrobe/proxied-axios':
         specifier: workspace:^
         version: link:../proxied-axios
+      '@awardrobe/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^20.10.3
+        version: 20.10.3
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
+  packages/auth:
+    dependencies:
+      '@auth/drizzle-adapter':
+        specifier: ^0.3.12
+        version: 0.3.12
+      '@awardrobe/db':
+        specifier: workspace:^
+        version: link:../db
+      '@awardrobe/emails':
+        specifier: workspace:^
+        version: link:../emails
+      next-auth:
+        specifier: 5.0.0-beta.4
+        version: 5.0.0-beta.4(patch_hash=4rlqptwrozkoskzjajwvwvijom)(next@14.0.4)(react@18.2.0)
+    devDependencies:
       '@awardrobe/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
