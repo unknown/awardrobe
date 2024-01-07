@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { Bell } from "@icons/Bell";
 
+import { auth } from "@awardrobe/auth";
 import { findFollowingProducts } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 import { Product } from "@awardrobe/meilisearch-types";
-
-import { auth } from "@/utils/auth";
 
 export type ProductListProps = {
   products: Product[];

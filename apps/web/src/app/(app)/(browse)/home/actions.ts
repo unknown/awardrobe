@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/utils/auth";
+import { auth } from "@awardrobe/auth";
+
 import { Page } from "./types";
 
 export async function updateHomepage(page: Page) {

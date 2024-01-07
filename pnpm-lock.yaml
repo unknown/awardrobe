@@ -132,9 +132,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@auth/drizzle-adapter':
-        specifier: ^0.3.12
-        version: 0.3.12
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters

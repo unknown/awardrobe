@@ -12,8 +12,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^0.3.12",
     "@awardrobe/adapters": "workspace:^",
+    "@awardrobe/auth": "workspace:^",
     "@awardrobe/db": "workspace:^",
     "@awardrobe/emails": "workspace:^",
     "@awardrobe/media-store": "workspace:^",

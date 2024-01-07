@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "@awardrobe/auth";
 import { findUserNotifications, NotificationWithVariant, Public } from "@awardrobe/db";
-
-import { auth } from "@/utils/auth";
 
 type GetNotificationsRequest = {
   productPublicId: string;
