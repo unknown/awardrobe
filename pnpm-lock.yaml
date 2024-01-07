@@ -135,6 +135,9 @@ importers:
       '@awardrobe/adapters':
         specifier: workspace:^
         version: link:../../packages/adapters
+      '@awardrobe/api':
+        specifier: workspace:^
+        version: link:../../packages/api
       '@awardrobe/auth':
         specifier: workspace:^
         version: link:../../packages/auth
@@ -177,6 +180,21 @@ importers:
       '@radix-ui/react-toggle-group':
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@18.2.17)(@types/react@18.2.42)(react-dom@18.2.0)(react@18.2.0)
+      '@tanstack/react-query':
+        specifier: ^5.17.8
+        version: 5.17.8(react@18.2.0)
+      '@trpc/client':
+        specifier: next
+        version: 11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153)
+      '@trpc/next':
+        specifier: next
+        version: 11.0.0-next-alpha.153(@tanstack/react-query@5.17.8)(@trpc/client@11.0.0-next-alpha.153)(@trpc/react-query@11.0.0-next-alpha.153)(@trpc/server@11.0.0-next-alpha.153)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
+      '@trpc/react-query':
+        specifier: next
+        version: 11.0.0-next-alpha.153(@tanstack/react-query@5.17.8)(@trpc/client@11.0.0-next-alpha.153)(@trpc/server@11.0.0-next-alpha.153)(react-dom@18.2.0)(react@18.2.0)
+      '@trpc/server':
+        specifier: next
+        version: 11.0.0-next-alpha.153
       '@vercel/analytics':
         specifier: ^1.1.1
         version: 1.1.1
@@ -237,6 +255,9 @@ importers:
       sonner:
         specifier: ^1.3.1
         version: 1.3.1(react-dom@18.2.0)(react@18.2.0)
+      superjson:
+        specifier: ^2.2.1
+        version: 2.2.1
       tailwind-merge:
         specifier: ^2.1.0
         version: 2.1.0
@@ -296,6 +317,49 @@ importers:
       '@awardrobe/proxied-axios':
         specifier: workspace:^
         version: link:../proxied-axios
+      '@awardrobe/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^20.10.3
+        version: 20.10.3
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
+  packages/api:
+    dependencies:
+      '@awardrobe/adapters':
+        specifier: workspace:^
+        version: link:../adapters
+      '@awardrobe/auth':
+        specifier: workspace:^
+        version: link:../auth
+      '@awardrobe/db':
+        specifier: workspace:^
+        version: link:../db
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../media-store
+      '@awardrobe/meilisearch-types':
+        specifier: workspace:^
+        version: link:../meilisearch-types
+      '@trpc/client':
+        specifier: next
+        version: 11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153)
+      '@trpc/server':
+        specifier: next
+        version: 11.0.0-next-alpha.153
+      next:
+        specifier: ^14.0.4
+        version: 14.0.4(@babel/core@7.23.6)(react-dom@18.2.0)(react@18.2.0)
+      superjson:
+        specifier: ^2.2.1
+        version: 2.2.1
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
       '@awardrobe/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
@@ -3082,6 +3146,67 @@ packages:
       tailwindcss: 3.4.1
     dev: true
 
+  /@tanstack/query-core@5.17.8:
+    resolution: {integrity: sha512-V4hQv4jmRwbji9wo3F6/JQEjbWLUlv2sE2K5R49girEyok71ksDnVHbQiAvp4+FbovMY8A3IbP3cH3jqAUe/BQ==}
+    dev: false
+
+  /@tanstack/react-query@5.17.8(react@18.2.0):
+    resolution: {integrity: sha512-J+QMBoQiAZglwVB/bEgmf9IczLPg0YwFaqmn4aTW72ZYkUYyBU9dj6OMQk3RzmD9RzUz2m7pPBCkcT0Z1i0acg==}
+    peerDependencies:
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-core': 5.17.8
+      react: 18.2.0
+    dev: false
+
+  /@trpc/client@11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153):
+    resolution: {integrity: sha512-7xxAQ0VrYdaHVCeaIFYrm+kfzGAOu8wPqdq2+o0NPV9hIIW3Ve11fa27aoujx+QK7M0gw3j28Xj4fOul3iZbwg==}
+    peerDependencies:
+      '@trpc/server': 11.0.0-next-alpha.153+ad79cc8a2
+    dependencies:
+      '@trpc/server': 11.0.0-next-alpha.153
+    dev: false
+
+  /@trpc/next@11.0.0-next-alpha.153(@tanstack/react-query@5.17.8)(@trpc/client@11.0.0-next-alpha.153)(@trpc/react-query@11.0.0-next-alpha.153)(@trpc/server@11.0.0-next-alpha.153)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-w8iAC6p7OWRrLXqTDwCca9LHFmefr7aZD0s0jG3atzeVF9lk6SjSRJHG/o34hHtWAEtXKgoAAqyLXkqXfnfaxg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.0.0
+      '@trpc/client': 11.0.0-next-alpha.153+ad79cc8a2
+      '@trpc/react-query': 11.0.0-next-alpha.153+ad79cc8a2
+      '@trpc/server': 11.0.0-next-alpha.153+ad79cc8a2
+      next: '*'
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@tanstack/react-query': 5.17.8(react@18.2.0)
+      '@trpc/client': 11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153)
+      '@trpc/react-query': 11.0.0-next-alpha.153(@tanstack/react-query@5.17.8)(@trpc/client@11.0.0-next-alpha.153)(@trpc/server@11.0.0-next-alpha.153)(react-dom@18.2.0)(react@18.2.0)
+      '@trpc/server': 11.0.0-next-alpha.153
+      next: 14.0.4(@babel/core@7.23.6)(react-dom@18.2.0)(react@18.2.0)
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@trpc/react-query@11.0.0-next-alpha.153(@tanstack/react-query@5.17.8)(@trpc/client@11.0.0-next-alpha.153)(@trpc/server@11.0.0-next-alpha.153)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NY2lE4l1f1scZ2q8ZdbxnoDj1G04gnRetLhSWcKJFP89/Kw18ytkwYiIQUpT2jngIiKd5GbxeOmoNsQpd0emzg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.0.0
+      '@trpc/client': 11.0.0-next-alpha.153+ad79cc8a2
+      '@trpc/server': 11.0.0-next-alpha.153+ad79cc8a2
+      react: '>=18.2.0'
+      react-dom: '>=18.2.0'
+    dependencies:
+      '@tanstack/react-query': 5.17.8(react@18.2.0)
+      '@trpc/client': 11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153)
+      '@trpc/server': 11.0.0-next-alpha.153
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@trpc/server@11.0.0-next-alpha.153:
+    resolution: {integrity: sha512-sLNFvRJ0OxIly7sSAniCY7PrA9wcYFwHonejPJDByt0rFQp/kay2MZ3JOuIY8ki+x0yARn33kgkNq8CtSfN/1A==}
+    dev: false
+
   /@types/cookie@0.6.0:
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
     dev: false
@@ -4055,7 +4180,6 @@ packages:
     engines: {node: '>=12.13'}
     dependencies:
       is-what: 4.1.16
-    dev: true
 
   /cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
@@ -5848,7 +5972,6 @@ packages:
   /is-what@4.1.16:
     resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
     engines: {node: '>=12.13'}
-    dev: true
 
   /is-whitespace@0.3.0:
     resolution: {integrity: sha512-RydPhl4S6JwAyj0JJjshWJEFG6hNye3pZFBRZaTUfZFwGHxzppNaNOVgQuS/E/SlhrApuMXrpnK1EEIXfdo3Dg==}
@@ -7810,7 +7933,6 @@ packages:
     engines: {node: '>=16'}
     dependencies:
       copy-anything: 3.0.5
-    dev: true
 
   /supports-color@2.0.0:
     resolution: {integrity: sha512-KKNVtd6pCYgPIKU4cp2733HWYCpplQhddZLBUryaAHou723x+FRzQ5Df824Fj+IyyuiQTRoub4SnIFfIcrp70g==}

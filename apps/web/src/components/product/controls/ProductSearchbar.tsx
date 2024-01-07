@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
+import { TRPCClientError } from "@trpc/client";
 import { Input } from "@ui/Input";
 import { toast } from "sonner";
 
-import { AddProductResponse } from "@/app/api/products/add/route";
-import { FindProductResponse } from "@/app/api/products/find/route";
+import { api } from "@/trpc/react";
 
 function isUrl(query: string) {
   try {
@@ -18,84 +18,63 @@ function isUrl(query: string) {
   }
 }
 
-async function findProduct(productUrl: string) {
-  const response = await fetch("/api/products/find", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productUrl,
-    }),
-  });
-  return response;
-}
-
-async function addProduct(productUrl: string) {
-  const response = await fetch("/api/products/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productUrl,
-    }),
-  });
-  return response;
-}
-
 export function ProductSearchbar() {
   const router = useRouter();
   const params = useParams<{ query?: string }>();
 
   const [loading, setLoading] = useState(false);
 
-  const searchQuery = params.query ? decodeURIComponent(params.query) : "";
-
-  const addProductAction = async (productUrl: string) => {
-    setLoading(true);
-    const response = (await addProduct(productUrl).then((response) =>
-      response.json(),
-    )) as AddProductResponse;
-    setLoading(false);
-
-    if (response.status === "error") {
+  const utils = api.useUtils();
+  const addProduct = api.products.add.useMutation({
+    onSuccess: (response) => {
+      utils.products.invalidate();
+      router.push(`/product/${response.publicId}`);
+    },
+    onError: (error) => {
       toast("Could not add product", {
-        description: response.error,
+        description: error.message,
       });
-      return;
-    }
-
-    router.push(`/product/${response.product.publicId}`);
-  };
+    },
+  });
 
   const doSearch = async (query: string) => {
     if (query.length === 0) {
       return;
     }
-
     if (isUrl(query)) {
       setLoading(true);
-      const response = await findProduct(query);
-      const responseBody = (await response.json()) as FindProductResponse;
+      const product = await utils.products.get.fetch({ productUrl: query }).catch((error) => {
+        if (error instanceof TRPCClientError) {
+          toast("Could not add product", {
+            description: error.message,
+            // TODO: better product not found check
+            action:
+              error.message === "Product not found"
+                ? {
+                    label: "Add product",
+                    onClick: () => {
+                      addProduct.mutate({ productUrl: query });
+                    },
+                  }
+                : undefined,
+          });
+        } else {
+          toast("Could not add product", {
+            description: "Unknown error",
+          });
+        }
+      });
       setLoading(false);
 
-      if (responseBody.status === "error") {
-        toast("Could not find product", {
-          description: responseBody.error,
-          action:
-            response.status === 404
-              ? { label: "Add product", onClick: () => addProductAction(query) }
-              : undefined,
-        });
-        return;
+      if (product) {
+        router.push(`/product/${product.publicId}`);
       }
-
-      router.push(`/product/${responseBody.product.publicId}`);
     } else {
-      router.push(`/search/${query}/`);
+      router.push(`/search/${encodeURIComponent(query)}`);
     }
   };
+
+  const paramsQuery = params.query ? decodeURIComponent(params.query) : "";
 
   return (
     <div className="relative">
@@ -104,13 +83,13 @@ export function ProductSearchbar() {
         type="search"
         className={"pl-8"}
         placeholder="Search (product name or URL)"
-        defaultValue={searchQuery}
+        defaultValue={paramsQuery}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             doSearch(event.currentTarget.value);
           }
         }}
-        disabled={loading}
+        disabled={loading || addProduct.isPending}
       />
     </div>
   );

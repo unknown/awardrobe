@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
+    "@awardrobe/api": "workspace:^",
     "@awardrobe/auth": "workspace:^",
     "@awardrobe/db": "workspace:^",
     "@awardrobe/emails": "workspace:^",
@@ -27,6 +28,11 @@
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
+    "@tanstack/react-query": "^5.17.8",
+    "@trpc/client": "next",
+    "@trpc/next": "next",
+    "@trpc/react-query": "next",
+    "@trpc/server": "next",
     "@vercel/analytics": "^1.1.1",
     "@vercel/speed-insights": "^1.0.0",
     "@visx/axis": "^3.5.0",
@@ -47,6 +53,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^1.3.1",
+    "superjson": "^2.2.1",
     "tailwind-merge": "^2.1.0"
   },
   "devDependencies": {

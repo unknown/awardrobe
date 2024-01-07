@@ -1,12 +1,11 @@
 import { Inter } from "next/font/google";
+import { Toaster } from "@ui/Toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 import "@/styles/globals.css";
-
-import { Toaster } from "@ui/Toaster";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,9 +38,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <ThemeProvider attribute="class" enableSystem>
           {children}
           <Toaster />
-          <Analytics />
-          <SpeedInsights />
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

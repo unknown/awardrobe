@@ -12,13 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui/Select";
+import { toast } from "sonner";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
-import { CreateNotificationOptions } from "@/hooks/useNotifications";
-
-export type AddNotificationDialogProps = {
-  onNotificationCreate: (options: CreateNotificationOptions) => Promise<boolean>;
-};
+import { api } from "@/trpc/react";
 
 type AddNotificationOptions = {
   priceInCents: number;
@@ -26,12 +23,25 @@ type AddNotificationOptions = {
   restock: boolean;
 };
 
-export function AddNotificationDialog({ onNotificationCreate }: AddNotificationDialogProps) {
+export function AddNotificationDialog() {
+  const utils = api.useUtils();
+  const addNotification = api.notifications.create.useMutation({
+    onSuccess: async () => {
+      await utils.notifications.invalidate();
+    },
+    onError: (err) => {
+      toast.error(
+        err.data?.code === "UNAUTHORIZED"
+          ? "You must be logged in to create a notification"
+          : "Failed to create notification",
+      );
+    },
+  });
+
   const { product, productOptions, attributes: initialAttributes, prices } = useProductInfo();
   const lastPrice = prices?.at(-1);
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const [options, setOptions] = useState<AddNotificationOptions>({
     priceInCents: lastPrice?.priceInCents ?? 5000,
@@ -67,16 +77,14 @@ export function AddNotificationDialog({ onNotificationCreate }: AddNotificationD
             // TODO: handle this better
             if (!variant) return;
 
-            setLoading(true);
-            const success = await onNotificationCreate({
+            await addNotification.mutateAsync({
               variantPublicId: variant.publicId,
               priceInCents: options.priceInCents,
               priceDrop: options.priceDrop,
               restock: options.restock,
             });
-            setLoading(false);
 
-            if (success) {
+            if (addNotification.isSuccess) {
               setOpen(false);
             }
           }}
@@ -156,7 +164,7 @@ export function AddNotificationDialog({ onNotificationCreate }: AddNotificationD
             </label>
           </div>
           <div className="mt-4 flex justify-end">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={addNotification.isPending}>
               Create notification
             </Button>
           </div>
