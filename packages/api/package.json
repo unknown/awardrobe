@@ -10,10 +10,14 @@
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
+    "@awardrobe/adapters": "workspace:^",
     "@awardrobe/auth": "workspace:^",
     "@awardrobe/db": "workspace:^",
+    "@awardrobe/media-store": "workspace:^",
+    "@awardrobe/meilisearch-types": "workspace:^",
     "@trpc/client": "next",
     "@trpc/server": "next",
+    "next": "^14.0.4",
     "superjson": "^2.2.1",
     "zod": "^3.22.4"
   },

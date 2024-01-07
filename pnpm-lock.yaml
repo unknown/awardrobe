@@ -329,18 +329,30 @@ importers:
 
   packages/api:
     dependencies:
+      '@awardrobe/adapters':
+        specifier: workspace:^
+        version: link:../adapters
       '@awardrobe/auth':
         specifier: workspace:^
         version: link:../auth
       '@awardrobe/db':
         specifier: workspace:^
         version: link:../db
+      '@awardrobe/media-store':
+        specifier: workspace:^
+        version: link:../media-store
+      '@awardrobe/meilisearch-types':
+        specifier: workspace:^
+        version: link:../meilisearch-types
       '@trpc/client':
         specifier: next
         version: 11.0.0-next-alpha.153(@trpc/server@11.0.0-next-alpha.153)
       '@trpc/server':
         specifier: next
         version: 11.0.0-next-alpha.153
+      next:
+        specifier: ^14.0.4
+        version: 14.0.4(@babel/core@7.23.6)(react-dom@18.2.0)(react@18.2.0)
       superjson:
         specifier: ^2.2.1
         version: 2.2.1
