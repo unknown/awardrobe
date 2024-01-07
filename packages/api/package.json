@@ -1,0 +1,25 @@
+{
+  "name": "@awardrobe/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "dependencies": {
+    "@awardrobe/auth": "workspace:^",
+    "@awardrobe/db": "workspace:^",
+    "@trpc/client": "^10.45.0",
+    "@trpc/server": "^10.45.0",
+    "superjson": "^2.2.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
+    "@types/node": "^20.10.3",
+    "typescript": "^5.3.3"
+  }
+}

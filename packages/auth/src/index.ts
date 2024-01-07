@@ -6,6 +6,8 @@ import EmailProvider from "next-auth/providers/email";
 import { db } from "@awardrobe/db";
 import { resend, SignInEmail } from "@awardrobe/emails";
 
+export type { Session } from "next-auth";
+
 declare module "next-auth" {
   interface Session {
     user: {
