@@ -5,7 +5,7 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
 export function PriceControls() {
-  const { product, variant, prices, isLoading } = useProductInfo();
+  const { product, variant, prices, isPending } = useProductInfo();
 
   const storeName = product.store.shortenedName ?? product.store.name;
   const productUrl = variant?.productUrl;
@@ -19,7 +19,7 @@ export function PriceControls() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        {isLoading
+        {isPending
           ? "Loading..."
           : !productUrl
             ? "Not available"

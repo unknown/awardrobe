@@ -49,7 +49,7 @@ export function ProductChart({
   margin = defaultMargin,
   showAxes = true,
 }: PricesChartProps) {
-  const { isLoading } = useProductInfo();
+  const { isPending } = useProductInfo();
 
   return (
     <ParentSize className="relative">
@@ -67,7 +67,7 @@ export function ProductChart({
             />
           );
 
-        const overlayComponent = isLoading ? (
+        const overlayComponent = isPending ? (
           <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
             <p className="text-muted-foreground">Loading...</p>
           </div>

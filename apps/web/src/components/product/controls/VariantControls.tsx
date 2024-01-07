@@ -18,7 +18,7 @@ export function VariantControls() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { productOptions, attributes: initialAttributes, setIsLoading } = useProductInfo();
+  const { productOptions, attributes: initialAttributes, startTransition } = useProductInfo();
   const [attributes, setAttributes] = useState(initialAttributes);
 
   return (
@@ -30,16 +30,17 @@ export function VariantControls() {
           </label>
           <Select
             value={attributes[name] ?? ""}
-            onValueChange={(value) => {
-              setIsLoading(true);
-              setAttributes((attributes) => ({ ...attributes, [name]: value }));
-              const params = new URLSearchParams({
-                ...attributes,
-                ...Object.fromEntries(searchParams),
-              });
-              params.set(name, value);
-              router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-            }}
+            onValueChange={(value) =>
+              startTransition(() => {
+                setAttributes((attributes) => ({ ...attributes, [name]: value }));
+                const params = new URLSearchParams({
+                  ...attributes,
+                  ...Object.fromEntries(searchParams),
+                });
+                params.set(name, value);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              })
+            }
           >
             <SelectTrigger className="max-w-[180px]" id={`${name}-input`}>
               <SelectValue placeholder={`Select a ${name}...`} />

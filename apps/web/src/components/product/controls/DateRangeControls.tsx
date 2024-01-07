@@ -17,20 +17,21 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
   const searchParams = useSearchParams();
 
   const [dateRange, setDateRange] = useState(initialDateRange);
-  const { setIsLoading } = useProductInfo();
+  const { startTransition } = useProductInfo();
 
   return (
     <ToggleGroup
       className="bg-muted text-muted-foreground rounded-lg p-1"
       type="single"
       value={dateRange}
-      onValueChange={(range: DateRange) => {
-        setIsLoading(true);
-        setDateRange(range);
-        const params = new URLSearchParams(searchParams);
-        params.set("range", range);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      }}
+      onValueChange={(range: DateRange) =>
+        startTransition(() => {
+          setDateRange(range);
+          const params = new URLSearchParams(searchParams);
+          params.set("range", range);
+          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        })
+      }
     >
       {DateRanges.map((range) => (
         <ToggleGroupItem
