@@ -1,8 +1,7 @@
-import { and, count, desc, eq, exists, inArray, notExists } from "drizzle-orm";
+import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
-import { productVariants } from "./schema/product-variants";
 import { products } from "./schema/products";
 import type { FullProduct, Product, ProductWithStore, Public } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
@@ -49,11 +48,9 @@ export function findProduct(options: FindProductOptions): Promise<Product | unde
 export async function findFrequentProducts(): Promise<ProductWithStore[]> {
   return db.query.products.findMany({
     where: (products) =>
-      exists(
-        db
-          .select()
-          .from(productNotifications)
-          .where(eq(productNotifications.productId, products.id)),
+      inArray(
+        products.id,
+        db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
       ),
     with: { store: true },
   });
@@ -62,31 +59,11 @@ export async function findFrequentProducts(): Promise<ProductWithStore[]> {
 export async function findPeriodicProducts(): Promise<ProductWithStore[]> {
   return db.query.products.findMany({
     where: (products) =>
-      notExists(
-        db
-          .select()
-          .from(productNotifications)
-          .where(eq(productNotifications.productId, products.id)),
+      notInArray(
+        products.id,
+        db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
       ),
     with: { store: true },
-  });
-}
-
-export type FindProductsWithUsersNotificationsOptions = {
-  userId: string;
-  productIds?: number[];
-};
-
-export function findProductsWithUsersNotifications(
-  options: FindProductsWithUsersNotificationsOptions,
-) {
-  const { userId, productIds } = options;
-
-  return db.query.products.findMany({
-    where: and(
-      exists(db.select().from(productNotifications).where(eq(productNotifications.userId, userId))),
-      productIds ? inArray(products.id, productIds) : undefined,
-    ),
   });
 }
 
@@ -104,7 +81,7 @@ export function findFeaturedProducts(
     orderBy: (products) =>
       desc(
         db
-          .select({ value: count() })
+          .select({ count: count() })
           .from(productNotifications)
           .where(eq(productNotifications.productId, products.id)),
       ),
@@ -157,43 +134,25 @@ export function findFollowingProducts(options: FindFollowingProductsOptions) {
     where: (products) =>
       and(
         productPublicIds ? inArray(products.publicId, productPublicIds) : undefined,
-        exists(
+        inArray(
+          products.id,
           db
-            .select()
-            .from(productVariants)
-            .where(
-              and(
-                eq(products.id, productVariants.productId),
-                exists(
-                  db
-                    .select()
-                    .from(productNotifications)
-                    .where(
-                      and(
-                        eq(productNotifications.userId, userId),
-                        eq(productVariants.id, productNotifications.productVariantId),
-                      ),
-                    ),
-                ),
-              ),
-            ),
+            .selectDistinct({ productId: productNotifications.productId })
+            .from(productNotifications)
+            .where(eq(productNotifications.userId, userId)),
         ),
       ),
     with: {
-      store: withStore || undefined,
+      store: withStore ? true : undefined,
       variants: withNotifiedVariants
         ? {
             where: (variants) =>
-              exists(
+              inArray(
+                variants.id,
                 db
-                  .select()
+                  .selectDistinct({ variantId: productNotifications.productVariantId })
                   .from(productNotifications)
-                  .where(
-                    and(
-                      eq(productNotifications.userId, userId),
-                      eq(variants.id, productNotifications.productVariantId),
-                    ),
-                  ),
+                  .where(eq(productNotifications.userId, userId)),
               ),
           }
         : undefined,
