@@ -20,7 +20,8 @@ export function OPTIONS() {
   return response;
 }
 
-const handler = auth(async (req) => {
+// TODO: remove any
+const handler: any = auth(async (req) => {
   const response = await fetchRequestHandler({
     req,
     endpoint: "/api/trpc",
