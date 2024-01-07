@@ -24,14 +24,14 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
       className="bg-muted text-muted-foreground rounded-lg p-1"
       type="single"
       value={dateRange}
-      onValueChange={(range: DateRange) =>
+      onValueChange={(range: DateRange) => {
+        setDateRange(range);
         startTransition(() => {
-          setDateRange(range);
           const params = new URLSearchParams(searchParams);
           params.set("range", range);
           router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        })
-      }
+        });
+      }}
     >
       {DateRanges.map((range) => (
         <ToggleGroupItem
