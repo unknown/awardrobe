@@ -6,7 +6,11 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 
 import "@/styles/globals.css";
 
+import { cache } from "react";
+import { headers } from "next/headers";
 import { Toaster } from "@ui/Toaster";
+
+import { TRPCReactProvider } from "@/trpc/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,17 +35,19 @@ type RootLayoutProps = {
   children: React.ReactNode;
 };
 
+const getHeaders = cache(async () => headers());
+
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head />
       <body className="bg-background min-h-screen font-sans antialiased">
         <ThemeProvider attribute="class" enableSystem>
-          {children}
+          <TRPCReactProvider headersPromise={getHeaders()}>{children}</TRPCReactProvider>
           <Toaster />
-          <Analytics />
-          <SpeedInsights />
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

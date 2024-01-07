@@ -1,10 +1,13 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
+import SuperJSON from "superjson";
 
 import { auth, Session } from "@awardrobe/auth";
 
-export const createTRPCContext = async (opts: { session: Session }) => {
+export const createTRPCContext = async (opts: { session: Session | null; headers: Headers }) => {
   const session = opts.session ?? (await auth());
+  const source = opts.headers.get("x-trpc-source") ?? "unknown";
+
+  console.log(`>>> tRPC Request from ${source} by ${session?.user}`);
 
   return { session };
 };
@@ -14,7 +17,7 @@ export const createTRPCContext = async (opts: { session: Session }) => {
  * Should be done only once per backend!
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
+  transformer: SuperJSON,
 });
 
 export const createCallerFactory = t.createCallerFactory;
