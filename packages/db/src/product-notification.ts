@@ -1,4 +1,4 @@
-import { and, eq, exists, gte, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
@@ -73,16 +73,12 @@ export async function findUserNotifications(
     where: (productNotifications) =>
       and(
         eq(productNotifications.userId, userId),
-        exists(
+        inArray(
+          productNotifications.productVariantId,
           db
-            .select()
+            .selectDistinct({ productVariantId: productVariants.id })
             .from(productVariants)
-            .where(
-              and(
-                eq(productNotifications.productVariantId, productVariants.id),
-                eq(productVariants.productId, product.id),
-              ),
-            ),
+            .where(eq(productVariants.productId, product.id)),
         ),
       ),
     columns: { id: false, productId: false, productVariantId: false },
