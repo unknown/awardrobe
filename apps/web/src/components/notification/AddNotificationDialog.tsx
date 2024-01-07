@@ -24,10 +24,21 @@ type AddNotificationOptions = {
 };
 
 export function AddNotificationDialog() {
+  const { product, productOptions, attributes: initialAttributes, prices } = useProductInfo();
+  const lastPrice = prices?.at(-1);
+  const [attributes, setAttributes] = useState<Record<string, string>>(initialAttributes);
+  const [options, setOptions] = useState<AddNotificationOptions>({
+    priceInCents: lastPrice?.priceInCents ?? 5000,
+    priceDrop: true,
+    restock: true,
+  });
+  const [open, setOpen] = useState(false);
+
   const utils = api.useUtils();
   const addNotification = api.notifications.create.useMutation({
     onSuccess: async () => {
-      await utils.notifications.invalidate();
+      await utils.notifications.list.invalidate({ productPublicId: product.publicId });
+      setOpen(false);
     },
     onError: (err) => {
       toast.error(
@@ -37,18 +48,6 @@ export function AddNotificationDialog() {
       );
     },
   });
-
-  const { product, productOptions, attributes: initialAttributes, prices } = useProductInfo();
-  const lastPrice = prices?.at(-1);
-
-  const [open, setOpen] = useState(false);
-
-  const [options, setOptions] = useState<AddNotificationOptions>({
-    priceInCents: lastPrice?.priceInCents ?? 5000,
-    priceDrop: true,
-    restock: true,
-  });
-  const [attributes, setAttributes] = useState<Record<string, string>>(initialAttributes);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,10 +82,6 @@ export function AddNotificationDialog() {
               priceDrop: options.priceDrop,
               restock: options.restock,
             });
-
-            if (addNotification.isSuccess) {
-              setOpen(false);
-            }
           }}
         >
           {Object.entries(productOptions).map(([name, values]) => (
