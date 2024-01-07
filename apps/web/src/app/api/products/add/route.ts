@@ -2,11 +2,10 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
+import { auth } from "@awardrobe/auth";
 import { createProduct, createProductVariants, findStore, Product, Public } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
-
-import { auth } from "@/utils/auth";
 
 type AddProductRequest = {
   productUrl: string;

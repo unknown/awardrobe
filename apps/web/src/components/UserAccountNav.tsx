@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@ui/DropdownMenu";
 
-import { auth } from "@/utils/auth";
+import { auth } from "@awardrobe/auth";
 
 export async function UserAccountNav() {
   const session = await auth();

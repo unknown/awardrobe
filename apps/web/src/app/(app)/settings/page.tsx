@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { auth } from "@awardrobe/auth";
 import { findFollowingProducts } from "@awardrobe/db";
-
-import { auth } from "@/utils/auth";
 
 export default async function ProfilePage() {
   const session = await auth();

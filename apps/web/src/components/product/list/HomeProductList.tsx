@@ -1,8 +1,8 @@
+import { auth } from "@awardrobe/auth";
 import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
 
 import { Page } from "@/app/(app)/(browse)/home/types";
 import { ProductList } from "@/components/product/list/ProductList";
-import { auth } from "@/utils/auth";
 
 type HomeProductListProps = {
   page: Page;
