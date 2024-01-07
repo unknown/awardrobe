@@ -3,7 +3,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, createTRPCContext } from "@awardrobe/api";
 import { auth } from "@awardrobe/auth";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function setCorsHeaders(res: Response) {
   res.headers.set("Access-Control-Allow-Origin", "*");
