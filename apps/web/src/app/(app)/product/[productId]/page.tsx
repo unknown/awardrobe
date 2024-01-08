@@ -8,12 +8,12 @@ import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
 import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
 import { ProductInfoProvider } from "@/components/product/ProductInfoProvider";
-import { DateRange, getDateFromRange, isDateRange } from "@/utils/dates";
+import { getDateFromRange, isDateRange } from "@/utils/dates";
 
 type ProductPageProps = {
   params: { productId: string };
   searchParams: {
-    range?: DateRange;
+    range?: string;
   } & Record<string, string>;
 };
 

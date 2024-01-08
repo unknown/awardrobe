@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ToggleGroup, ToggleGroupItem } from "@ui/ToggleGroup";
+import { Tabs, TabsList, TabsTrigger } from "@ui/Tabs";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
-import { DateRange, DateRanges } from "@/utils/dates";
+import { DateRange, DateRanges, isDateRange } from "@/utils/dates";
 
 export type DateRangeControlProps = {
   initialDateRange: DateRange;
@@ -20,11 +20,10 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
   const { startTransition } = useProductInfo();
 
   return (
-    <ToggleGroup
-      className="bg-muted text-muted-foreground rounded-lg p-1"
-      type="single"
+    <Tabs
       value={dateRange}
-      onValueChange={(range: DateRange) => {
+      onValueChange={(newRange: string) => {
+        const range = isDateRange(newRange) ? newRange : "7d";
         setDateRange(range);
         startTransition(() => {
           const params = new URLSearchParams(searchParams);
@@ -33,15 +32,13 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
         });
       }}
     >
-      {DateRanges.map((range) => (
-        <ToggleGroupItem
-          className="data-[state=on]:bg-background data-[state=on]:shadow"
-          key={range}
-          value={range}
-        >
-          {range}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+      <TabsList>
+        {DateRanges.map((range) => (
+          <TabsTrigger key={range} value={range}>
+            {range}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }
