@@ -96,10 +96,22 @@ async function seedUniqloUS() {
 async function seedStores() {
   const stores = [
     {
+      handle: "uniqlo-us",
+      name: "Uniqlo US",
+      shortenedName: "Uniqlo",
+      externalUrl: "https://www.uniqlo.com/us/en/",
+    },
+    {
       handle: "abercrombie-us",
       name: "Abercrombie & Fitch US",
       shortenedName: "Abercrombie",
       externalUrl: "https://www.abercrombie.com/shop/us",
+    },
+    {
+      handle: "zara-us",
+      name: "Zara US",
+      shortenedName: "Zara",
+      externalUrl: "https://www.zara.com/us/",
     },
     {
       handle: "jcrew-us",
@@ -108,16 +120,10 @@ async function seedStores() {
       externalUrl: "https://www.jcrew.com/",
     },
     {
-      handle: "uniqlo-us",
-      name: "Uniqlo US",
-      shortenedName: "Uniqlo",
-      externalUrl: "https://www.uniqlo.com/us/en/",
-    },
-    {
-      handle: "zara-us",
-      name: "Zara US",
-      shortenedName: "Zara",
-      externalUrl: "https://www.zara.com/us/",
+      handle: "levis-us",
+      name: "Levi's US",
+      shortenedName: "Levi's",
+      externalUrl: "https://www.levi.com/US/en_US/",
     },
   ];
 

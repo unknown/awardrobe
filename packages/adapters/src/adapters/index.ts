@@ -1,13 +1,14 @@
 import { AbercrombieUS } from "./abercrombie-us";
 import { JCrewUS } from "./jcrew-us";
+import { LevisUS } from "./levis-us";
 import { StoreAdapter } from "./types";
 import { UniqloUS } from "./uniqlo-us";
 import { ZaraUS } from "./zara-us";
 
-export { AbercrombieUS, JCrewUS, UniqloUS, ZaraUS };
+export { AbercrombieUS, JCrewUS, LevisUS, UniqloUS, ZaraUS };
 
 // TODO: somehow dedupe this?
-const adapters: StoreAdapter[] = [AbercrombieUS, JCrewUS, UniqloUS, ZaraUS];
+const adapters: StoreAdapter[] = [AbercrombieUS, JCrewUS, LevisUS, UniqloUS, ZaraUS];
 
 export function getAdapter(storeHandle: string) {
   return adapters.find((adapter) => adapter.storeHandle === storeHandle) ?? null;
