@@ -13,8 +13,6 @@ import { addProductImage } from "@awardrobe/media-store";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 
 async function populateMeilisearch() {
-  console.log("Populating Meilisearch");
-
   const products = await db.query.products.findMany({ with: { store: true } });
 
   const productDocuments: Product[] = products.map(({ publicId, name, store }) => ({
@@ -25,6 +23,8 @@ async function populateMeilisearch() {
 
   await meilisearch.index("products").deleteAllDocuments();
   await meilisearch.index("products").addDocuments(productDocuments, { primaryKey: "id" });
+
+  console.log(`Added ${productDocuments.length} products to Meilisearch`);
 }
 
 async function addProduct(storeId: number, productCode: string, details: ProductDetails) {
