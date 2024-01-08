@@ -13,8 +13,6 @@ import { addProductImage } from "@awardrobe/media-store";
 import { meilisearch, Product } from "@awardrobe/meilisearch-types";
 
 async function populateMeilisearch() {
-  console.log("Populating Meilisearch");
-
   const products = await db.query.products.findMany({ with: { store: true } });
 
   const productDocuments: Product[] = products.map(({ publicId, name, store }) => ({
@@ -25,6 +23,8 @@ async function populateMeilisearch() {
 
   await meilisearch.index("products").deleteAllDocuments();
   await meilisearch.index("products").addDocuments(productDocuments, { primaryKey: "id" });
+
+  console.log(`Added ${productDocuments.length} products to Meilisearch`);
 }
 
 async function addProduct(storeId: number, productCode: string, details: ProductDetails) {
@@ -96,10 +96,22 @@ async function seedUniqloUS() {
 async function seedStores() {
   const stores = [
     {
+      handle: "uniqlo-us",
+      name: "Uniqlo US",
+      shortenedName: "Uniqlo",
+      externalUrl: "https://www.uniqlo.com/us/en/",
+    },
+    {
       handle: "abercrombie-us",
       name: "Abercrombie & Fitch US",
       shortenedName: "Abercrombie",
       externalUrl: "https://www.abercrombie.com/shop/us",
+    },
+    {
+      handle: "zara-us",
+      name: "Zara US",
+      shortenedName: "Zara",
+      externalUrl: "https://www.zara.com/us/",
     },
     {
       handle: "jcrew-us",
@@ -108,16 +120,10 @@ async function seedStores() {
       externalUrl: "https://www.jcrew.com/",
     },
     {
-      handle: "uniqlo-us",
-      name: "Uniqlo US",
-      shortenedName: "Uniqlo",
-      externalUrl: "https://www.uniqlo.com/us/en/",
-    },
-    {
-      handle: "zara-us",
-      name: "Zara US",
-      shortenedName: "Zara",
-      externalUrl: "https://www.zara.com/us/",
+      handle: "levis-us",
+      name: "Levi's US",
+      shortenedName: "Levi's",
+      externalUrl: "https://www.levi.com/US/en_US/",
     },
   ];
 

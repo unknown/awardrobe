@@ -69,9 +69,9 @@ export async function createProductVariants(options: CreateProductVariantsOption
 
   await Promise.all(
     created.map((productVariant) => {
-      // TODO: hacky toString comparison
+      // TODO: hacky JSON comparison
       const variantInfo = variantInfos.find(
-        (v) => v.attributes.toString() === productVariant.attributes.toString(),
+        (v) => JSON.stringify(v.attributes) === JSON.stringify(productVariant.attributes),
       );
       if (!variantInfo) {
         // TODO: log error
