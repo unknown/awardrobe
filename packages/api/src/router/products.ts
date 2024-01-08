@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct, createProductVariants, findProductPublic, findStore } from "@awardrobe/db";
+import type { Product, Public } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -28,7 +29,10 @@ export const productsRouter = router({
         throw new Error("Store not yet supported");
       }
 
-      const productCode = await adapter.getProductCode(productUrl);
+      const productCode = await adapter.getProductCode(productUrl).catch((error) => {
+        console.error(error);
+        throw new Error("Error retrieving product code");
+      });
       if (!productCode) {
         throw new Error("Error retrieving product code");
       }
@@ -66,11 +70,15 @@ export const productsRouter = router({
           )
         : undefined;
 
-      await Promise.all([createVariantsPromise, addProductToSearchPromise, addImagePromise]);
+      await Promise.allSettled([createVariantsPromise, addProductToSearchPromise, addImagePromise]);
 
       revalidatePath("/(app)/(browse)/search", "page");
 
-      const { id: _, ...publicProduct } = product;
+      const publicProduct: Public<Product> = {
+        name: product.name,
+        productCode: product.productCode,
+        publicId: product.publicId,
+      };
 
       return publicProduct;
     }),
