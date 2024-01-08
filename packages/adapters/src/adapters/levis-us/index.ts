@@ -2,7 +2,7 @@ import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
-import { productSchema, swatchesSchema } from "./schemas";
+import { GalleryImage, productSchema, swatchesSchema } from "./schemas";
 
 const headers = {
   "User-Agent": "LeviStraussAmericasAppiOS16.7.2",
@@ -23,6 +23,13 @@ function parsePantsAttributes(description: string): VariantAttribute[] | null {
 
 function parseGeneralAttributes(description: string): VariantAttribute[] {
   return [{ name: "Size", value: description }];
+}
+
+function getImageUrl(galleryImages: GalleryImage[]) {
+  const image = galleryImages.find(
+    (image) => image.format === "Regular_Tablet" && image.imageType === "GALLERY",
+  );
+  return image?.url ?? null;
 }
 
 export const LevisUS: StoreAdapter = {
@@ -62,6 +69,9 @@ export const LevisUS: StoreAdapter = {
     const swatches = swatchesSchema.parse(swatchesResponse.data);
     const details = productSchema.parse(detailsResponse.data);
 
+    // two types of sizing schemes: pants and general
+    const isPants = "variantWaist" in details;
+
     // TODO: make this concurrent?
     // TODO: duplicate details request to first swatch
     const variants: VariantInfo[] = [];
@@ -70,9 +80,6 @@ export const LevisUS: StoreAdapter = {
       const detailsResponse = await proxiedAxios.get(detailsEndpoint, { headers });
       const details = productSchema.parse(detailsResponse.data);
       const timestamp = new Date();
-
-      // two types of sizing schemes: pants and general
-      const isPants = "variantWaist" in details;
 
       const swatchVariants: VariantInfo[] = details.variantOptions.map((variant) => {
         const attributes = isPants
@@ -85,7 +92,7 @@ export const LevisUS: StoreAdapter = {
 
         return {
           timestamp,
-          attributes,
+          attributes: [{ name: "Color", value: details.colorName }, ...attributes],
           inStock: variant.stock.stockLevel > 0 && !variant.comingSoon,
           priceInCents: dollarsToCents(variant.priceData.formattedValue),
           productUrl: `https://www.levi.com/US/en_US${details.url}`,
@@ -99,6 +106,8 @@ export const LevisUS: StoreAdapter = {
       variants,
       name: details.name,
       productUrl: `https://www.levi.com/US/en_US${details.url}`,
+      description: details.description,
+      imageUrl: getImageUrl(details.galleryImageList.galleryImage) ?? undefined,
     };
   },
 };

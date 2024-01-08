@@ -1,20 +1,23 @@
 import { z } from "zod";
 
+const galleryImageSchema = z.object({
+  format: z.string(),
+  galleryIndex: z.number(),
+  imageType: z.string(),
+  url: z.string(),
+});
+
+export type GalleryImage = z.infer<typeof galleryImageSchema>;
+
 const baseProductSchema = z.object({
   baseProduct: z.string(),
   name: z.string(),
+  description: z.string(),
   colorGroup: z.string(),
   colorName: z.string(),
   url: z.string(),
   galleryImageList: z.object({
-    galleryImage: z.array(
-      z.object({
-        format: z.string(),
-        galleryIndex: z.number(),
-        imageType: z.string(),
-        url: z.string(),
-      }),
-    ),
+    galleryImage: z.array(galleryImageSchema),
   }),
   variantOptions: z.array(
     z.object({
