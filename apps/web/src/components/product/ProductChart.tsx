@@ -8,7 +8,7 @@ import { Group } from "@visx/group";
 import { Pattern } from "@visx/pattern";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
-import { AreaClosed, Bar, Line, LinePath } from "@visx/shape";
+import { AreaClosed, Bar, Circle, Line, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
@@ -119,25 +119,34 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     <Fragment>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
-          <RadialGradient id="radialGradient" from="#DBDBDB" to="#4A4A4A" />
-          <mask id="radialMask">
-            <rect width={innerWidth} height={innerHeight} fill="url(#radialGradient)" />
-          </mask>
-          <Pattern id="grid-pattern" width={12} height={12}>
-            <circle cx={5} cy={5} r="1.5" stroke="none" fill="hsl(var(--border))" />
-          </Pattern>
-          <Bar
-            width={innerWidth}
-            height={innerHeight}
-            fill="url(#grid-pattern)"
-            mask="url(#radialMask)"
-          />
+          <RadialGradient id="grid-gradient" from="#DBDBDB" to="#4A4A4A" />
+          <linearGradient id="tooltip-gradient" gradientTransform="rotate(90)">
+            <stop offset="0" stopColor="#000000" />
+            <stop offset="0.25" stopColor="#FFFFFF" />
+            <stop offset="0.75" stopColor="#FFFFFF" />
+            <stop offset="1" stopColor="#000000" />
+          </linearGradient>
           <LinearGradient
             id="area-gradient"
             from="#A8FF99"
             fromOpacity={0.3}
             to="#A8FF99"
-            toOpacity={0.03}
+            toOpacity={0.15}
+          />
+          <mask id="grid-mask">
+            <Bar width={innerWidth} height={innerHeight} fill="url(#grid-gradient)" />
+          </mask>
+          <mask id="tooltip-mask">
+            <Bar width={innerWidth} height={innerHeight} fill="url(#tooltip-gradient)" />
+          </mask>
+          <Pattern id="grid-pattern" width={12} height={12}>
+            <Circle cx={5} cy={5} r={1.5} fill="hsl(var(--border))" />
+          </Pattern>
+          <Bar
+            width={innerWidth}
+            height={innerHeight}
+            fill="url(#grid-pattern)"
+            mask="url(#grid-mask)"
           />
           <AreaClosed<ChartPrice>
             data={prices}
@@ -165,21 +174,20 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             onMouseMove={handleTooltip}
             onMouseLeave={() => hideTooltip()}
             onTouchEnd={() => hideTooltip()}
-            fill="transparent"
-            stroke="hsl(var(--border))"
             strokeWidth={2}
+            stroke="hsl(var(--border))"
+            fill="transparent"
           />
         </Group>
         {tooltipData && (
-          <g>
-            <Line
-              from={{ x: tooltipLeft, y: margin.top }}
-              to={{ x: tooltipLeft, y: margin.top + innerHeight }}
-              stroke="hsl(var(--border))"
-              strokeWidth={2}
-              pointerEvents="none"
-            />
-          </g>
+          <Bar
+            width={2}
+            height={innerHeight}
+            x={tooltipLeft}
+            pointerEvents="none"
+            fill="hsl(var(--muted-foreground))"
+            mask="url(#tooltip-mask)"
+          />
         )}
       </svg>
       {tooltipOpen && tooltipData && (
