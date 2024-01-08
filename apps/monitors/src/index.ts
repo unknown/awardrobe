@@ -6,7 +6,7 @@ import {
   findPeriodicProducts,
   findProductsByProductCodes,
   findStores,
-  ProductWithStore,
+  ProductWithStoreHandle,
   Store,
 } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
@@ -70,7 +70,7 @@ async function main() {
       teamRefill: true,
       newJobCheckInterval: 500,
     },
-    async (job: Job<{ product: ProductWithStore }>) => {
+    async (job: Job<{ product: ProductWithStoreHandle }>) => {
       const { product } = job.data;
 
       await updateProduct(product);

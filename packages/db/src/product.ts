@@ -3,7 +3,7 @@ import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { products } from "./schema/products";
-import type { FullProduct, Product, ProductWithStore, Public } from "./schema/types";
+import type { FullProduct, Product, ProductWithStoreHandle, Public } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {
@@ -45,25 +45,25 @@ export function findProduct(options: FindProductOptions): Promise<Product | unde
   });
 }
 
-export async function findFrequentProducts(): Promise<ProductWithStore[]> {
+export async function findFrequentProducts(): Promise<ProductWithStoreHandle[]> {
   return db.query.products.findMany({
     where: (products) =>
       inArray(
         products.id,
         db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
       ),
-    with: { store: true },
+    with: { store: { columns: { handle: true } } },
   });
 }
 
-export async function findPeriodicProducts(): Promise<ProductWithStore[]> {
+export async function findPeriodicProducts(): Promise<ProductWithStoreHandle[]> {
   return db.query.products.findMany({
     where: (products) =>
       notInArray(
         products.id,
         db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
       ),
-    with: { store: true },
+    with: { store: { columns: { handle: true } } },
   });
 }
 
@@ -73,7 +73,7 @@ export type FindFeaturedProductsOptions = {
 
 export function findFeaturedProducts(
   options: FindFeaturedProductsOptions = {},
-): Promise<ProductWithStore[]> {
+): Promise<ProductWithStoreHandle[]> {
   const { limit = 24 } = options;
 
   return db.query.products.findMany({

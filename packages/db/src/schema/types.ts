@@ -26,8 +26,8 @@ export type NotificationWithVariant = ProductNotification & {
   productVariant: ProductVariant;
 };
 
-export type ProductWithStore = Product & {
-  store: Store;
+export type ProductWithStoreHandle = Product & {
+  store: { handle: string };
 };
 
 export type FullProduct = Product & {

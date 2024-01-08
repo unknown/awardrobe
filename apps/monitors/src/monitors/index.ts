@@ -12,7 +12,7 @@ import {
   findProductVariants,
   Price,
   ProductVariantWithPrice,
-  ProductWithStore,
+  ProductWithStoreHandle,
   Store,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
@@ -72,7 +72,7 @@ export async function insertProduct(productCode: string, store: Store) {
   return product;
 }
 
-export async function updateProduct(product: ProductWithStore) {
+export async function updateProduct(product: ProductWithStoreHandle) {
   const variants = await findProductVariants({ productId: product.id });
 
   const details = await getUpdatedDetails({
@@ -80,8 +80,8 @@ export async function updateProduct(product: ProductWithStore) {
     productCode: product.productCode,
   });
 
-  const allVariantsCallbacks = details.variants.map(async (variantInfo) => {
-    const productVariant = await getExistingVariant(variants, variantInfo);
+  const allVariantsCallbacks = details.variants.map((variantInfo) => {
+    const productVariant = getExistingVariant(variants, variantInfo);
 
     if (!productVariant) {
       return createProductVariant({ variantInfo, productId: product.id });
@@ -90,15 +90,11 @@ export async function updateProduct(product: ProductWithStore) {
     const flags = getFlags(variantInfo, productVariant.latestPrice);
     const options = { product, variantInfo, productVariant };
 
-    const singleVariantCallbacks = Object.entries(flags).map(([flag, value]) => {
-      if (!value) {
-        return null;
-      }
-      const callback = updateVariantCallbacks[flag as keyof VariantFlags](options);
-      return callback;
-    });
+    const singleVariantCallbacks = Object.entries(flags).map(([flag, value]) =>
+      value ? updateVariantCallbacks[flag as keyof VariantFlags](options) : null,
+    );
 
-    await Promise.allSettled(singleVariantCallbacks);
+    return Promise.allSettled(singleVariantCallbacks);
   });
 
   await Promise.allSettled(allVariantsCallbacks);
@@ -118,7 +114,7 @@ async function getUpdatedDetails(options: {
   return await adapter.getProductDetails(productCode);
 }
 
-async function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
+function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
   const inputAttributeMap = attributesToMap(variantInfo.attributes);
 
   const existingVariant = variants.find((productVariant) =>
