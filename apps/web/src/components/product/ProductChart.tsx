@@ -1,12 +1,11 @@
 "use client";
 
 import { Fragment } from "react";
-import { AxisBottom, AxisLeft } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
 import { localPoint } from "@visx/event";
-import { LinearGradient } from "@visx/gradient";
-import { GridColumns, GridRows } from "@visx/grid";
+import { LinearGradient, RadialGradient } from "@visx/gradient";
 import { Group } from "@visx/group";
+import { Pattern } from "@visx/pattern";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { AreaClosed, Bar, Line, LinePath } from "@visx/shape";
@@ -24,16 +23,12 @@ export type ChartPrice = {
 
 export type PricesChartProps = {
   prices: ChartPrice[] | null;
-  margin?: { top: number; right: number; bottom: number; left: number };
-  showAxes?: boolean;
 };
 
 type VisxChartProps = {
   prices: ChartPrice[];
   width: number;
   height: number;
-  margin: { top: number; right: number; bottom: number; left: number };
-  showAxes: boolean;
 };
 
 // accessors
@@ -42,31 +37,12 @@ const dateAccessor = (d: ChartPrice) => new Date(d.date);
 const priceAccessor = (d: ChartPrice) => d.price;
 const stockAccessor = (d: ChartPrice) => d.stock;
 
-const defaultMargin = { top: 10, right: 0, bottom: 35, left: 60 };
-
-export function ProductChart({
-  prices,
-  margin = defaultMargin,
-  showAxes = true,
-}: PricesChartProps) {
+export function ProductChart({ prices }: PricesChartProps) {
   const { isPending } = useProductInfo();
 
   return (
     <ParentSize className="relative">
       {({ width, height }) => {
-        const chartComponent =
-          prices === null ? (
-            <PlaceholderChart />
-          ) : (
-            <VisxChart
-              prices={prices}
-              width={width}
-              height={height}
-              margin={margin}
-              showAxes={showAxes}
-            />
-          );
-
         const overlayComponent = isPending ? (
           <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
             <p className="text-muted-foreground">Loading...</p>
@@ -82,7 +58,7 @@ export function ProductChart({
 
         return (
           <div className="relative h-[20rem] sm:h-[24rem] md:h-[28rem]">
-            {chartComponent}
+            <VisxChart prices={prices ?? []} width={width} height={height} />
             {overlayComponent}
           </div>
         );
@@ -91,50 +67,15 @@ export function ProductChart({
   );
 }
 
-function PlaceholderChart() {
-  return (
-    <svg
-      className="h-full w-full overflow-visible"
-      stroke="#e0e0e0"
-      strokeWidth={1}
-      shapeRendering="crispEdges"
-    >
-      <g>
-        <line x1="0%" x2="100%" y1="0%" y2="0%" />
-        <line x1="0%" x2="100%" y1="10%" y2="10%" />
-        <line x1="0%" x2="100%" y1="20%" y2="20%" />
-        <line x1="0%" x2="100%" y1="30%" y2="30%" />
-        <line x1="0%" x2="100%" y1="40%" y2="40%" />
-        <line x1="0%" x2="100%" y1="50%" y2="50%" />
-        <line x1="0%" x2="100%" y1="60%" y2="60%" />
-        <line x1="0%" x2="100%" y1="70%" y2="70%" />
-        <line x1="0%" x2="100%" y1="80%" y2="80%" />
-        <line x1="0%" x2="100%" y1="90%" y2="90%" />
-        <line x1="0%" x2="100%" y1="100%" y2="100%" />
-      </g>
-      <g>
-        <line x1="0%" x2="0%" y1="0%" y2="100%" />
-        <line x1="20%" x2="20%" y1="0%" y2="100%" />
-        <line x1="40%" x2="40%" y1="0%" y2="100%" />
-        <line x1="60%" x2="60%" y1="0%" y2="100%" />
-        <line x1="80%" x2="80%" y1="0%" y2="100%" />
-        <line x1="100%" x2="100%" y1="0%" y2="100%" />
-      </g>
-      <g strokeWidth={2}>
-        <line x1="0%" x2="100%" y1="0%" y2="0%" />
-        <line x1="0%" x2="100%" y1="100%" y2="100%" />
-        <line x1="0%" x2="0%" y1="0%" y2="100%" />
-        <line x1="100%" x2="100%" y1="0%" y2="100%" />
-      </g>
-    </svg>
-  );
-}
-
-function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) {
-  const { tooltipData, tooltipLeft, tooltipTop, tooltipOpen, showTooltip, hideTooltip } =
+function VisxChart({ prices, width, height }: VisxChartProps) {
+  const { tooltipData, tooltipLeft, tooltipOpen, showTooltip, hideTooltip } =
     useTooltip<ChartPrice>();
 
-  if (width <= 0 || height <= 0) return null;
+  if (width <= 0 || height <= 0) {
+    return null;
+  }
+
+  const margin = { top: 0, right: 0, bottom: 0, left: 0 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -178,6 +119,19 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
     <Fragment>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
+          <RadialGradient id="radialGradient" from="#DBDBDB" to="#4A4A4A" />
+          <mask id="radialMask">
+            <rect width={innerWidth} height={innerHeight} fill="url(#radialGradient)" />
+          </mask>
+          <Pattern id="grid-pattern" width={12} height={12}>
+            <circle cx={5} cy={5} r="1.5" stroke="none" fill="hsl(var(--border))" />
+          </Pattern>
+          <Bar
+            width={innerWidth}
+            height={innerHeight}
+            fill="url(#grid-pattern)"
+            mask="url(#radialMask)"
+          />
           <LinearGradient
             id="area-gradient"
             from="#A8FF99"
@@ -195,33 +149,6 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
             stroke="#398739"
             fill="url(#area-gradient)"
           />
-          {showAxes ? (
-            <Fragment>
-              <AxisLeft
-                scale={priceScale}
-                tickLabelProps={{
-                  className: "font-sans text-xs tabular-nums",
-                  fill: "hsl(var(--foreground))",
-                }}
-                tickFormat={(value) => formatCurrency(value.valueOf())}
-                hideTicks
-                hideAxisLine
-              />
-              <AxisBottom
-                top={innerHeight}
-                scale={timeScale}
-                tickLabelProps={{
-                  className: "font-sans text-xs tabular-nums",
-                  fill: "hsl(var(--foreground))",
-                }}
-                numTicks={Math.min(10, innerWidth / 80)}
-                hideTicks
-                hideAxisLine
-              />
-            </Fragment>
-          ) : null}
-          <GridRows scale={priceScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
-          <GridColumns scale={timeScale} width={innerWidth} height={innerHeight} stroke="#e0e0e0" />
           <LinePath<ChartPrice>
             data={prices}
             x={(d) => timeScale(dateAccessor(d))}
@@ -239,7 +166,7 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
             onMouseLeave={() => hideTooltip()}
             onTouchEnd={() => hideTooltip()}
             fill="transparent"
-            stroke="#e0e0e0"
+            stroke="hsl(var(--border))"
             strokeWidth={2}
           />
         </Group>
@@ -248,30 +175,28 @@ function VisxChart({ prices, width, height, margin, showAxes }: VisxChartProps) 
             <Line
               from={{ x: tooltipLeft, y: margin.top }}
               to={{ x: tooltipLeft, y: margin.top + innerHeight }}
-              stroke="#c0c0c0"
+              stroke="hsl(var(--border))"
               strokeWidth={2}
               pointerEvents="none"
-              strokeDasharray="5,2"
             />
           </g>
         )}
       </svg>
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds
-          className="border-border bg-background absolute space-y-1 rounded-md border p-3 shadow-lg"
-          style={{}}
-          key={Math.random()}
-          top={tooltipTop}
+          className="bg-background absolute flex items-center justify-center gap-1.5 rounded-md border p-2 text-sm shadow-sm"
+          unstyled={true}
           left={tooltipLeft}
+          offsetLeft={8}
+          offsetTop={8}
         >
-          <p className="text-sm">
-            Price:{" "}
-            <span className="tabular-nums">{formatCurrency(priceAccessor(tooltipData))}</span>
+          <span className="font-medium tabular-nums">
+            {formatCurrency(priceAccessor(tooltipData))}
             {!stockAccessor(tooltipData) ? "*" : undefined}
-          </p>
-          <p className="text-[12px] tabular-nums">
+          </span>
+          <span className="text-muted-foreground tabular-nums">
             {formatDate(new Date(dateAccessor(tooltipData)))}
-          </p>
+          </span>
         </TooltipWithBounds>
       )}
     </Fragment>

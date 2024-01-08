@@ -148,11 +148,7 @@ export default async function IndexPage() {
                 See how prices have changed over time to get the best deals.
               </p>
               <div className="relative aspect-video">
-                <ProductChart
-                  prices={mockPrices}
-                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                  showAxes={false}
-                />
+                <ProductChart prices={mockPrices} />
               </div>
             </div>
           </div>

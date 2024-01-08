@@ -38,8 +38,10 @@ export function formatCurrency(priceInCents: number) {
 
 export function formatDate(date: Date) {
   return date.toLocaleString(undefined, {
-    dateStyle: "short",
-    timeStyle: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
   });
 }
 

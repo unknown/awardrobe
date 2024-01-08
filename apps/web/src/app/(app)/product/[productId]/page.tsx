@@ -111,12 +111,12 @@ export default async function ProductPage({
           <h2 className="text-xl font-medium">Price History</h2>
           <div className="flex flex-wrap justify-between gap-4 pb-2">
             <DateRangeControl initialDateRange={initialDateRange} />
-            <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
-              <span className="flex items-center gap-2">
-                <div className="h-3 w-3 border border-[#398739] bg-[#A8FF99]/[0.3]" /> In Stock
+            <div className="text-muted-foreground flex flex-row flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
+              <span className="flex items-center gap-2.5">
+                <div className="h-2 w-2 border border-[#398739] bg-[#A8FF99]/[0.3]" /> In Stock
               </span>
-              <span className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-[#2b8bad]" /> {product.store.name}
+              <span className="flex items-center gap-2.5">
+                <div className="h-2 w-2 rounded-full bg-[#2b8bad]" /> {product.store.name}
               </span>
             </div>
           </div>
