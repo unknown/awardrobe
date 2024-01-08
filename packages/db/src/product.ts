@@ -3,7 +3,13 @@ import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { products } from "./schema/products";
-import type { FullProduct, Product, ProductWithStoreHandle, Public } from "./schema/types";
+import type {
+  FullProduct,
+  Product,
+  ProductWithStore,
+  ProductWithStoreHandle,
+  Public,
+} from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {
@@ -73,7 +79,7 @@ export type FindFeaturedProductsOptions = {
 
 export function findFeaturedProducts(
   options: FindFeaturedProductsOptions = {},
-): Promise<ProductWithStoreHandle[]> {
+): Promise<ProductWithStore[]> {
   const { limit = 24 } = options;
 
   return db.query.products.findMany({
