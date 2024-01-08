@@ -8,7 +8,7 @@ import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
 import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
 import { ProductInfoProvider } from "@/components/product/ProductInfoProvider";
-import { DateRange, getDateFromRange } from "@/utils/dates";
+import { DateRange, getDateFromRange, isDateRange } from "@/utils/dates";
 
 type ProductPageProps = {
   params: { productId: string };
@@ -48,7 +48,7 @@ export default async function ProductPage({
         })
       : product.variants[0]) ?? null;
 
-  const initialDateRange = range ?? "7d";
+  const initialDateRange = isDateRange(range) ? range : "7d";
   const initialAttributes: Record<string, string> = {};
   if (variant) {
     variant.attributes.forEach(({ name, value }) => {
