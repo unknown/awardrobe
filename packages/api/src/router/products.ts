@@ -6,16 +6,16 @@ import { createProduct, createProductVariants, findProductPublic, findStore } fr
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { publicProcedure, router } from "../trpc";
 
 export const productsRouter = router({
-  get: publicProcedure
+  getOrAdd: publicProcedure
     .input(
       z.object({
         productUrl: z.string().url(),
       }),
     )
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const { productUrl } = input;
 
       const adapter = getAdapterFromUrl(productUrl);
@@ -33,48 +33,15 @@ export const productsRouter = router({
         throw new Error("Error retrieving product code");
       }
 
-      const product = await findProductPublic({ productCode, storeId: store.id });
-
-      if (!product) {
-        throw new Error("Product not found");
-      }
-
-      return product;
-    }),
-  add: protectedProcedure
-    .input(
-      z.object({
-        productUrl: z.string().url(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const { productUrl } = input;
-
-      const adapter = getAdapterFromUrl(productUrl);
-      if (!adapter) {
-        throw new Error("Store not yet supported");
-      }
-
-      const [store, productCode] = await Promise.all([
-        findStore({ storeHandle: adapter.storeHandle }),
-        adapter.getProductCode(productUrl),
-      ]);
-
-      if (!store) {
-        throw new Error("Store not yet supported");
-      }
-
-      if (!productCode) {
-        throw new Error("Error retrieving product code");
+      const existingProduct = await findProductPublic({ productCode, storeId: store.id });
+      if (existingProduct) {
+        return existingProduct;
       }
 
       const details = await adapter.getProductDetails(productCode).catch((error) => {
         console.error(error);
-        return null;
-      });
-      if (!details) {
         throw new Error("Error retrieving product details");
-      }
+      });
 
       const product = await createProduct({
         productCode,

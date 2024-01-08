@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Search } from "@icons/Search";
-import { TRPCClientError } from "@trpc/client";
 import { Input } from "@ui/Input";
 import { toast } from "sonner";
 
@@ -22,16 +20,12 @@ export function ProductSearchbar() {
   const router = useRouter();
   const params = useParams<{ query?: string }>();
 
-  const [loading, setLoading] = useState(false);
-
-  const utils = api.useUtils();
-  const addProduct = api.products.add.useMutation({
+  const getOrAddProduct = api.products.getOrAdd.useMutation({
     onSuccess: (response) => {
-      utils.products.invalidate();
       router.push(`/product/${response.publicId}`);
     },
     onError: (error) => {
-      toast("Could not add product", {
+      toast("Could not find or add product", {
         description: error.message,
       });
     },
@@ -42,33 +36,10 @@ export function ProductSearchbar() {
       return;
     }
     if (isUrl(query)) {
-      setLoading(true);
-      const product = await utils.products.get.fetch({ productUrl: query }).catch((error) => {
-        if (error instanceof TRPCClientError) {
-          toast("Could not add product", {
-            description: error.message,
-            // TODO: better product not found check
-            action:
-              error.message === "Product not found"
-                ? {
-                    label: "Add product",
-                    onClick: () => {
-                      addProduct.mutate({ productUrl: query });
-                    },
-                  }
-                : undefined,
-          });
-        } else {
-          toast("Could not add product", {
-            description: "Unknown error",
-          });
-        }
+      const product = await getOrAddProduct.mutateAsync({
+        productUrl: query,
       });
-      setLoading(false);
-
-      if (product) {
-        router.push(`/product/${product.publicId}`);
-      }
+      router.push(`/product/${product.publicId}`);
     } else {
       router.push(`/search/${encodeURIComponent(query)}`);
     }
@@ -89,7 +60,7 @@ export function ProductSearchbar() {
             doSearch(event.currentTarget.value);
           }
         }}
-        disabled={loading || addProduct.isPending}
+        disabled={getOrAddProduct.isPending}
       />
     </div>
   );
