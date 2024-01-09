@@ -1,5 +1,8 @@
 "use client";
 
+import { buttonVariants } from "@ui/Button";
+import { twMerge } from "tailwind-merge";
+
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
@@ -14,7 +17,10 @@ export function PriceControls() {
   return (
     <div className="flex flex-wrap gap-3">
       <a
-        className="text-md inline-block rounded-md bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-600"
+        className={twMerge(
+          buttonVariants({ variant: "primary" }),
+          "text-md bg-sky-500 font-medium text-white hover:bg-sky-600",
+        )}
         href={productUrl}
         target="_blank"
         rel="noopener noreferrer"

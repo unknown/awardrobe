@@ -12,23 +12,22 @@ export type FindPriceOptions = {
   startDate: Date;
 };
 
-// TODO: extra query to get the variant
-export async function findPublicPrices(options: FindPriceOptions): Promise<Public<Price>[]> {
+export function findPublicPrices(options: FindPriceOptions): Promise<Public<Price>[]> {
   const { variantPublicId, startDate } = options;
 
-  const variant = await db.query.productVariants.findFirst({
-    where: eq(productVariants.publicId, variantPublicId),
-  });
-
-  if (!variant) {
-    throw new Error("Product variant does not exist");
-  }
-
   return db.query.prices.findMany({
-    where: and(eq(prices.productVariantId, variant.id), gte(prices.timestamp, startDate)),
+    where: and(
+      eq(
+        prices.productVariantId,
+        db
+          .select({ id: productVariants.id })
+          .from(productVariants)
+          .where(eq(productVariants.publicId, variantPublicId)),
+      ),
+      gte(prices.timestamp, startDate),
+    ),
     columns: { id: false, productVariantId: false },
     orderBy: asc(prices.timestamp),
-    limit: 1000,
   });
 }
 

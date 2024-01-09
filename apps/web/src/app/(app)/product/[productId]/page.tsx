@@ -8,7 +8,8 @@ import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
 import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
 import { ProductInfoProvider } from "@/components/product/ProductInfoProvider";
-import { getDateFromRange, isDateRange } from "@/utils/dates";
+import { DateRange, getDateFromRange, isDateRange } from "@/utils/dates";
+import { formatCurrency } from "@/utils/utils";
 
 type ProductPageProps = {
   params: { productId: string };
@@ -48,7 +49,7 @@ export default async function ProductPage({
         })
       : product.variants[0]) ?? null;
 
-  const initialDateRange = isDateRange(range) ? range : "7d";
+  const initialDateRange: DateRange = isDateRange(range) ? range : "3m";
   const initialAttributes: Record<string, string> = {};
   if (variant) {
     variant.attributes.forEach(({ name, value }) => {
@@ -69,6 +70,19 @@ export default async function ProductPage({
       })
     : null;
   const lastPrice = prices?.at(-1);
+  const minMaxPrices = prices?.reduce(
+    (acc, price) => {
+      if (acc.min === null || price.priceInCents < acc.min) {
+        acc.min = price.priceInCents;
+      }
+      if (acc.max === null || price.priceInCents > acc.max) {
+        acc.max = price.priceInCents;
+      }
+      return acc;
+    },
+    { min: null as number | null, max: null as number | null },
+  );
+
   const chartPrices: ChartPrice[] | null =
     prices !== null && lastPrice
       ? [...prices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
@@ -99,17 +113,19 @@ export default async function ProductPage({
                 alt={`Image of ${product.name}`}
               />
             </div>
-            <div className="flex w-full flex-col gap-2">
-              <p className="text-muted-foreground text-sm">{product.store.name}</p>
-              <h1 className="text-3xl font-medium">{product.name}</h1>
+            <div className="flex w-full flex-col gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{product.store.name}</p>
+                <h1 className="text-3xl font-medium">{product.name}</h1>
+              </div>
               <VariantControls />
               <PriceControls />
             </div>
           </div>
         </div>
-        <div className="container max-w-4xl space-y-2">
+        <div className="container max-w-4xl space-y-3">
           <h2 className="text-xl font-medium">Price History</h2>
-          <div className="flex flex-wrap justify-between gap-4 pb-2">
+          <div className="flex flex-wrap justify-between gap-4">
             <DateRangeControl initialDateRange={initialDateRange} />
             <div className="text-muted-foreground flex flex-row flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
               <span className="flex items-center gap-2.5">
@@ -121,6 +137,26 @@ export default async function ProductPage({
             </div>
           </div>
           <ProductChart prices={chartPrices} />
+          <div className="flex flex-wrap items-center justify-stretch gap-3 text-sm font-medium">
+            {lastPrice ? (
+              <div className="flex flex-1 justify-between rounded-md border p-4">
+                <p className="text-muted-foreground">Current price</p>
+                <p className="tabular-nums">{formatCurrency(lastPrice.priceInCents)}</p>
+              </div>
+            ) : null}
+            {minMaxPrices?.min ? (
+              <div className="flex flex-1 justify-between rounded-md border p-4">
+                <p className="text-muted-foreground">Lowest price</p>
+                <p className="tabular-nums">{formatCurrency(minMaxPrices.min)}</p>
+              </div>
+            ) : null}
+            {minMaxPrices?.max ? (
+              <div className="flex flex-1 justify-between rounded-md border p-4">
+                <p className="text-muted-foreground">Highest price</p>
+                <p className="tabular-nums">{formatCurrency(minMaxPrices.max)}</p>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
     </ProductInfoProvider>
