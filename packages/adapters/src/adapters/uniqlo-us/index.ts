@@ -1,6 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -77,7 +78,7 @@ export const UniqloUS: StoreAdapter = {
     const [l2sResponse, detailsResponse] = await Promise.all([
       proxiedAxios.get(l2sEndpoint),
       proxiedAxios.get(detailsEndpoint),
-    ]);
+    ]).catch(handleAxiosError);
     const timestamp = new Date();
 
     const [l2sData, detailsData] = [

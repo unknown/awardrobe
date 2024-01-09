@@ -10,6 +10,7 @@
     "clean": "rm -rf .turbo node_modules dist"
   },
   "dependencies": {
+    "axios": "^1.6.5",
     "node-html-parser": "^6.1.11",
     "zod": "^3.22.4"
   },
