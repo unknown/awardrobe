@@ -37,17 +37,27 @@ export const ZaraUS: StoreAdapter = {
       ?.match(challengeRegex)?.[1];
 
     if (!challengeRoute) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get challenge route",
+      });
     }
-    const challengeUrl = `https://www.zara.com${challengeRoute}`;
 
+    const challengeUrl = `https://www.zara.com${challengeRoute}`;
     const productResponse = await proxiedAxios.get(challengeUrl);
     const root = parse(productResponse.data);
 
     const htmlId = root.querySelector("html")?.getAttribute("id");
     const productId = htmlId?.split("-").pop();
 
-    return productId ?? null;
+    if (!productId) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get product id",
+      });
+    }
+
+    return productId;
   },
 
   async getProductDetails(productCode: string) {

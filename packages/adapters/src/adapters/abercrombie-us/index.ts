@@ -68,7 +68,10 @@ export const AbercrombieUS: StoreAdapter = {
 
     const productCode = matches?.[1];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
@@ -79,7 +82,14 @@ export const AbercrombieUS: StoreAdapter = {
       .querySelector("meta[name=branch:deeplink:collectionID]")
       ?.getAttribute("content");
 
-    return collectionId ?? null;
+    if (!collectionId) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get product code from product page",
+      });
+    }
+
+    return collectionId;
   },
 
   async getProductDetails(productCode: string) {

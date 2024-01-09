@@ -49,7 +49,10 @@ export const LevisUS: StoreAdapter = {
 
     const productCode = matches?.[0];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const swatchesEndpoint = `https://www.levi.com/mule/lma/v1/leviUSSite/products/${productCode}/swatchdata?fields=FULL&lang=en_US`;
@@ -64,7 +67,15 @@ export const LevisUS: StoreAdapter = {
       });
     }
 
-    return result.data.swatches[0]?.code ?? null;
+    const swatchCode = result.data.swatches[0]?.code;
+    if (!swatchCode) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get swatch code",
+      });
+    }
+
+    return swatchCode;
   },
 
   async getProductDetails(productCode) {

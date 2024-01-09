@@ -23,6 +23,6 @@ export interface StoreAdapter {
   storeHandle: string;
   // TODO: create pagination interface?
   getProducts: (limit?: number) => Promise<Set<string>>;
-  getProductCode: (url: string) => Promise<string | null>;
+  getProductCode: (url: string) => Promise<string>;
   getProductDetails: (productCode: string) => Promise<ProductDetails>;
 }

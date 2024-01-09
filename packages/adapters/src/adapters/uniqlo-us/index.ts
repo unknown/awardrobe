@@ -64,7 +64,10 @@ export const UniqloUS: StoreAdapter = {
 
     const productCode = matches?.[0];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
@@ -81,7 +84,10 @@ export const UniqloUS: StoreAdapter = {
     }
 
     if (result.data.status === "nok") {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Response status is nok",
+      });
     }
 
     return productCode;
