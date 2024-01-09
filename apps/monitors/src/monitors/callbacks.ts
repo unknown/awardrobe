@@ -1,23 +1,63 @@
 import { VariantInfo } from "@awardrobe/adapters";
 import {
   createLatestPrice,
+  findNotificationsByProduct,
   findPriceDropNotifications,
   findRestockNotifications,
+  findStore,
   Product,
   ProductVariant,
+  ProductWithStoreHandle,
   updatePriceDropLastPing,
   updateProductsDelisted,
   updateRestockLastPing,
 } from "@awardrobe/db";
-import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
+import {
+  DelistedNotificationEmail,
+  PriceNotificationEmail,
+  render,
+  resend,
+  StockNotificationEmail,
+} from "@awardrobe/emails";
 
 // TODO: config file?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 
-export async function handleDelistedProduct(options: { product: Product }) {
+export async function handleDelistedProduct(options: { product: ProductWithStoreHandle }) {
   const { product } = options;
 
+  console.log(`Delisting ${product.name}`);
+
   await updateProductsDelisted({ productIds: [product.id], delisted: true });
+
+  const store = await findStore({ storeHandle: product.store.handle });
+  const url = new URL(`/product/${product.publicId}`, baseUrl);
+
+  if (!store) {
+    throw new Error(`Store ${product.store.handle} not found`);
+  }
+
+  const notifications = await findNotificationsByProduct({ productId: product.id });
+
+  const renderedEmail = await render(
+    DelistedNotificationEmail({
+      productName: product.name,
+      storeName: store.name,
+      productUrl: url.toString(),
+    }),
+  );
+
+  await Promise.allSettled(
+    notifications.map(async (notification) => {
+      if (!notification.user.email) return;
+      await resend.emails.send({
+        to: [notification.user.email],
+        from: "Awardrobe <notifications@getawardrobe.com>",
+        subject: "Product delisted",
+        html: renderedEmail,
+      });
+    }),
+  );
 }
 
 export async function handleOutdatedVariant(options: {
