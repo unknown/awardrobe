@@ -1,8 +1,8 @@
 import { AxiosError } from "axios";
 
 export const AdaptersErrorNames = [
+  "INVALID_RESPONSE",
   "PRODUCT_NOT_FOUND",
-  "SCHEMA_INVALID_INPUT",
   "PRODUCT_CODE_NOT_FOUND",
 ] as const;
 export type AdaptersErrorName = (typeof AdaptersErrorNames)[number];

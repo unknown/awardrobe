@@ -71,7 +71,7 @@ export const ZaraUS: StoreAdapter = {
     const details = productSchema.safeParse(productResponse.data);
     if (!details.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse product response",
         cause: details.error,
       });

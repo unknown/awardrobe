@@ -94,7 +94,7 @@ export async function updateProduct(product: ProductWithStoreHandle) {
       if (error.name === "PRODUCT_NOT_FOUND") {
         await handleDelistedProduct({ product });
         return null;
-      } else if (error.name === "SCHEMA_INVALID_INPUT") {
+      } else if (error.name === "INVALID_RESPONSE") {
         // TODO: log this better
         console.error(error);
         return null;

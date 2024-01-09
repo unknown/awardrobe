@@ -37,14 +37,17 @@ export const UniqloUS: StoreAdapter = {
       const result = productsSchema.safeParse(productsResponse.data);
       if (!result.success) {
         throw new AdaptersError({
-          name: "SCHEMA_INVALID_INPUT",
+          name: "INVALID_RESPONSE",
           message: "Failed to parse products response",
           cause: result.error,
         });
       }
 
       if (result.data.status === "nok") {
-        throw new Error(`Failed to get products`);
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Response status is nok",
+        });
       }
 
       const { items, pagination } = result.data.result;
@@ -77,7 +80,7 @@ export const UniqloUS: StoreAdapter = {
     const result = detailsSchema.safeParse(searchResponse.data);
     if (!result.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse details response",
         cause: result.error,
       });
@@ -106,7 +109,7 @@ export const UniqloUS: StoreAdapter = {
     const l2sResult = l2sSchema.safeParse(l2sResponse.data);
     if (!l2sResult.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse l2s response",
         cause: l2sResult.error,
       });
@@ -115,14 +118,17 @@ export const UniqloUS: StoreAdapter = {
     const detailsResult = detailsSchema.safeParse(detailsResponse.data);
     if (!detailsResult.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse details response",
         cause: detailsResult.error,
       });
     }
 
     if (l2sResult.data.status === "nok" || detailsResult.data.status === "nok") {
-      throw new Error(`Failed to get product details for ${productCode}`);
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Response status is nok",
+      });
     }
 
     const { l2s, stocks, prices } = l2sResult.data.result;
@@ -142,7 +148,10 @@ export const UniqloUS: StoreAdapter = {
       const size = options.sizes.find((size) => size.code === variant.size.code);
       const pld = options.plds.find((pld) => pld.code === variant.pld.code);
       if (!color || !size || !pld) {
-        throw new Error("Failed to parse product details");
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Response status is nok",
+        });
       }
 
       const attributes: VariantAttribute[] = [];

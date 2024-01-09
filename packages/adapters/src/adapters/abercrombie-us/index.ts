@@ -45,7 +45,7 @@ export const AbercrombieUS: StoreAdapter = {
       const result = searchSchema.safeParse(searchResponse.data);
       if (!result.success) {
         throw new AdaptersError({
-          name: "SCHEMA_INVALID_INPUT",
+          name: "INVALID_RESPONSE",
           message: "Failed to parse search response",
           cause: result.error,
         });
@@ -100,7 +100,7 @@ export const AbercrombieUS: StoreAdapter = {
     const result = collectionSchema.safeParse(collectionResponse.data);
     if (!result.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse collection response",
         cause: result.error,
       });
@@ -108,7 +108,10 @@ export const AbercrombieUS: StoreAdapter = {
 
     const { products } = result.data;
     if (products[0] === undefined) {
-      throw new Error(`Failed to get product details for ${productCode}. No products found.`);
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Empty products array",
+      });
     }
 
     const variants: VariantInfo[] = [];

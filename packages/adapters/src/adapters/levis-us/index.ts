@@ -61,7 +61,7 @@ export const LevisUS: StoreAdapter = {
     const result = swatchesSchema.safeParse(swatchesResponse.data);
     if (!result.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse swatches response",
         cause: result.error,
       });
@@ -89,7 +89,7 @@ export const LevisUS: StoreAdapter = {
     const swatchesResult = swatchesSchema.safeParse(swatchesResponse.data);
     if (!swatchesResult.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse swatches response",
         cause: swatchesResult.error,
       });
@@ -98,7 +98,7 @@ export const LevisUS: StoreAdapter = {
     const detailsResult = productSchema.safeParse(detailsResponse.data);
     if (!detailsResult.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse details response",
         cause: detailsResult.error,
       });
@@ -123,7 +123,7 @@ export const LevisUS: StoreAdapter = {
       const swatchDetailsResult = productSchema.safeParse(swatchDetailsResponse.data);
       if (!swatchDetailsResult.success) {
         throw new AdaptersError({
-          name: "SCHEMA_INVALID_INPUT",
+          name: "INVALID_RESPONSE",
           message: "Failed to parse swatch details response",
           cause: swatchDetailsResult.error,
         });
@@ -137,7 +137,7 @@ export const LevisUS: StoreAdapter = {
 
         if (!attributes) {
           throw new AdaptersError({
-            name: "SCHEMA_INVALID_INPUT",
+            name: "INVALID_RESPONSE",
             message: "Failed to parse variant attributes",
           });
         }

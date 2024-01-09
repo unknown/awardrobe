@@ -49,7 +49,7 @@ export const JCrewUS: StoreAdapter = {
     const result = productInfoSchema.safeParse(productResponse.data);
     if (!result.success) {
       throw new AdaptersError({
-        name: "SCHEMA_INVALID_INPUT",
+        name: "INVALID_RESPONSE",
         message: "Failed to parse product response",
         cause: result.error,
       });
