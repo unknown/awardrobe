@@ -184,3 +184,13 @@ export function findFullProductPublic(
     },
   });
 }
+
+export type DelistProductOptions = {
+  productId: number;
+};
+
+export async function delistProduct(options: DelistProductOptions): Promise<void> {
+  const { productId } = options;
+
+  await db.update(products).set({ delisted: true }).where(eq(products.id, productId));
+}

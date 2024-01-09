@@ -1,4 +1,5 @@
 import {
+  AdaptersError,
   downloadImage,
   getAdapter,
   ProductDetails,
@@ -19,8 +20,12 @@ import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
 import { shallowEquals } from "../utils/utils";
-import { updateVariantCallbacks } from "./callbacks";
-import { VariantFlags } from "./types";
+import {
+  handleDelistedProduct,
+  handleOutdatedVariant,
+  handlePriceDrop,
+  handleRestock,
+} from "./callbacks";
 
 // TODO: relocate this?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -78,7 +83,19 @@ export async function updateProduct(product: ProductWithStoreHandle) {
   const details = await getUpdatedDetails({
     storeHandle: product.store.handle,
     productCode: product.productCode,
+  }).catch(async (error) => {
+    if (error instanceof AdaptersError) {
+      if (error.name === "PRODUCT_NOT_FOUND") {
+        await handleDelistedProduct({ product });
+        return null;
+      }
+    }
+    throw error;
   });
+
+  if (!details) {
+    return;
+  }
 
   const allVariantsCallbacks = details.variants.map((variantInfo) => {
     const productVariant = getExistingVariant(variants, variantInfo);
@@ -87,14 +104,16 @@ export async function updateProduct(product: ProductWithStoreHandle) {
       return createProductVariant({ variantInfo, productId: product.id });
     }
 
-    const flags = getFlags(variantInfo, productVariant.latestPrice);
-    const options = { product, variantInfo, productVariant };
-
-    const singleVariantCallbacks = Object.entries(flags).map(([flag, value]) =>
-      value ? updateVariantCallbacks[flag as keyof VariantFlags](options) : null,
+    const { isOutdated, hasPriceDropped, hasRestocked } = getFlags(
+      variantInfo,
+      productVariant.latestPrice,
     );
 
-    return Promise.allSettled(singleVariantCallbacks);
+    return Promise.allSettled([
+      isOutdated ? handleOutdatedVariant({ variantInfo, productVariant }) : null,
+      hasPriceDropped ? handlePriceDrop({ product, variantInfo, productVariant }) : null,
+      hasRestocked ? handleRestock({ product, variantInfo, productVariant }) : null,
+    ]);
   });
 
   await Promise.allSettled(allVariantsCallbacks);

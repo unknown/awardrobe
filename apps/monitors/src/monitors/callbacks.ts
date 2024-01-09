@@ -1,32 +1,43 @@
+import { VariantInfo } from "@awardrobe/adapters";
 import {
   createLatestPrice,
+  delistProduct,
   findPriceDropNotifications,
   findRestockNotifications,
+  Product,
+  ProductVariant,
   updatePriceDropLastPing,
   updateRestockLastPing,
 } from "@awardrobe/db";
 import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
 
-import { UpdateVariantCallback, VariantFlags } from "./types";
-
 // TODO: config file?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 
-const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({
-  variantInfo,
-  productVariant,
+export async function handleDelistedProduct(options: { product: Product }) {
+  const { product } = options;
+
+  await delistProduct({ productId: product.id });
+}
+
+export async function handleOutdatedVariant(options: {
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { variantInfo, productVariant } = options;
+
   await createLatestPrice({
     variantInfo,
     variantId: productVariant.id,
   });
-};
+}
 
-const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop({
-  product,
-  variantInfo,
-  productVariant,
+export async function handlePriceDrop(options: {
+  product: Product;
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { product, variantInfo, productVariant } = options;
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
@@ -66,13 +77,14 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
       });
     }),
   );
-};
+}
 
-const restockCallback: UpdateVariantCallback = async function handleRestock({
-  product,
-  variantInfo,
-  productVariant,
+export async function handleRestock(options: {
+  product: Product;
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { product, variantInfo, productVariant } = options;
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
@@ -112,10 +124,4 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
       });
     }),
   );
-};
-
-export const updateVariantCallbacks: Record<keyof VariantFlags, UpdateVariantCallback> = {
-  isOutdated: outdatedCallback,
-  hasPriceDropped: priceDropCallback,
-  hasRestocked: restockCallback,
-};
+}

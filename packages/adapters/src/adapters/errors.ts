@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 
-export const AdaptersErrorNames = ["DELISTED_PRODUCT"] as const;
+export const AdaptersErrorNames = ["PRODUCT_NOT_FOUND"] as const;
 export type AdaptersErrorName = (typeof AdaptersErrorNames)[number];
 
 export class AdaptersError extends Error {
@@ -20,8 +20,8 @@ export function handleAxiosError(error: any): never {
   if (error instanceof AxiosError) {
     if (error.response?.status === 404) {
       throw new AdaptersError({
-        name: "DELISTED_PRODUCT",
-        message: "Product is delisted.",
+        name: "PRODUCT_NOT_FOUND",
+        message: "Request returned status code 404",
         cause: error,
       });
     }
