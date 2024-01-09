@@ -127,8 +127,9 @@ async function main() {
         newProductCodes.delete(product.productCode);
       });
 
-      console.log(`Inserting ${newProductCodes.size} products for ${store.handle}`);
-      console.log(`Relisting ${delistedProductIds.length} products for ${store.handle}`);
+      console.log(
+        `Inserting ${newProductCodes.size} and relisting ${delistedProductIds.length} products for ${store.handle}`,
+      );
 
       await updateProductsDelisted({
         productIds: delistedProductIds,
