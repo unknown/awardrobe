@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   index,
   int,
   mysqlTable,
@@ -21,6 +22,7 @@ export const products = mysqlTable(
     storeId: int("storeId").notNull(),
     productCode: varchar("productCode", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
+    delisted: boolean("delisted").notNull().default(false),
   },
   (product) => ({
     publicIdIdx: uniqueIndex("publicIdIdx").on(product.publicId),
