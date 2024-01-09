@@ -1,7 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -34,12 +34,20 @@ export const UniqloUS: StoreAdapter = {
 
       const productsResponse = await proxiedAxios.get(productsEndpoint, { params });
 
-      const productsData = productsSchema.parse(productsResponse.data);
-      if (productsData.status === "nok") {
+      const result = productsSchema.safeParse(productsResponse.data);
+      if (!result.success) {
+        throw new AdaptersError({
+          name: "SCHEMA_INVALID_INPUT",
+          message: "Failed to parse products response",
+          cause: result.error,
+        });
+      }
+
+      if (result.data.status === "nok") {
         throw new Error(`Failed to get products`);
       }
 
-      const { items, pagination } = productsData.result;
+      const { items, pagination } = result.data.result;
       items.forEach((item) => productCodes.add(item.productId));
 
       if (!limit) {
@@ -63,8 +71,16 @@ export const UniqloUS: StoreAdapter = {
 
     const searchResponse = await proxiedAxios.get(detailsEndpoint);
 
-    const detailsResult = detailsSchema.parse(searchResponse.data);
-    if (detailsResult.status === "nok") {
+    const result = detailsSchema.safeParse(searchResponse.data);
+    if (!result.success) {
+      throw new AdaptersError({
+        name: "SCHEMA_INVALID_INPUT",
+        message: "Failed to parse details response",
+        cause: result.error,
+      });
+    }
+
+    if (result.data.status === "nok") {
       return null;
     }
 
@@ -81,17 +97,30 @@ export const UniqloUS: StoreAdapter = {
     ]).catch(handleAxiosError);
     const timestamp = new Date();
 
-    const [l2sData, detailsData] = [
-      l2sSchema.parse(l2sResponse.data),
-      detailsSchema.parse(detailsResponse.data),
-    ];
+    const l2sResult = l2sSchema.safeParse(l2sResponse.data);
+    if (!l2sResult.success) {
+      throw new AdaptersError({
+        name: "SCHEMA_INVALID_INPUT",
+        message: "Failed to parse l2s response",
+        cause: l2sResult.error,
+      });
+    }
 
-    if (l2sData.status === "nok" || detailsData.status === "nok") {
+    const detailsResult = detailsSchema.safeParse(detailsResponse.data);
+    if (!detailsResult.success) {
+      throw new AdaptersError({
+        name: "SCHEMA_INVALID_INPUT",
+        message: "Failed to parse details response",
+        cause: detailsResult.error,
+      });
+    }
+
+    if (l2sResult.data.status === "nok" || detailsResult.data.status === "nok") {
       throw new Error(`Failed to get product details for ${productCode}`);
     }
 
-    const { l2s, stocks, prices } = l2sData.result;
-    const { name, longDescription, images, ...options } = detailsData.result;
+    const { l2s, stocks, prices } = l2sResult.data.result;
+    const { name, longDescription, images, ...options } = detailsResult.data.result;
 
     const variants: VariantInfo[] = [];
     l2s.forEach((variant) => {

@@ -2,7 +2,7 @@ import parse from "node-html-parser";
 
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantInfo } from "../types";
 import { Product, productSchema } from "./schemas";
 
@@ -58,8 +58,16 @@ export const ZaraUS: StoreAdapter = {
       .catch(handleAxiosError);
     const timestamp = new Date();
 
-    const product = productSchema.parse(productResponse.data);
-    const { name, detail, seo } = product;
+    const details = productSchema.safeParse(productResponse.data);
+    if (!details.success) {
+      throw new AdaptersError({
+        name: "SCHEMA_INVALID_INPUT",
+        message: "Failed to parse product response",
+        cause: details.error,
+      });
+    }
+
+    const { name, detail, seo } = details.data;
 
     const variants: VariantInfo[] = detail.colors.flatMap((color) => {
       const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.seoProductId}.html?v1=${color.productId}`;
@@ -79,7 +87,7 @@ export const ZaraUS: StoreAdapter = {
       name,
       variants,
       description: seo.description,
-      imageUrl: getImageUrl(product) ?? undefined,
+      imageUrl: getImageUrl(details.data) ?? undefined,
     };
   },
 };
