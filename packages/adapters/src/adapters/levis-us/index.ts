@@ -1,7 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { GalleryImage, productSchema, swatchesSchema } from "./schemas";
 
@@ -49,15 +49,33 @@ export const LevisUS: StoreAdapter = {
 
     const productCode = matches?.[0];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const swatchesEndpoint = `https://www.levi.com/mule/lma/v1/leviUSSite/products/${productCode}/swatchdata?fields=FULL&lang=en_US`;
     const swatchesResponse = await proxiedAxios.get(swatchesEndpoint, { headers });
 
-    const swatches = swatchesSchema.parse(swatchesResponse.data);
+    const result = swatchesSchema.safeParse(swatchesResponse.data);
+    if (!result.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse swatches response",
+        cause: result.error,
+      });
+    }
 
-    return swatches.swatches[0]?.code ?? null;
+    const swatchCode = result.data.swatches[0]?.code;
+    if (!swatchCode) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get swatch code",
+      });
+    }
+
+    return swatchCode;
   },
 
   async getProductDetails(productCode) {
@@ -67,38 +85,69 @@ export const LevisUS: StoreAdapter = {
       proxiedAxios.get(swatchesEndpoint, { headers }),
       proxiedAxios.get(detailsEndpoint, { headers }),
     ]).catch(handleAxiosError);
-    const swatches = swatchesSchema.parse(swatchesResponse.data);
-    const details = productSchema.parse(detailsResponse.data);
+
+    const swatchesResult = swatchesSchema.safeParse(swatchesResponse.data);
+    if (!swatchesResult.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse swatches response",
+        cause: swatchesResult.error,
+      });
+    }
+
+    const detailsResult = productSchema.safeParse(detailsResponse.data);
+    if (!detailsResult.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse details response",
+        cause: detailsResult.error,
+      });
+    }
 
     // two types of sizing schemes: pants and general
-    const isPants = "variantWaist" in details;
+    const isPants = "variantWaist" in detailsResult.data;
+
+    const { swatches } = swatchesResult.data;
+    const { name, description, galleryImageList, url } = detailsResult.data;
 
     // TODO: make this concurrent?
     // TODO: duplicate details request to first swatch
     const variants: VariantInfo[] = [];
-    for (const swatch of swatches.swatches) {
-      const detailsEndpoint = `https://www.levi.com/mule/lma/v1/leviUSSite/products/${swatch.code}?fields=FULL&lang=en_US`;
-      const detailsResponse = await proxiedAxios
-        .get(detailsEndpoint, { headers })
+    for (const swatch of swatches) {
+      const swatchDetailsEndpoint = `https://www.levi.com/mule/lma/v1/leviUSSite/products/${swatch.code}?fields=FULL&lang=en_US`;
+      const swatchDetailsResponse = await proxiedAxios
+        .get(swatchDetailsEndpoint, { headers })
         .catch(handleAxiosError);
-      const details = productSchema.parse(detailsResponse.data);
       const timestamp = new Date();
 
-      const swatchVariants: VariantInfo[] = details.variantOptions.map((variant) => {
+      const swatchDetailsResult = productSchema.safeParse(swatchDetailsResponse.data);
+      if (!swatchDetailsResult.success) {
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Failed to parse swatch details response",
+          cause: swatchDetailsResult.error,
+        });
+      }
+
+      const { variantOptions, colorName, url } = swatchDetailsResult.data;
+      const swatchVariants: VariantInfo[] = variantOptions.map((variant) => {
         const attributes = isPants
           ? parsePantsAttributes(variant.displaySizeDescription)
           : parseGeneralAttributes(variant.displaySizeDescription);
 
         if (!attributes) {
-          throw new Error("Failed to parse product attributes");
+          throw new AdaptersError({
+            name: "INVALID_RESPONSE",
+            message: "Failed to parse variant attributes",
+          });
         }
 
         return {
           timestamp,
-          attributes: [{ name: "Color", value: details.colorName }, ...attributes],
+          attributes: [{ name: "Color", value: colorName }, ...attributes],
           inStock: variant.stock.stockLevel > 0 && !variant.comingSoon,
           priceInCents: dollarsToCents(variant.priceData.formattedValue),
-          productUrl: `https://www.levi.com/US/en_US${details.url}`,
+          productUrl: `https://www.levi.com/US/en_US${url}`,
         };
       });
 
@@ -106,11 +155,11 @@ export const LevisUS: StoreAdapter = {
     }
 
     return {
+      name,
       variants,
-      name: details.name,
-      productUrl: `https://www.levi.com/US/en_US${details.url}`,
-      description: details.description,
-      imageUrl: getImageUrl(details.galleryImageList.galleryImage) ?? undefined,
+      description,
+      productUrl: `https://www.levi.com/US/en_US${url}`,
+      imageUrl: getImageUrl(galleryImageList.galleryImage) ?? undefined,
     };
   },
 };

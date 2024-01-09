@@ -1,7 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -34,12 +34,23 @@ export const UniqloUS: StoreAdapter = {
 
       const productsResponse = await proxiedAxios.get(productsEndpoint, { params });
 
-      const productsData = productsSchema.parse(productsResponse.data);
-      if (productsData.status === "nok") {
-        throw new Error(`Failed to get products`);
+      const result = productsSchema.safeParse(productsResponse.data);
+      if (!result.success) {
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Failed to parse products response",
+          cause: result.error,
+        });
       }
 
-      const { items, pagination } = productsData.result;
+      if (result.data.status === "nok") {
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Response status is nok",
+        });
+      }
+
+      const { items, pagination } = result.data.result;
       items.forEach((item) => productCodes.add(item.productId));
 
       if (!limit) {
@@ -56,16 +67,30 @@ export const UniqloUS: StoreAdapter = {
 
     const productCode = matches?.[0];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
 
     const searchResponse = await proxiedAxios.get(detailsEndpoint);
 
-    const detailsResult = detailsSchema.parse(searchResponse.data);
-    if (detailsResult.status === "nok") {
-      return null;
+    const result = detailsSchema.safeParse(searchResponse.data);
+    if (!result.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse details response",
+        cause: result.error,
+      });
+    }
+
+    if (result.data.status === "nok") {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Response status is nok",
+      });
     }
 
     return productCode;
@@ -81,17 +106,33 @@ export const UniqloUS: StoreAdapter = {
     ]).catch(handleAxiosError);
     const timestamp = new Date();
 
-    const [l2sData, detailsData] = [
-      l2sSchema.parse(l2sResponse.data),
-      detailsSchema.parse(detailsResponse.data),
-    ];
-
-    if (l2sData.status === "nok" || detailsData.status === "nok") {
-      throw new Error(`Failed to get product details for ${productCode}`);
+    const l2sResult = l2sSchema.safeParse(l2sResponse.data);
+    if (!l2sResult.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse l2s response",
+        cause: l2sResult.error,
+      });
     }
 
-    const { l2s, stocks, prices } = l2sData.result;
-    const { name, longDescription, images, ...options } = detailsData.result;
+    const detailsResult = detailsSchema.safeParse(detailsResponse.data);
+    if (!detailsResult.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse details response",
+        cause: detailsResult.error,
+      });
+    }
+
+    if (l2sResult.data.status === "nok" || detailsResult.data.status === "nok") {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Response status is nok",
+      });
+    }
+
+    const { l2s, stocks, prices } = l2sResult.data.result;
+    const { name, longDescription, images, ...options } = detailsResult.data.result;
 
     const variants: VariantInfo[] = [];
     l2s.forEach((variant) => {
@@ -107,7 +148,10 @@ export const UniqloUS: StoreAdapter = {
       const size = options.sizes.find((size) => size.code === variant.size.code);
       const pld = options.plds.find((pld) => pld.code === variant.pld.code);
       if (!color || !size || !pld) {
-        throw new Error("Failed to parse product details");
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Response status is nok",
+        });
       }
 
       const attributes: VariantAttribute[] = [];

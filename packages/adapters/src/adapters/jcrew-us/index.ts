@@ -1,7 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantInfo } from "../types";
 import { productInfoSchema } from "./schemas";
 
@@ -21,8 +21,16 @@ export const JCrewUS: StoreAdapter = {
   async getProductCode(url: string) {
     const productCodeRegex = /\/([a-zA-Z0-9]+)/g;
     const matches = url.match(productCodeRegex);
+
     const productCode = matches?.at(-1)?.slice(1);
-    return productCode ?? null;
+    if (!productCode) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
+    }
+
+    return productCode;
   },
 
   async getProductDetails(productCode: string) {
@@ -38,8 +46,17 @@ export const JCrewUS: StoreAdapter = {
       .catch(handleAxiosError);
     const timestamp = new Date();
 
-    const productInfo = productInfoSchema.parse(productResponse.data);
-    const products = "set_products" in productInfo ? productInfo.set_products : [productInfo];
+    const result = productInfoSchema.safeParse(productResponse.data);
+    if (!result.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse product response",
+        cause: result.error,
+      });
+    }
+
+    const { name } = result.data;
+    const products = "set_products" in result.data ? result.data.set_products : [result.data];
 
     const variants: VariantInfo[] = products.flatMap((product) => {
       return product.variants.map((variant) => {
@@ -65,8 +82,8 @@ export const JCrewUS: StoreAdapter = {
     });
 
     return {
+      name,
       variants,
-      name: productInfo.name,
       description: products[0]?.long_description,
       imageUrl: products[0]?.c_imageURL,
     };

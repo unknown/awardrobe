@@ -3,7 +3,7 @@ import parse from "node-html-parser";
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
-import { handleAxiosError } from "../errors";
+import { AdaptersError, handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
@@ -42,8 +42,16 @@ export const AbercrombieUS: StoreAdapter = {
       };
       const searchResponse = await proxiedAxios.get(searchEndpoint, { params });
 
-      const { products, stats } = searchSchema.parse(searchResponse.data);
+      const result = searchSchema.safeParse(searchResponse.data);
+      if (!result.success) {
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Failed to parse search response",
+          cause: result.error,
+        });
+      }
 
+      const { products, stats } = result.data;
       products.forEach((product) => productCodes.add(product.collection));
 
       if (!limit) {
@@ -60,7 +68,10 @@ export const AbercrombieUS: StoreAdapter = {
 
     const productCode = matches?.[1];
     if (!productCode) {
-      return null;
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Regex failed to get product code",
+      });
     }
 
     const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
@@ -71,7 +82,14 @@ export const AbercrombieUS: StoreAdapter = {
       .querySelector("meta[name=branch:deeplink:collectionID]")
       ?.getAttribute("content");
 
-    return collectionId ?? null;
+    if (!collectionId) {
+      throw new AdaptersError({
+        name: "PRODUCT_CODE_NOT_FOUND",
+        message: "Failed to get product code from product page",
+      });
+    }
+
+    return collectionId;
   },
 
   async getProductDetails(productCode: string) {
@@ -79,10 +97,21 @@ export const AbercrombieUS: StoreAdapter = {
     const collectionResponse = await proxiedAxios.get(collectionEndpoint).catch(handleAxiosError);
     const timestamp = new Date();
 
-    const { products } = collectionSchema.parse(collectionResponse.data);
+    const result = collectionSchema.safeParse(collectionResponse.data);
+    if (!result.success) {
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Failed to parse collection response",
+        cause: result.error,
+      });
+    }
 
+    const { products } = result.data;
     if (products[0] === undefined) {
-      throw new Error(`Failed to get product details for ${productCode}. No products found.`);
+      throw new AdaptersError({
+        name: "INVALID_RESPONSE",
+        message: "Empty products array",
+      });
     }
 
     const variants: VariantInfo[] = [];

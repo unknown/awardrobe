@@ -2,7 +2,6 @@ import {
   AdaptersError,
   downloadImage,
   getAdapter,
-  ProductDetails,
   VariantAttribute,
   VariantInfo,
 } from "@awardrobe/adapters";
@@ -34,9 +33,28 @@ if (!baseUrl) {
 }
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
 
-// TODO: DIRE NEED OF BETTER ERROR HANDLING
 export async function insertProduct(productCode: string, store: Store) {
-  const details = await getUpdatedDetails({ productCode, storeHandle: store.handle });
+  const adapter = getAdapter(store.handle);
+  if (!adapter) {
+    throw new Error(`No adapter found for ${store.handle}`);
+  }
+
+  const details = await adapter.getProductDetails(productCode).catch(async (error) => {
+    if (error instanceof AdaptersError) {
+      if (error.name === "PRODUCT_NOT_FOUND") {
+        console.error(`Product ${productCode} not found`);
+        return null;
+      } else if (error.name === "INVALID_RESPONSE") {
+        console.error(error);
+        return null;
+      }
+    }
+    throw error;
+  });
+
+  if (!details) {
+    return;
+  }
 
   const product = await createProduct({
     productCode,
@@ -80,13 +98,19 @@ export async function insertProduct(productCode: string, store: Store) {
 export async function updateProduct(product: ProductWithStoreHandle) {
   const variants = await findProductVariants({ productId: product.id });
 
-  const details = await getUpdatedDetails({
-    storeHandle: product.store.handle,
-    productCode: product.productCode,
-  }).catch(async (error) => {
+  const adapter = getAdapter(product.store.handle);
+  if (!adapter) {
+    throw new Error(`No adapter found for ${product.store.handle}`);
+  }
+
+  const details = await adapter.getProductDetails(product.productCode).catch(async (error) => {
     if (error instanceof AdaptersError) {
       if (error.name === "PRODUCT_NOT_FOUND") {
         await handleDelistedProduct({ product });
+        return null;
+      } else if (error.name === "INVALID_RESPONSE") {
+        // TODO: log this better
+        console.error(error);
         return null;
       }
     }
@@ -117,20 +141,6 @@ export async function updateProduct(product: ProductWithStoreHandle) {
   });
 
   await Promise.allSettled(allVariantsCallbacks);
-}
-
-async function getUpdatedDetails(options: {
-  storeHandle: string;
-  productCode: string;
-}): Promise<ProductDetails> {
-  const { storeHandle, productCode } = options;
-  const adapter = getAdapter(storeHandle);
-
-  if (!adapter) {
-    throw new Error(`No adapter found for ${storeHandle}`);
-  }
-
-  return await adapter.getProductDetails(productCode);
 }
 
 function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
