@@ -136,7 +136,10 @@ export const LevisUS: StoreAdapter = {
           : parseGeneralAttributes(variant.displaySizeDescription);
 
         if (!attributes) {
-          throw new Error("Failed to parse product attributes");
+          throw new AdaptersError({
+            name: "SCHEMA_INVALID_INPUT",
+            message: "Failed to parse variant attributes",
+          });
         }
 
         return {
