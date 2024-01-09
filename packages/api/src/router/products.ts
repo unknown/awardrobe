@@ -78,6 +78,7 @@ export const productsRouter = router({
         name: product.name,
         productCode: product.productCode,
         publicId: product.publicId,
+        delisted: product.delisted,
       };
 
       return publicProduct;
