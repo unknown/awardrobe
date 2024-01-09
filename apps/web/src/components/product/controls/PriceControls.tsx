@@ -21,11 +21,13 @@ export function PriceControls() {
       >
         {isPending
           ? "Loading..."
-          : !productUrl
-            ? "Not available"
-            : !lastPrice
-              ? "See price"
-              : `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`}
+          : product.delisted
+            ? "Unavailable"
+            : !productUrl
+              ? "Not available"
+              : !lastPrice
+                ? "See price"
+                : `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`}
       </a>
       <NotificationPopover />
     </div>
