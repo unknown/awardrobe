@@ -33,14 +33,28 @@ if (!baseUrl) {
 }
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
 
-// TODO: DIRE NEED OF BETTER ERROR HANDLING
 export async function insertProduct(productCode: string, store: Store) {
   const adapter = getAdapter(store.handle);
   if (!adapter) {
     throw new Error(`No adapter found for ${store.handle}`);
   }
 
-  const details = await adapter.getProductDetails(productCode);
+  const details = await adapter.getProductDetails(productCode).catch(async (error) => {
+    if (error instanceof AdaptersError) {
+      if (error.name === "PRODUCT_NOT_FOUND") {
+        console.error(`Product ${productCode} not found`);
+        return null;
+      } else if (error.name === "INVALID_RESPONSE") {
+        console.error(error);
+        return null;
+      }
+    }
+    throw error;
+  });
+
+  if (!details) {
+    return;
+  }
 
   const product = await createProduct({
     productCode,
