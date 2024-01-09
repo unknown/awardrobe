@@ -2,6 +2,7 @@ import parse from "node-html-parser";
 
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantInfo } from "../types";
 import { Product, productSchema } from "./schemas";
 
@@ -20,9 +21,9 @@ export const ZaraUS: StoreAdapter = {
   urlRegex: /^(?:www.)?zara\.com\/us\//,
   storeHandle: "zara-us",
 
-  async getProducts(_?: number) {
+  async getProducts(_) {
     // TODO: implement
-    return [];
+    return new Set();
   },
 
   async getProductCode(url: string) {
@@ -52,7 +53,9 @@ export const ZaraUS: StoreAdapter = {
   async getProductDetails(productCode: string) {
     const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
     const params = { locale: "en_US" };
-    const productResponse = await proxiedAxios.get(productEndpoint, { params });
+    const productResponse = await proxiedAxios
+      .get(productEndpoint, { params })
+      .catch(handleAxiosError);
     const timestamp = new Date();
 
     const product = productSchema.parse(productResponse.data);

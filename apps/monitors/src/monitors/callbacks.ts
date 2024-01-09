@@ -1,32 +1,83 @@
+import { VariantInfo } from "@awardrobe/adapters";
 import {
   createLatestPrice,
+  findNotificationsByProduct,
   findPriceDropNotifications,
   findRestockNotifications,
+  findStore,
+  Product,
+  ProductVariant,
+  ProductWithStoreHandle,
   updatePriceDropLastPing,
+  updateProductsDelisted,
   updateRestockLastPing,
 } from "@awardrobe/db";
-import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
-
-import { UpdateVariantCallback, VariantFlags } from "./types";
+import {
+  DelistedNotificationEmail,
+  PriceNotificationEmail,
+  render,
+  resend,
+  StockNotificationEmail,
+} from "@awardrobe/emails";
 
 // TODO: config file?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 
-const outdatedCallback: UpdateVariantCallback = async function updateOutdatedVariant({
-  variantInfo,
-  productVariant,
+export async function handleDelistedProduct(options: { product: ProductWithStoreHandle }) {
+  const { product } = options;
+
+  console.log(`Delisting ${product.name}`);
+
+  await updateProductsDelisted({ productIds: [product.id], delisted: true });
+
+  const store = await findStore({ storeHandle: product.store.handle });
+  const url = new URL(`/product/${product.publicId}`, baseUrl);
+
+  if (!store) {
+    throw new Error(`Store ${product.store.handle} not found`);
+  }
+
+  const notifications = await findNotificationsByProduct({ productId: product.id });
+
+  const renderedEmail = await render(
+    DelistedNotificationEmail({
+      productName: product.name,
+      storeName: store.name,
+      productUrl: url.toString(),
+    }),
+  );
+
+  await Promise.allSettled(
+    notifications.map(async (notification) => {
+      if (!notification.user.email) return;
+      await resend.emails.send({
+        to: [notification.user.email],
+        from: "Awardrobe <notifications@getawardrobe.com>",
+        subject: "Product delisted",
+        html: renderedEmail,
+      });
+    }),
+  );
+}
+
+export async function handleOutdatedVariant(options: {
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { variantInfo, productVariant } = options;
+
   await createLatestPrice({
     variantInfo,
     variantId: productVariant.id,
   });
-};
+}
 
-const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop({
-  product,
-  variantInfo,
-  productVariant,
+export async function handlePriceDrop(options: {
+  product: Product;
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { product, variantInfo, productVariant } = options;
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
@@ -66,13 +117,14 @@ const priceDropCallback: UpdateVariantCallback = async function handlePriceDrop(
       });
     }),
   );
-};
+}
 
-const restockCallback: UpdateVariantCallback = async function handleRestock({
-  product,
-  variantInfo,
-  productVariant,
+export async function handleRestock(options: {
+  product: Product;
+  variantInfo: VariantInfo;
+  productVariant: ProductVariant;
 }) {
+  const { product, variantInfo, productVariant } = options;
   const { attributes, priceInCents } = variantInfo;
 
   const description = attributes.map(({ value }) => value).join(" - ");
@@ -112,10 +164,4 @@ const restockCallback: UpdateVariantCallback = async function handleRestock({
       });
     }),
   );
-};
-
-export const updateVariantCallbacks: Record<keyof VariantFlags, UpdateVariantCallback> = {
-  isOutdated: outdatedCallback,
-  hasPriceDropped: priceDropCallback,
-  hasRestocked: restockCallback,
-};
+}

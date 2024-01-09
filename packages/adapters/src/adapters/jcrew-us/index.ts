@@ -1,6 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantInfo } from "../types";
 import { productInfoSchema } from "./schemas";
 
@@ -12,9 +13,9 @@ export const JCrewUS: StoreAdapter = {
   urlRegex: /^(?:www.)?jcrew\.com/,
   storeHandle: "jcrew-us",
 
-  async getProducts(_?: number) {
+  async getProducts(_) {
     // TODO: implement
-    return [];
+    return new Set();
   },
 
   async getProductCode(url: string) {
@@ -32,7 +33,9 @@ export const JCrewUS: StoreAdapter = {
       expand: "availability,prices,variations,set_products",
       locale: "en-US",
     };
-    const productResponse = await proxiedAxios.get(productEndpoint, { headers, params });
+    const productResponse = await proxiedAxios
+      .get(productEndpoint, { headers, params })
+      .catch(handleAxiosError);
     const timestamp = new Date();
 
     const productInfo = productInfoSchema.parse(productResponse.data);

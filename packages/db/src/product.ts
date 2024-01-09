@@ -54,9 +54,14 @@ export function findProduct(options: FindProductOptions): Promise<Product | unde
 export async function findFrequentProducts(): Promise<ProductWithStoreHandle[]> {
   return db.query.products.findMany({
     where: (products) =>
-      inArray(
-        products.id,
-        db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
+      and(
+        inArray(
+          products.id,
+          db
+            .selectDistinct({ productId: productNotifications.productId })
+            .from(productNotifications),
+        ),
+        eq(products.delisted, false),
       ),
     with: { store: { columns: { handle: true } } },
   });
@@ -65,9 +70,14 @@ export async function findFrequentProducts(): Promise<ProductWithStoreHandle[]> 
 export async function findPeriodicProducts(): Promise<ProductWithStoreHandle[]> {
   return db.query.products.findMany({
     where: (products) =>
-      notInArray(
-        products.id,
-        db.selectDistinct({ productId: productNotifications.productId }).from(productNotifications),
+      and(
+        notInArray(
+          products.id,
+          db
+            .selectDistinct({ productId: productNotifications.productId })
+            .from(productNotifications),
+        ),
+        eq(products.delisted, false),
       ),
     with: { store: { columns: { handle: true } } },
   });
@@ -183,4 +193,21 @@ export function findFullProductPublic(
       store: { columns: { id: false } },
     },
   });
+}
+
+export type UpdateProductsDelistedOptions = {
+  productIds: number[];
+  delisted: boolean;
+};
+
+export async function updateProductsDelisted(
+  options: UpdateProductsDelistedOptions,
+): Promise<void> {
+  const { productIds, delisted } = options;
+
+  if (productIds.length === 0) {
+    return;
+  }
+
+  await db.update(products).set({ delisted }).where(inArray(products.id, productIds));
 }

@@ -5,6 +5,9 @@ import { StoreAdapter } from "./types";
 import { UniqloUS } from "./uniqlo-us";
 import { ZaraUS } from "./zara-us";
 
+export * from "./errors";
+export * from "./types";
+
 export { AbercrombieUS, JCrewUS, LevisUS, UniqloUS, ZaraUS };
 
 // TODO: somehow dedupe this?

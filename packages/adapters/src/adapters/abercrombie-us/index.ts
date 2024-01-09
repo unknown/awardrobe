@@ -3,6 +3,7 @@ import parse from "node-html-parser";
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
@@ -50,7 +51,7 @@ export const AbercrombieUS: StoreAdapter = {
       }
     }
 
-    return Array.from(productCodes);
+    return productCodes;
   },
 
   async getProductCode(url: string) {
@@ -75,7 +76,7 @@ export const AbercrombieUS: StoreAdapter = {
 
   async getProductDetails(productCode: string) {
     const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
-    const collectionResponse = await proxiedAxios.get(collectionEndpoint);
+    const collectionResponse = await proxiedAxios.get(collectionEndpoint).catch(handleAxiosError);
     const timestamp = new Date();
 
     const { products } = collectionSchema.parse(collectionResponse.data);

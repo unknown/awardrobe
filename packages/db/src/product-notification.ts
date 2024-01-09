@@ -86,6 +86,21 @@ export async function findUserNotifications(
   });
 }
 
+export type FindNotificaitonsByProductOptions = {
+  productId: number;
+};
+
+export function findNotificationsByProduct(
+  options: FindNotificaitonsByProductOptions,
+): Promise<NotificationWithUser[]> {
+  const { productId } = options;
+
+  return db.query.productNotifications.findMany({
+    where: eq(productNotifications.productId, productId),
+    with: { user: true },
+  });
+}
+
 export type FindNotificationsOptions = {
   variantId: number;
   priceInCents: number;

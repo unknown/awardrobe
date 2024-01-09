@@ -22,7 +22,7 @@ export interface StoreAdapter {
   urlRegex: RegExp;
   storeHandle: string;
   // TODO: create pagination interface?
-  getProducts: (limit?: number) => Promise<string[]>;
+  getProducts: (limit?: number) => Promise<Set<string>>;
   getProductCode: (url: string) => Promise<string | null>;
   getProductDetails: (productCode: string) => Promise<ProductDetails>;
 }

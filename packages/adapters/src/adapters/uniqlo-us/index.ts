@@ -1,6 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
@@ -25,7 +26,7 @@ export const UniqloUS: StoreAdapter = {
   async getProducts(limit?: number) {
     const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
 
-    const productCodes: string[] = [];
+    const productCodes = new Set<string>();
     const increment = 100;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
@@ -39,7 +40,7 @@ export const UniqloUS: StoreAdapter = {
       }
 
       const { items, pagination } = productsData.result;
-      productCodes.push(...items.map((item) => item.productId));
+      items.forEach((item) => productCodes.add(item.productId));
 
       if (!limit) {
         total = pagination.total;
@@ -77,7 +78,7 @@ export const UniqloUS: StoreAdapter = {
     const [l2sResponse, detailsResponse] = await Promise.all([
       proxiedAxios.get(l2sEndpoint),
       proxiedAxios.get(detailsEndpoint),
-    ]);
+    ]).catch(handleAxiosError);
     const timestamp = new Date();
 
     const [l2sData, detailsData] = [

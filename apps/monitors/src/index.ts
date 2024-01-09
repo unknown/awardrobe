@@ -8,6 +8,7 @@ import {
   findStores,
   ProductWithStoreHandle,
   Store,
+  updateProductsDelisted,
 } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
@@ -107,25 +108,36 @@ async function main() {
 
       const limit = process.env.NODE_ENV === "production" ? undefined : 10;
       const productCodes = await adapter.getProducts(limit);
-      if (productCodes.length === 0) {
-        console.error(`No products found for ${store.handle}`);
+      if (productCodes.size === 0) {
+        console.warn(`No products found for ${store.handle}`);
         continue;
       }
 
       const products = await findProductsByProductCodes({
-        productCodes,
         storeId: store.id,
+        productCodes: Array.from(productCodes),
       });
-      const existingProductCodes = new Set(products.map((product) => product.productCode));
 
-      const newProductCodes = productCodes.filter(
-        (productCode) => !existingProductCodes.has(productCode),
+      const newProductCodes = new Set(productCodes);
+      const delistedProductIds: number[] = [];
+      products.forEach((product) => {
+        if (product.delisted) {
+          delistedProductIds.push(product.id);
+        }
+        newProductCodes.delete(product.productCode);
+      });
+
+      console.log(
+        `Inserting ${newProductCodes.size} and relisting ${delistedProductIds.length} products for ${store.handle}`,
       );
 
-      console.log(`Inserting ${newProductCodes.length} products for ${store.handle}`);
+      await updateProductsDelisted({
+        productIds: delistedProductIds,
+        delisted: false,
+      });
 
       await boss.insert(
-        newProductCodes.map((productCode) => ({
+        [...newProductCodes].map((productCode) => ({
           name: "insert-product",
           data: { productCode, store },
           singletonKey: `${store.handle}:${productCode}`,

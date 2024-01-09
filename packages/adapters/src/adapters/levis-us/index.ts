@@ -1,6 +1,7 @@
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
+import { handleAxiosError } from "../errors";
 import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
 import { GalleryImage, productSchema, swatchesSchema } from "./schemas";
 
@@ -37,7 +38,7 @@ export const LevisUS: StoreAdapter = {
   storeHandle: "levis-us",
 
   async getProducts(_) {
-    return [];
+    return new Set();
   },
 
   // since different swatches of the same product are listed under different product codes, a product's unique identifier (i.e. our `productCode`) is the `code` of the first swatch
@@ -65,7 +66,7 @@ export const LevisUS: StoreAdapter = {
     const [swatchesResponse, detailsResponse] = await Promise.all([
       proxiedAxios.get(swatchesEndpoint, { headers }),
       proxiedAxios.get(detailsEndpoint, { headers }),
-    ]);
+    ]).catch(handleAxiosError);
     const swatches = swatchesSchema.parse(swatchesResponse.data);
     const details = productSchema.parse(detailsResponse.data);
 
@@ -77,7 +78,9 @@ export const LevisUS: StoreAdapter = {
     const variants: VariantInfo[] = [];
     for (const swatch of swatches.swatches) {
       const detailsEndpoint = `https://www.levi.com/mule/lma/v1/leviUSSite/products/${swatch.code}?fields=FULL&lang=en_US`;
-      const detailsResponse = await proxiedAxios.get(detailsEndpoint, { headers });
+      const detailsResponse = await proxiedAxios
+        .get(detailsEndpoint, { headers })
+        .catch(handleAxiosError);
       const details = productSchema.parse(detailsResponse.data);
       const timestamp = new Date();
 
