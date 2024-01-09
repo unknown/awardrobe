@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
+import { AdaptersError, downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
 import { createProduct, createProductVariants, findProductPublic, findStore } from "@awardrobe/db";
 import type { Product, Public } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
@@ -30,9 +30,14 @@ export const productsRouter = router({
       }
 
       const productCode = await adapter.getProductCode(productUrl).catch((error) => {
-        console.error(error);
-        throw new Error("Error retrieving product code");
+        if (error instanceof AdaptersError) {
+          if (error.name === "PRODUCT_CODE_NOT_FOUND") {
+            return null;
+          }
+        }
+        throw error;
       });
+
       if (!productCode) {
         throw new Error("Error retrieving product code");
       }
