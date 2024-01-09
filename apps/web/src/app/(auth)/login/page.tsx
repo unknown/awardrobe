@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Button } from "@ui/Button";
+import { buttonVariants } from "@ui/Button";
+import { twMerge } from "tailwind-merge";
 
 import { auth } from "@awardrobe/auth";
 
@@ -15,8 +16,14 @@ export default async function LoginPage() {
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <Link href="/" className="absolute left-4 top-4 md:left-8 md:top-8">
-        <Button variant="secondary">Back</Button>
+      <Link
+        href="/"
+        className={twMerge(
+          buttonVariants({ variant: "secondary" }),
+          "absolute left-4 top-4 md:left-8 md:top-8",
+        )}
+      >
+        Back
       </Link>
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2">
