@@ -195,5 +195,9 @@ export async function updateProductsDelisted(
 ): Promise<void> {
   const { productIds, delisted } = options;
 
+  if (productIds.length === 0) {
+    return;
+  }
+
   await db.update(products).set({ delisted }).where(inArray(products.id, productIds));
 }
