@@ -1,12 +1,12 @@
 import { VariantInfo } from "@awardrobe/adapters";
 import {
   createLatestPrice,
-  delistProduct,
   findPriceDropNotifications,
   findRestockNotifications,
   Product,
   ProductVariant,
   updatePriceDropLastPing,
+  updateProductsDelisted,
   updateRestockLastPing,
 } from "@awardrobe/db";
 import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
@@ -17,7 +17,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 export async function handleDelistedProduct(options: { product: Product }) {
   const { product } = options;
 
-  await delistProduct({ productId: product.id });
+  await updateProductsDelisted({ productIds: [product.id], delisted: true });
 }
 
 export async function handleOutdatedVariant(options: {

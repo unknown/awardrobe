@@ -51,7 +51,7 @@ export const AbercrombieUS: StoreAdapter = {
       }
     }
 
-    return Array.from(productCodes);
+    return productCodes;
   },
 
   async getProductCode(url: string) {

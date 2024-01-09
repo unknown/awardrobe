@@ -21,9 +21,9 @@ export const ZaraUS: StoreAdapter = {
   urlRegex: /^(?:www.)?zara\.com\/us\//,
   storeHandle: "zara-us",
 
-  async getProducts(_?: number) {
+  async getProducts(_) {
     // TODO: implement
-    return [];
+    return new Set();
   },
 
   async getProductCode(url: string) {

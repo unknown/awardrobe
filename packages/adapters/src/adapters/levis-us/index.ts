@@ -38,7 +38,7 @@ export const LevisUS: StoreAdapter = {
   storeHandle: "levis-us",
 
   async getProducts(_) {
-    return [];
+    return new Set();
   },
 
   // since different swatches of the same product are listed under different product codes, a product's unique identifier (i.e. our `productCode`) is the `code` of the first swatch

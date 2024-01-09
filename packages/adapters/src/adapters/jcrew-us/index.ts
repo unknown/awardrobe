@@ -13,9 +13,9 @@ export const JCrewUS: StoreAdapter = {
   urlRegex: /^(?:www.)?jcrew\.com/,
   storeHandle: "jcrew-us",
 
-  async getProducts(_?: number) {
+  async getProducts(_) {
     // TODO: implement
-    return [];
+    return new Set();
   },
 
   async getProductCode(url: string) {
