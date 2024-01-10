@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { AxisBottom } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
 import { localPoint } from "@visx/event";
 import { LinearGradient, RadialGradient } from "@visx/gradient";
@@ -8,7 +9,7 @@ import { Group } from "@visx/group";
 import { Pattern } from "@visx/pattern";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
-import { AreaClosed, Bar, Circle, Line, LinePath } from "@visx/shape";
+import { AreaClosed, Bar, Circle, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
@@ -75,21 +76,23 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     return null;
   }
 
-  const margin = { top: 0, right: 0, bottom: 0, left: 0 };
+  const margin = { top: 0, right: 10, bottom: 50, left: 10 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
   // scales
+  const timeExtent = extent(prices, dateAccessor);
   const timeScale = scaleTime<number>({
     range: [0, innerWidth],
-    domain: extent(prices, dateAccessor) as [Date, Date],
+    domain: [timeExtent[0] ?? new Date(), timeExtent[1] ?? new Date()],
+    round: true,
   });
-  const priceExtent = extent(prices, priceAccessor) as [number, number];
+  const priceExtent = extent(prices, priceAccessor);
   const priceScale = scaleLinear<number>({
     range: [innerHeight, 0],
-    domain: [priceExtent[0] - 50, priceExtent[1] + 50],
+    domain: [0, (priceExtent[1] ?? 0) * 1.2],
   });
   const stockScale = scaleLinear<number>({
     range: [innerHeight, 0],
@@ -157,6 +160,18 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             strokeWidth={1}
             stroke="#398739"
             fill="url(#area-gradient)"
+          />
+          <AxisBottom
+            top={innerHeight + 10}
+            scale={timeScale}
+            tickComponent={({ formattedValue, x, y, dy }) => (
+              <text x={x} y={y} dy={dy} className="text-xs" fill="hsl(var(--muted-foreground))">
+                {formattedValue}
+              </text>
+            )}
+            numTicks={Math.min(4, innerWidth / 80)}
+            hideTicks
+            hideAxisLine
           />
           <LinePath<ChartPrice>
             data={prices}
