@@ -14,14 +14,17 @@ const inter = Inter({
 
 export const metadata = {
   metadataBase: new URL("https://awardrobe.co"),
-  title: "Awardrobe",
-  description: "Track prices and set alerts while building your wardrobe.",
+  title: {
+    default: "Awardrobe",
+    template: "%s — Awardrobe",
+  },
+  description: "Research price history and stock availability to save money.",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://awardrobe.co",
-    title: "Awardrobe — Shopping for clothes made simple",
-    description: "Track prices and set alerts while building your wardrobe.",
+    title: "Awardrobe — Shop for clothes smarter",
+    description: "Research price history and stock availability to save money.",
     siteName: "Awardrobe",
   },
 };

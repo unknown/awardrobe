@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { findFullProductPublic, findPublicPrices } from "@awardrobe/db";
@@ -17,6 +18,19 @@ type ProductPageProps = {
     range?: string;
   } & Record<string, string>;
 };
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata | undefined> {
+  const product = await findFullProductPublic({ productPublicId: params.productId });
+  if (!product) {
+    return undefined;
+  }
+
+  return {
+    title: product.name,
+  };
+}
 
 export default async function ProductPage({
   params,
