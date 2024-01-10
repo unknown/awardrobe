@@ -20,7 +20,7 @@
     "@awardrobe/tsconfig": "workspace:^",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@types/node": "^20.10.3",
-    "@types/react": "^18.2.42",
+    "@types/react": "^18.2.47",
     "typescript": "^5.3.3"
   }
 }
