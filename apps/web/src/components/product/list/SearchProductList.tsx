@@ -26,6 +26,8 @@ export async function SearchProductList({ query, page }: SearchProductListProps)
   const pageStart = Math.max(1, pageMiddle - Math.floor(numPages / 2));
   const pageEnd = Math.min(searchResponse.totalPages, pageMiddle + Math.floor(numPages / 2));
 
+  const encodedQuery = encodeURIComponent(query);
+
   return (
     <Fragment>
       <ProductList products={searchResponse.hits as Product[]} />
@@ -33,31 +35,30 @@ export async function SearchProductList({ query, page }: SearchProductListProps)
         <div className="flex justify-center gap-2">
           <Link
             className={buttonVariants({ variant: "ghost", size: "sm" })}
-            href={`/search?q=${query}&page=${Math.max(1, page - 1)}`}
+            href={`/search/${encodedQuery}?page=${Math.max(1, page - 1)}`}
           >
             Previous
           </Link>
           {pageStart > 1 ? <span className="px-2">...</span> : null}
           {[...Array(pageEnd - pageStart + 1)].map((_, index) => {
-            const page = pageStart + index;
-            const isCurrentPage = page === searchResponse.page;
+            const pg = pageStart + index;
             return (
               <Link
                 className={buttonVariants({
-                  variant: isCurrentPage ? "outline" : "ghost",
+                  variant: pg === page ? "outline" : "ghost",
                   size: "sm",
                 })}
-                key={page}
-                href={`/search?q=${query}&page=${page}`}
+                key={pg}
+                href={`/search/${encodedQuery}?page=${pg}`}
               >
-                {page}
+                {pg}
               </Link>
             );
           })}
           {pageEnd < searchResponse.totalPages ? <span className="px-2">...</span> : null}
           <Link
             className={buttonVariants({ variant: "ghost", size: "sm" })}
-            href={`/search?q=${query}&page=${Math.min(searchResponse.totalPages, page + 1)}`}
+            href={`/search/${encodedQuery}?page=${Math.min(searchResponse.totalPages, page + 1)}`}
           >
             Next
           </Link>

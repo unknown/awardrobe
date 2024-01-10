@@ -13,7 +13,7 @@ type SearchPageProps = {
 };
 
 export default async function SearchPage({ params, searchParams }: SearchPageProps) {
-  const query = params.query ?? "";
+  const query = decodeURIComponent(params.query);
   const page = Number(searchParams.page) || 1;
 
   return (
