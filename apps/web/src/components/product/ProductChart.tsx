@@ -89,7 +89,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     return null;
   }
 
-  const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 50 : 0, left: 0 };
+  const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 36 : 0, left: 0 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -185,7 +185,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             mask="url(#chart-mask)"
           />
           <AxisBottom
-            top={innerHeight + 10}
+            top={innerHeight + 8}
             scale={timeScale}
             tickComponent={({ formattedValue, x, y, dy }) => (
               <text
