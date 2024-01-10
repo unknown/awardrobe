@@ -13,6 +13,8 @@ import { AreaClosed, Bar, Circle, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
+import { Price, Public } from "@awardrobe/db";
+
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency, formatDate } from "@/utils/utils";
 
@@ -23,7 +25,8 @@ export type ChartPrice = {
 };
 
 export type PricesChartProps = {
-  prices: ChartPrice[] | null;
+  prices: Public<Price>[] | null;
+  augmentCurrentPrice?: boolean;
 };
 
 type VisxChartProps = {
@@ -38,32 +41,42 @@ const dateAccessor = (d: ChartPrice) => new Date(d.date);
 const priceAccessor = (d: ChartPrice) => d.price;
 const stockAccessor = (d: ChartPrice) => d.stock;
 
-export function ProductChart({ prices }: PricesChartProps) {
+export function ProductChart({ prices, augmentCurrentPrice = true }: PricesChartProps) {
   const { isPending } = useProductInfo();
+
+  const lastPrice = prices?.at(-1);
+  const chartPrices: ChartPrice[] | null =
+    prices !== null && lastPrice
+      ? prices
+          .concat(augmentCurrentPrice ? { ...lastPrice, timestamp: new Date() } : [])
+          .map((price) => ({
+            date: price.timestamp.toString(),
+            price: price.priceInCents,
+            stock: price.inStock ? 1 : 0,
+          }))
+      : null;
+
+  const overlayComponent = isPending ? (
+    <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  ) : prices === null ? (
+    <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+      <h2 className="text-xl font-medium">No price history</h2>
+      <p className="text-muted-foreground">
+        We have no data in this date range. Maybe try again later?
+      </p>
+    </div>
+  ) : null;
 
   return (
     <ParentSize className="relative">
-      {({ width, height }) => {
-        const overlayComponent = isPending ? (
-          <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        ) : prices === null ? (
-          <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
-            <h2 className="text-xl font-medium">No price history</h2>
-            <p className="text-muted-foreground">
-              We have no data in this date range. Maybe try again later?
-            </p>
-          </div>
-        ) : null;
-
-        return (
-          <div className="relative h-[20rem] sm:h-[24rem] md:h-[28rem]">
-            <VisxChart prices={prices ?? []} width={width} height={height} />
-            {overlayComponent}
-          </div>
-        );
-      }}
+      {({ width, height }) => (
+        <Fragment>
+          <VisxChart prices={chartPrices ?? []} width={width} height={height} />
+          {overlayComponent}
+        </Fragment>
+      )}
     </ParentSize>
   );
 }
@@ -76,7 +89,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     return null;
   }
 
-  const margin = { top: 0, right: 10, bottom: prices.length > 0 ? 50 : 0, left: 10 };
+  const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 50 : 0, left: 0 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -124,10 +137,10 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
         <Group left={margin.left} top={margin.top}>
           <RadialGradient id="grid-gradient" from="#DBDBDB" to="#4A4A4A" />
           <linearGradient id="tooltip-gradient" gradientTransform="rotate(90)">
-            <stop offset="0" stopColor="#000000" />
-            <stop offset="0.25" stopColor="#FFFFFF" />
-            <stop offset="0.75" stopColor="#FFFFFF" />
-            <stop offset="1" stopColor="#000000" />
+            <stop offset="0" stopColor="black" />
+            <stop offset="0.25" stopColor="white" />
+            <stop offset="0.75" stopColor="white" />
+            <stop offset="1" stopColor="black" />
           </linearGradient>
           <LinearGradient
             id="area-gradient"
@@ -148,6 +161,9 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
               fill="url(#tooltip-gradient)"
             />
           </mask>
+          <mask id="chart-mask">
+            <Bar width={innerWidth} height={innerHeight} fill="white" />
+          </mask>
           <Pattern id="grid-pattern" width={12} height={12}>
             <Circle cx={5} cy={5} r={1.5} fill="hsl(var(--border))" />
           </Pattern>
@@ -166,6 +182,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             strokeWidth={1}
             stroke="#398739"
             fill="url(#area-gradient)"
+            mask="url(#chart-mask)"
           />
           <AxisBottom
             top={innerHeight + 10}
@@ -202,9 +219,10 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             onMouseMove={handleTooltip}
             onMouseLeave={() => hideTooltip()}
             onTouchEnd={() => hideTooltip()}
-            strokeWidth={2}
             stroke="hsl(var(--border))"
+            strokeWidth={2}
             fill="transparent"
+            mask="url(#chart-mask)"
           />
         </Group>
         {tooltipData && (

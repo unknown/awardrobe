@@ -97,15 +97,6 @@ export default async function ProductPage({
     { min: null as number | null, max: null as number | null },
   );
 
-  const chartPrices: ChartPrice[] | null =
-    prices !== null && lastPrice
-      ? [...prices, { ...lastPrice, timestamp: new Date().toISOString() }].map((price) => ({
-          date: price.timestamp.toString(),
-          price: price.priceInCents,
-          stock: price.inStock ? 1 : 0,
-        }))
-      : null;
-
   const mediaStorePath = getProductPath(product.publicId);
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
 
@@ -150,7 +141,9 @@ export default async function ProductPage({
               </span>
             </div>
           </div>
-          <ProductChart prices={chartPrices} />
+          <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
+            <ProductChart prices={prices} />
+          </div>
           <div className="flex flex-wrap items-center justify-stretch gap-3 text-sm font-medium">
             {lastPrice ? (
               <div className="flex flex-1 justify-between rounded-md border p-4">

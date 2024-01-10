@@ -3,43 +3,45 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
-import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
+import { Price, Public } from "@awardrobe/db";
 
-const mockPrices: ChartPrice[] = [
+import { ProductChart } from "@/components/product/ProductChart";
+
+const mockPrices: Public<Price>[] = [
   {
-    date: "2023-07-21T12:00:00.000Z",
-    price: 2000,
-    stock: 1,
+    timestamp: new Date("2023-07-21"),
+    priceInCents: 2000,
+    inStock: true,
   },
   {
-    date: "2023-07-21T12:40:00.000Z",
-    price: 2000,
-    stock: 0,
+    timestamp: new Date("2023-07-24"),
+    priceInCents: 2000,
+    inStock: false,
   },
   {
-    date: "2023-07-21T14:10:00.000Z",
-    price: 1500,
-    stock: 0,
+    timestamp: new Date("2023-07-28"),
+    priceInCents: 1500,
+    inStock: false,
   },
   {
-    date: "2023-07-21T14:50:00.000Z",
-    price: 1500,
-    stock: 1,
+    timestamp: new Date("2023-07-30"),
+    priceInCents: 1500,
+    inStock: true,
   },
   {
-    date: "2023-07-21T15:50:00.000Z",
-    price: 1500,
-    stock: 0,
+    timestamp: new Date("2023-08-04"),
+    priceInCents: 1500,
+    inStock: false,
   },
   {
-    date: "2023-07-21T16:40:00.000Z",
-    price: 1500,
-    stock: 1,
+    timestamp: new Date("2023-08-07"),
+    priceInCents: 1500,
+    inStock: true,
   },
   {
-    date: "2023-07-21T18:00:00.000Z",
-    price: 1500,
-    stock: 1,
+    timestamp: new Date("2023-08-10"),
+    priceInCents: 1500,
+    inStock: true,
   },
 ];
 
@@ -148,7 +150,7 @@ export default async function IndexPage() {
                 See how prices have changed over time to get the best deals.
               </p>
               <div className="relative aspect-video">
-                <ProductChart prices={mockPrices} />
+                <ProductChart prices={mockPrices} augmentCurrentPrice={false} />
               </div>
             </div>
           </div>
