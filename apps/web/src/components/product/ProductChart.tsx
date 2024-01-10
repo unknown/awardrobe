@@ -140,7 +140,13 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             <Bar width={innerWidth} height={innerHeight} fill="url(#grid-gradient)" />
           </mask>
           <mask id="tooltip-mask">
-            <Bar width={innerWidth} height={innerHeight} fill="url(#tooltip-gradient)" />
+            <Bar
+              x={margin.left}
+              y={margin.top}
+              width={innerWidth}
+              height={innerHeight}
+              fill="url(#tooltip-gradient)"
+            />
           </mask>
           <Pattern id="grid-pattern" width={12} height={12}>
             <Circle cx={5} cy={5} r={1.5} fill="hsl(var(--border))" />
@@ -165,7 +171,14 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             top={innerHeight + 10}
             scale={timeScale}
             tickComponent={({ formattedValue, x, y, dy }) => (
-              <text x={x} y={y} dy={dy} className="text-xs" fill="hsl(var(--muted-foreground))">
+              <text
+                className="text-xs"
+                x={x}
+                y={y}
+                dy={dy}
+                fill="hsl(var(--muted-foreground))"
+                textAnchor="middle"
+              >
                 {formattedValue}
               </text>
             )}
