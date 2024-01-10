@@ -76,7 +76,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     return null;
   }
 
-  const margin = { top: 0, right: 10, bottom: 50, left: 10 };
+  const margin = { top: 0, right: 10, bottom: prices.length > 0 ? 50 : 0, left: 10 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -86,7 +86,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
   const timeExtent = extent(prices, dateAccessor);
   const timeScale = scaleTime<number>({
     range: [0, innerWidth],
-    domain: [timeExtent[0] ?? new Date(), timeExtent[1] ?? new Date()],
+    domain: timeExtent as [Date, Date],
     round: true,
   });
   const priceExtent = extent(prices, priceAccessor);
