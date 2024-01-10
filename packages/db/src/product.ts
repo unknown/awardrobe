@@ -51,6 +51,12 @@ export function findProduct(options: FindProductOptions): Promise<Product | unde
   });
 }
 
+export function findListedProducts(): Promise<Product[]> {
+  return db.query.products.findMany({
+    where: eq(products.delisted, false),
+  });
+}
+
 export async function findFrequentProducts(): Promise<ProductWithStoreHandle[]> {
   return db.query.products.findMany({
     where: (products) =>
