@@ -9,8 +9,9 @@ const galleryImageSchema = z.object({
 
 export type GalleryImage = z.infer<typeof galleryImageSchema>;
 
-const baseProductSchema = z.object({
+const baseProductsSchema = z.object({
   baseProduct: z.string(),
+  code: z.string(),
   name: z.string(),
   description: z.string(),
   colorGroup: z.string(),
@@ -34,20 +35,20 @@ const baseProductSchema = z.object({
   ),
 });
 
-const pantsProductSchema = baseProductSchema.merge(
+const pantsProductsSchema = baseProductsSchema.merge(
   z.object({
     variantWaist: z.array(z.string()),
     variantLength: z.array(z.string()),
   }),
 );
 
-const generalProductSchema = baseProductSchema.merge(
+const generalProductsSchema = baseProductsSchema.merge(
   z.object({
     variantSize: z.array(z.string()),
   }),
 );
 
-export const productSchema = z.union([pantsProductSchema, generalProductSchema]);
+export const productsSchema = z.union([pantsProductsSchema, generalProductsSchema]);
 
 export const swatchesSchema = z.object({
   swatches: z.array(

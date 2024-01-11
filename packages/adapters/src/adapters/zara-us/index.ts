@@ -3,7 +3,7 @@ import parse from "node-html-parser";
 import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { AdaptersError, handleAxiosError } from "../errors";
-import { StoreAdapter, VariantInfo } from "../types";
+import { ProductDetails, StoreAdapter, VariantDetails } from "../types";
 import { Product, productSchema } from "./schemas";
 
 function getImageUrl(product: Product) {
@@ -21,12 +21,12 @@ export const ZaraUS: StoreAdapter = {
   urlRegex: /^(?:www.)?zara\.com\/us\//,
   storeHandle: "zara-us",
 
-  async getProducts(_) {
+  async getListingIds(_) {
     // TODO: implement
     return new Set();
   },
 
-  async getProductCode(url: string) {
+  async getListingId(url) {
     const initialResponse = await proxiedAxios.get(url);
 
     const initialRoot = parse(initialResponse.data);
@@ -60,8 +60,8 @@ export const ZaraUS: StoreAdapter = {
     return productId;
   },
 
-  async getProductDetails(productCode: string) {
-    const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productCode}`;
+  async getListingDetails(productId) {
+    const productEndpoint = `https://www.zara.com/itxrest/4/catalog/store/11719/product/id/${productId}`;
     const params = { locale: "en_US" };
     const productResponse = await proxiedAxios
       .get(productEndpoint, { params })
@@ -79,25 +79,34 @@ export const ZaraUS: StoreAdapter = {
 
     const { name, detail, seo } = details.data;
 
-    const variants: VariantInfo[] = detail.colors.flatMap((color) => {
+    const variants: VariantDetails[] = detail.colors.flatMap((color) => {
       const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.seoProductId}.html?v1=${color.productId}`;
       return color.sizes.map((size) => ({
-        timestamp,
         productUrl,
         attributes: [
           { name: detail.colorSelectorLabel, value: `${color.id} ${color.name}` },
           { name: "Size", value: size.name },
         ],
-        inStock: size.availability !== "out_of_stock",
-        priceInCents: size.price,
+        price: {
+          timestamp,
+          inStock: size.availability !== "out_of_stock",
+          priceInCents: size.price,
+        },
       }));
     });
 
-    return {
+    const product: ProductDetails = {
       name,
       variants,
+      productId: productId,
       description: seo.description,
-      imageUrl: getImageUrl(details.data) ?? undefined,
+      imageUrl: getImageUrl(details.data) ?? null,
+    };
+
+    return {
+      brand: "zara",
+      collectionId: productId,
+      products: [product],
     };
   },
 };

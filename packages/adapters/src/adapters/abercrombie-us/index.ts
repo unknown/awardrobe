@@ -4,7 +4,7 @@ import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
 import { AdaptersError, handleAxiosError } from "../errors";
-import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
+import { ProductDetails, StoreAdapter, VariantAttribute, VariantDetails } from "../types";
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
@@ -27,11 +27,11 @@ export const AbercrombieUS: StoreAdapter = {
   urlRegex: /^(?:www.)?abercrombie\.com\/shop\/us\//,
   storeHandle: "abercrombie-us",
 
-  async getProducts(limit?: number) {
+  async getListingIds(limit) {
     // category 10000 represents all of A&F
     const searchEndpoint = `https://www.abercrombie.com/api/search/a-us/search/category/10000`;
 
-    const productCodes = new Set<string>();
+    const listingIds = new Set<string>();
     const increment = 240;
 
     for (let [offset, total] = [0, limit ?? increment]; offset < total; offset += increment) {
@@ -52,30 +52,30 @@ export const AbercrombieUS: StoreAdapter = {
       }
 
       const { products, stats } = result.data;
-      products.forEach((product) => productCodes.add(product.collection));
+      products.forEach((product) => listingIds.add(product.collection));
 
       if (!limit) {
         total = stats.total;
       }
     }
 
-    return productCodes;
+    return listingIds;
   },
 
-  async getProductCode(url: string) {
-    const productCodeRegex = /\/p\/([a-zA-Z0-9-]+)/;
-    const matches = url.match(productCodeRegex);
+  async getListingId(url) {
+    const listingIdRegex = /\/p\/([a-zA-Z0-9-]+)/;
+    const matches = url.match(listingIdRegex);
 
-    const productCode = matches?.[1];
-    if (!productCode) {
+    const listingId = matches?.[1];
+    if (!listingId) {
       throw new AdaptersError({
         name: "PRODUCT_CODE_NOT_FOUND",
-        message: "Regex failed to get product code",
+        message: "Regex failed to get listing id",
       });
     }
 
-    const productEndpoint = `https://www.abercrombie.com/shop/us/p/${productCode}`;
-    const productResponse = await proxiedAxios.get(productEndpoint);
+    const productEndpoint = `https://www.abercrombie.com/shop/us/p/${listingId}`;
+    const productResponse = await proxiedAxios.get(productEndpoint); // TODO: throw PRODUCT_CODE_NOT_FOUND if 404
 
     const root = parse(productResponse.data);
     const collectionId = root
@@ -92,8 +92,8 @@ export const AbercrombieUS: StoreAdapter = {
     return collectionId;
   },
 
-  async getProductDetails(productCode: string) {
-    const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${productCode}`;
+  async getListingDetails(listingId) {
+    const collectionEndpoint = `https://www.abercrombie.com/api/search/a-us/product/collection/${listingId}`;
     const collectionResponse = await proxiedAxios.get(collectionEndpoint).catch(handleAxiosError);
     const timestamp = new Date();
 
@@ -106,17 +106,21 @@ export const AbercrombieUS: StoreAdapter = {
       });
     }
 
-    const { products } = result.data;
-    if (products[0] === undefined) {
+    // TODO: does an error need to be thrown here?
+    if (result.data.products[0] === undefined) {
       throw new AdaptersError({
         name: "INVALID_RESPONSE",
         message: "Empty products array",
       });
     }
 
-    const variants: VariantInfo[] = [];
-    products.forEach((product) => {
-      if (!product.items[0]) return;
+    const products: ProductDetails[] = result.data.products.map((product) => {
+      if (!product.items[0]) {
+        throw new AdaptersError({
+          name: "INVALID_RESPONSE",
+          message: "Empty items array",
+        });
+      }
 
       // sort "items" (variants) by each attribute's value sequence to ensure consistent ordering
       const attributesKeys = Object.keys(product.items[0].definingAttrs);
@@ -128,7 +132,7 @@ export const AbercrombieUS: StoreAdapter = {
         });
       });
 
-      product.items.forEach((item) => {
+      const variants: VariantDetails[] = product.items.map((item) => {
         // the size is stored in individual grouped attributes and in a single composite attribute
         // we only want the grouped attributes
         const attributes: VariantAttribute[] = Object.values(item.definingAttrs)
@@ -167,22 +171,30 @@ export const AbercrombieUS: StoreAdapter = {
           item.listPrice,
         );
 
-        variants.push({
-          timestamp,
+        return {
           attributes,
           productUrl: getProductUrl(product, item),
-          inStock: item.inventory.inventoryStatus === "Available",
-          priceInCents: dollarsToCents(lowestPrice.toString()),
-        });
+          price: {
+            timestamp,
+            inStock: item.inventory.inventoryStatus === "Available",
+            priceInCents: dollarsToCents(lowestPrice.toString()),
+          },
+        };
       });
+
+      return {
+        variants,
+        name: product.name,
+        productId: product.productId,
+        description: product.longDesc,
+        imageUrl: getImageUrl(product) ?? null,
+      };
     });
 
-    // TODO: handle variants with different names
     return {
-      variants,
-      name: products[0].name,
-      description: products[0].longDesc,
-      imageUrl: getImageUrl(products[0]) ?? undefined,
+      products,
+      brand: "abercrombie",
+      collectionId: result.data.collectionId,
     };
   },
 };

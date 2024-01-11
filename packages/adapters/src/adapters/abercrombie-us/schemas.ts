@@ -37,6 +37,7 @@ const productSchema = z.object({
 export type Product = z.infer<typeof productSchema>;
 
 export const collectionSchema = z.object({
+  collectionId: z.string(),
   products: z.array(productSchema),
 });
 
