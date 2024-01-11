@@ -5,15 +5,14 @@ import {
   int,
   mysqlTable,
   serial,
-  text,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 
 import { VariantAttribute } from "@awardrobe/adapters";
 
-import { prices } from "./prices";
 import { productNotifications } from "./product-notifications";
+import { productVariantListings } from "./product-variant-listings";
 import { products } from "./products";
 
 const attributesType = customType<{ data: VariantAttribute[]; driverData: string }>({
@@ -31,9 +30,7 @@ export const productVariants = mysqlTable(
     id: serial("id").primaryKey(),
     publicId: varchar("publicId", { length: 12 }).notNull(),
     productId: int("productId").notNull(),
-    productUrl: text("productUrl").notNull(),
     attributes: attributesType("attributes").notNull(),
-    latestPriceId: int("latestPriceId"),
   },
   (productVariant) => ({
     publicIdIdx: uniqueIndex("publicIdIdx").on(productVariant.publicId),
@@ -42,7 +39,6 @@ export const productVariants = mysqlTable(
 );
 
 export const productVariantsRelations = relations(productVariants, ({ many, one }) => ({
-  prices: many(prices, { relationName: "PriceToProductVariant" }),
   notifications: many(productNotifications, {
     relationName: "ProductNotificationToProductVariant",
   }),
@@ -51,9 +47,5 @@ export const productVariantsRelations = relations(productVariants, ({ many, one 
     fields: [productVariants.productId],
     references: [products.id],
   }),
-  latestPrice: one(prices, {
-    relationName: "LatestPrice",
-    fields: [productVariants.latestPriceId],
-    references: [prices.id],
-  }),
+  listings: many(productVariantListings, { relationName: "ProductVariantToListings" }),
 }));

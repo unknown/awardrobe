@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import {
-  boolean,
   index,
   int,
   mysqlTable,
@@ -10,24 +9,26 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
+import { collections } from "./collections";
 import { productNotifications } from "./product-notifications";
 import { productVariants } from "./product-variants";
-import { stores } from "./stores";
 
 export const products = mysqlTable(
   "product",
   {
     id: serial("id").primaryKey(),
     publicId: varchar("publicId", { length: 12 }).notNull(),
-    storeId: int("storeId").notNull(),
-    productCode: varchar("productCode", { length: 255 }).notNull(),
+    collectionId: int("collectionId").notNull(),
+    externalProductId: varchar("externalProductId", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    delisted: boolean("delisted").notNull().default(false),
   },
   (product) => ({
     publicIdIdx: uniqueIndex("publicIdIdx").on(product.publicId),
-    storeIdProductCodeUnq: unique("storeIdProductCodeUnq").on(product.storeId, product.productCode),
-    storeIdIx: index("storeIdIx").on(product.storeId),
+    collectionIdProductIdUnq: unique("collectionIdProductIdUnq").on(
+      product.collectionId,
+      product.externalProductId,
+    ),
+    collectionIdIdx: index("collectionIdIdx").on(product.collectionId),
   }),
 );
 
@@ -36,9 +37,9 @@ export const productsRelations = relations(products, ({ many, one }) => ({
   notifications: many(productNotifications, {
     relationName: "ProductNotificationToProduct",
   }),
-  store: one(stores, {
-    relationName: "ProductToStore",
-    fields: [products.storeId],
-    references: [stores.id],
+  collection: one(collections, {
+    relationName: "CollectionToProduct",
+    fields: [products.collectionId],
+    references: [collections.id],
   }),
 }));
