@@ -4,10 +4,10 @@ import { z } from "zod";
 import { AdaptersError, getAdapterFromUrl } from "@awardrobe/adapters";
 import {
   createProduct,
-  createProductVariantListing,
-  createStoreListing,
   findBrand,
   findOrCreateCollection,
+  findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
   findProduct,
   findStore,
 } from "@awardrobe/db";
@@ -103,12 +103,15 @@ export const productsRouter = router({
           await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
         }
 
-        const storeListing = await createStoreListing({ externalListingId, storeId: store.id });
+        const storeListing = await findOrCreateStoreListing({
+          externalListingId,
+          storeId: store.id,
+        });
         const typedProduct = product; // hack to allow typescript to type product as non-null
 
         await Promise.all(
           productDetails.variants.map((variantDetails) =>
-            createProductVariantListing({
+            findOrCreateProductVariantListing({
               variantDetails,
               productId: typedProduct.id,
               storeListingId: storeListing.id,

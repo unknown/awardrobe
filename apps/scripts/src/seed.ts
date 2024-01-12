@@ -2,12 +2,12 @@ import { ListingDetails, UniqloUS } from "@awardrobe/adapters";
 import {
   createBrand,
   createProduct,
-  createProductVariantListing,
   createStore,
-  createStoreListing,
   db,
   findBrand,
   findOrCreateCollection,
+  findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
   findProduct,
   findStore,
   findStoreListings,
@@ -91,7 +91,7 @@ async function addListing(storeId: number, listingId: string, details: ListingDe
       await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
     }
 
-    const storeListing = await createStoreListing({
+    const storeListing = await findOrCreateStoreListing({
       externalListingId: listingId,
       storeId: storeId,
     });
@@ -99,7 +99,7 @@ async function addListing(storeId: number, listingId: string, details: ListingDe
 
     await Promise.all(
       productDetails.variants.map((variantDetails) =>
-        createProductVariantListing({
+        findOrCreateProductVariantListing({
           variantDetails,
           productId: typedProduct.id,
           storeListingId: storeListing.id,

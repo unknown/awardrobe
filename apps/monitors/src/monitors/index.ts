@@ -1,11 +1,10 @@
 import { AdaptersError, getAdapter, PriceDatum } from "@awardrobe/adapters";
 import {
   createProduct,
-  createProductVariantListing,
-  createStoreListing,
   findBrand,
   findOrCreateCollection,
   findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
   findProduct,
   Price,
   Store,
@@ -88,12 +87,12 @@ export async function insertStoreListing(externalListingId: string, store: Store
       await Promise.allSettled([addProductToSearchPromise, addImagePromise, revalidatePromise]);
     }
 
-    const storeListing = await createStoreListing({ externalListingId, storeId: store.id });
+    const storeListing = await findOrCreateStoreListing({ externalListingId, storeId: store.id });
     const typedProduct = product; // hack to allow typescript to type product as non-null
 
     await Promise.all(
       productDetails.variants.map((variantDetails) =>
-        createProductVariantListing({
+        findOrCreateProductVariantListing({
           variantDetails,
           productId: typedProduct.id,
           storeListingId: storeListing.id,

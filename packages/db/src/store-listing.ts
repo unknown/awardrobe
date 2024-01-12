@@ -6,15 +6,26 @@ import { productVariantListings } from "./schema/product-variant-listings";
 import { storeListings } from "./schema/store-listings";
 import { StoreListing, StoreListingWithStore } from "./schema/types";
 
-export type CreateStoreListingOptions = {
+export type FindOrCreateStoreListingOptions = {
   externalListingId: string;
   storeId: number;
 };
 
-export async function createStoreListing(
-  options: CreateStoreListingOptions,
+export async function findOrCreateStoreListing(
+  options: FindOrCreateStoreListingOptions,
 ): Promise<StoreListing> {
   const { externalListingId, storeId } = options;
+
+  const existing = await db.query.storeListings.findFirst({
+    where: and(
+      eq(storeListings.externalListingId, externalListingId),
+      eq(storeListings.storeId, storeId),
+    ),
+  });
+
+  if (existing) {
+    return existing;
+  }
 
   const listingsTable = await db.insert(storeListings).values({ externalListingId, storeId });
 
