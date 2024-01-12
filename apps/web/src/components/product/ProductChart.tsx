@@ -249,7 +249,7 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
             <p key={listing.storeName} className="font-medium tabular-nums">
               {`${listing.storeName}: ${
                 listing.price ? formatCurrency(listing.price.price) : "N/A"
-              }${!listing.price?.stock ? "*" : undefined}`}
+              }${!listing.price?.stock ? "*" : ""}`}
             </p>
           ))}
           <span className="text-muted-foreground tabular-nums">{formatDate(tooltipData.date)}</span>
