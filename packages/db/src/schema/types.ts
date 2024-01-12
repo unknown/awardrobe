@@ -52,13 +52,18 @@ export type ProductVariantWithPrice = ProductVariant & {
   latestPrice: Price | null;
 };
 
-export type PublicPrice = Omit<Price, "id" | "productVariantId">;
+export type PublicPrice = Omit<Price, "id" | "productVariantListingId">;
 export type PublicProductNotification = Omit<
   ProductNotification,
   "id" | "productVariantId" | "productId"
 >;
+export type PublicProductVariantListing = Omit<
+  ProductVariantListing,
+  "id" | "storeListingId" | "latestPriceId" | "productVariantId"
+>;
 export type PublicProductVariant = Omit<ProductVariant, "id" | "productId" | "latestPriceId">;
 export type PublicProduct = Omit<Product, "id" | "storeId">;
+export type PublicStoreListing = Omit<StoreListing, "id" | "storeId">;
 export type PublicStore = Omit<Store, "id">;
 
 type ExcludedBuiltinTypes = Date | Function | Promise<any> | RegExp;
@@ -96,10 +101,20 @@ type SubstituteProductNotification<T> = SubstituteType<
   ProductNotification,
   PublicProductNotification
 >;
+type SubstituteProductVariantListing<T> = SubstituteType<
+  T,
+  ProductVariantListing,
+  PublicProductVariantListing
+>;
 type SubstituteProductVariant<T> = SubstituteType<T, ProductVariant, PublicProductVariant>;
 type SubstituteProduct<T> = SubstituteType<T, Product, PublicProduct>;
+type SubstituteStoreListing<T> = SubstituteType<T, StoreListing, PublicStoreListing>;
 type SubstituteStore<T> = SubstituteType<T, Store, PublicStore>;
 
 export type Public<T> = SubstitutePrice<
-  SubstituteProductNotification<SubstituteProductVariant<SubstituteProduct<SubstituteStore<T>>>>
+  SubstituteProductNotification<
+    SubstituteProductVariantListing<
+      SubstituteProductVariant<SubstituteProduct<SubstituteStoreListing<SubstituteStore<T>>>>
+    >
+  >
 >;

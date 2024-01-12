@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { VariantAttribute, VariantDetails } from "@awardrobe/adapters";
 
