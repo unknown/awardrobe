@@ -38,8 +38,6 @@ export function VariantControls() {
                   ...Object.fromEntries(searchParams),
                 });
                 params.set(name, value);
-
-                // TODO: change pathname
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               });
             }}

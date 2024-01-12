@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import {
   findCollectionProducts,
@@ -35,10 +35,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({
-  params,
-  searchParams: { range, ...attributesParams },
-}: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+  const { range, ...attributesParams } = searchParams;
+
   const product = await findProductByPublicId({ productPublicId: params.productId });
 
   if (!product) {
@@ -61,17 +60,23 @@ export default async function ProductPage({
     });
   });
 
-  // only search in the current product's variants, because if a variant is
-  // selected from a different product, a navigation will have already occurred
   const variant =
     (Object.keys(attributesParams).length > 0
-      ? product.variants.find(({ attributes }) => {
+      ? variants.find(({ attributes }) => {
           if (attributes.length !== Object.keys(attributesParams).length) {
             return false;
           }
           return attributes.every(({ name, value }) => attributesParams[name] === value);
         })
       : product.variants[0]) ?? null;
+
+  if (variant && variant.productId !== product.id) {
+    const newProduct = products.find((product) => product.id === variant.productId);
+    if (newProduct) {
+      const params = new URLSearchParams(searchParams);
+      redirect(`/product/${newProduct.publicId}?${params.toString()}`);
+    }
+  }
 
   const dateRange: DateRange = isDateRange(range) ? range : "3m";
 
