@@ -1,29 +1,26 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { VariantInfo } from "@awardrobe/adapters";
+import { VariantAttribute, VariantDetails } from "@awardrobe/adapters";
 
 import { db } from "./db";
-import { createLatestPrice } from "./price";
 import { productVariants } from "./schema/product-variants";
-import { ProductVariant, ProductVariantWithPrice } from "./schema/types";
+import { ProductVariant } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductVariantOptions = {
   productId: number;
-  variantInfo: VariantInfo;
+  variantAttributes: VariantAttribute[];
 };
 
 export async function createProductVariant(
   options: CreateProductVariantOptions,
 ): Promise<ProductVariant> {
-  const { productId, variantInfo } = options;
-  const { attributes, productUrl } = variantInfo;
+  const { productId, variantAttributes } = options;
 
   const productVariantsTable = await db.insert(productVariants).values({
     productId,
-    attributes,
-    productUrl,
     publicId: generatePublicId(),
+    attributes: variantAttributes,
   });
 
   const created = await db.query.productVariants.findFirst({
@@ -34,54 +31,24 @@ export async function createProductVariant(
     throw new Error("Could not create product variant");
   }
 
-  await createLatestPrice({ variantId: created.id, variantInfo });
-
   return created;
 }
 
 export type CreateProductVariantsOptions = {
   productId: number;
-  variantInfos: VariantInfo[];
+  variants: VariantDetails[];
 };
 
 export async function createProductVariants(options: CreateProductVariantsOptions): Promise<void> {
-  const { productId, variantInfos } = options;
+  const { productId, variants } = options;
 
   await db.insert(productVariants).values(
-    variantInfos.map((variantInfo) => ({
+    variants.map((variantInfo) => ({
       productId,
       publicId: generatePublicId(),
       attributes: variantInfo.attributes,
       productUrl: variantInfo.productUrl,
     })),
-  );
-
-  const created = await db.query.productVariants.findMany({
-    where: (productVariants) =>
-      and(
-        eq(productVariants.productId, productId),
-        inArray(
-          sql`${productVariants.attributes}`,
-          variantInfos.map((v) => sql`cast(${JSON.stringify(v.attributes)} as json)`),
-        ),
-      ),
-  });
-
-  await Promise.all(
-    created.map((productVariant) => {
-      // TODO: hacky JSON comparison
-      const variantInfo = variantInfos.find(
-        (v) => JSON.stringify(v.attributes) === JSON.stringify(productVariant.attributes),
-      );
-      if (!variantInfo) {
-        // TODO: log error
-        return;
-      }
-      return createLatestPrice({
-        variantInfo,
-        variantId: productVariant.id,
-      });
-    }),
   );
 }
 
@@ -89,15 +56,34 @@ export type FindProductVariants = {
   productId: number;
 };
 
-export function findProductVariants(
-  options: FindProductVariants,
-): Promise<ProductVariantWithPrice[]> {
+export function findProductVariants(options: FindProductVariants): Promise<ProductVariant[]> {
   const { productId } = options;
 
   return db.query.productVariants.findMany({
     where: eq(productVariants.productId, productId),
-    with: {
-      latestPrice: true,
-    },
   });
+}
+
+export type FindOrCreateProductVariantOptions = {
+  productId: number;
+  variantAttributes: VariantAttribute[];
+};
+
+export async function findOrCreateProductVariant(
+  options: FindOrCreateProductVariantOptions,
+): Promise<ProductVariant> {
+  const { productId, variantAttributes } = options;
+
+  const existing = await db.query.productVariants.findFirst({
+    where: and(
+      eq(productVariants.productId, productId),
+      sql`${productVariants.attributes} = cast(${JSON.stringify(variantAttributes)} as json)`,
+    ),
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return createProductVariant(options);
 }

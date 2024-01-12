@@ -1,156 +1,133 @@
-import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
+
+import { ProductDetails } from "@awardrobe/adapters";
 
 import { db } from "./db";
+import { createProductVariants } from "./product-variant";
 import { productNotifications } from "./schema/product-notifications";
 import { products } from "./schema/products";
-import type {
-  FullProduct,
-  Product,
-  ProductWithStore,
-  ProductWithStoreHandle,
-  Public,
-} from "./schema/types";
+import type { FullProduct, Product, ProductWithBrand, Public } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {
-  name: string;
-  productCode: string;
-  storeId: number;
+  collectionId: number;
+  productDetails: ProductDetails;
 };
 
 export async function createProduct(options: CreateProductOptions): Promise<Product> {
-  const { name, productCode, storeId } = options;
+  const { collectionId, productDetails } = options;
 
   const productTable = await db.insert(products).values({
-    name,
-    productCode,
-    storeId,
+    collectionId,
+    name: productDetails.name,
+    externalProductId: productDetails.productId,
     publicId: generatePublicId(),
   });
 
-  const created = await db.query.products.findFirst({
+  const product = await db.query.products.findFirst({
     where: eq(products.id, Number(productTable.insertId)),
   });
 
-  if (!created) {
+  if (!product) {
     throw new Error("Could not create product");
   }
 
-  return created;
+  await createProductVariants({
+    productId: product.id,
+    variants: productDetails.variants,
+  });
+
+  return product;
 }
 
 export type FindProductOptions = {
-  productId: number;
+  collectionId: number;
+  externalProductId: string;
 };
 
-export function findProduct(options: FindProductOptions): Promise<Product | undefined> {
-  const { productId } = options;
+export async function findProduct(options: FindProductOptions): Promise<Product | null> {
+  const { collectionId, externalProductId } = options;
 
-  return db.query.products.findFirst({
-    where: eq(products.id, productId),
+  const existingProduct = await db.query.products.findFirst({
+    where: and(
+      eq(products.collectionId, collectionId),
+      eq(products.externalProductId, externalProductId),
+    ),
   });
+
+  return existingProduct ?? null;
+}
+
+export type FindProductByPublicIdOptions = {
+  productPublicId: string;
+};
+
+export async function findProductByPublicId(options: FindProductByPublicIdOptions) {
+  const { productPublicId } = options;
+
+  const existingProduct = await db.query.products.findFirst({
+    where: eq(products.publicId, productPublicId),
+    with: { variants: true, collection: { with: { brand: true } } },
+  });
+
+  return existingProduct ?? null;
 }
 
 export function findListedProducts(): Promise<Product[]> {
-  return db.query.products.findMany({
-    where: eq(products.delisted, false),
-  });
+  // TODO: only return products that have at least one variant that is listed
+  return db.query.products.findMany();
 }
 
-export async function findFrequentProducts(): Promise<ProductWithStoreHandle[]> {
-  return db.query.products.findMany({
-    where: (products) =>
-      and(
-        inArray(
-          products.id,
-          db
-            .selectDistinct({ productId: productNotifications.productId })
-            .from(productNotifications),
-        ),
-        eq(products.delisted, false),
-      ),
-    with: { store: { columns: { handle: true } } },
-  });
-}
-
-export async function findPeriodicProducts(): Promise<ProductWithStoreHandle[]> {
-  return db.query.products.findMany({
-    where: (products) =>
-      and(
-        notInArray(
-          products.id,
-          db
-            .selectDistinct({ productId: productNotifications.productId })
-            .from(productNotifications),
-        ),
-        eq(products.delisted, false),
-      ),
-    with: { store: { columns: { handle: true } } },
-  });
-}
-
-export type FindFeaturedProductsOptions = {
+export type FindFeedProductsOptions = (
+  | {
+      type: "featured";
+    }
+  | { type: "following"; userId: string }
+) & {
   limit?: number;
 };
 
-export function findFeaturedProducts(
-  options: FindFeaturedProductsOptions = {},
-): Promise<ProductWithStore[]> {
-  const { limit = 24 } = options;
+export function findFeedProducts(options: FindFeedProductsOptions): Promise<ProductWithBrand[]> {
+  const { type, limit = 24 } = options;
 
-  return db.query.products.findMany({
-    limit,
-    orderBy: (products) =>
-      desc(
-        db
-          .select({ count: count() })
-          .from(productNotifications)
-          .where(eq(productNotifications.productId, products.id)),
-      ),
-    with: { store: true },
-  });
-}
-
-export type FindProductPublicOptions = {
-  productCode: string;
-  storeId: number;
-};
-
-export function findProductPublic(
-  options: FindProductPublicOptions,
-): Promise<Public<Product> | undefined> {
-  const { productCode, storeId } = options;
-
-  return db.query.products.findFirst({
-    where: and(eq(products.productCode, productCode), eq(products.storeId, storeId)),
-    columns: { id: false, storeId: false },
-  });
-}
-
-export type FindProductsByProductCodesOptions = {
-  productCodes: string[];
-  storeId: number;
-};
-
-export function findProductsByProductCodes(
-  options: FindProductsByProductCodesOptions,
-): Promise<Product[]> {
-  const { productCodes, storeId } = options;
-
-  return db.query.products.findMany({
-    where: and(inArray(products.productCode, productCodes), eq(products.storeId, storeId)),
-  });
+  // TODO: only return products that have at least one variant that is listed
+  switch (type) {
+    case "featured":
+      return db.query.products.findMany({
+        limit,
+        orderBy: (products) =>
+          desc(
+            db
+              .select({ count: count() })
+              .from(productNotifications)
+              .where(eq(productNotifications.productId, products.id)),
+          ),
+        with: { collection: { with: { brand: true } } },
+      });
+    case "following":
+      return db.query.products.findMany({
+        limit,
+        where: (products) =>
+          inArray(
+            products.id,
+            db
+              .selectDistinct({ productId: productNotifications.productId })
+              .from(productNotifications)
+              .where(eq(productNotifications.userId, options.userId)),
+          ),
+        with: { collection: { with: { brand: true } } },
+      });
+  }
 }
 
 export type FindFollowingProductsOptions = {
   userId: string;
   productPublicIds?: string[];
-  withStore?: boolean;
   withNotifiedVariants?: boolean;
 };
 
 export function findFollowingProducts(options: FindFollowingProductsOptions) {
-  const { userId, productPublicIds, withStore, withNotifiedVariants } = options;
+  const { userId, productPublicIds, withNotifiedVariants } = options;
 
   return db.query.products.findMany({
     where: (products) =>
@@ -165,7 +142,6 @@ export function findFollowingProducts(options: FindFollowingProductsOptions) {
         ),
       ),
     with: {
-      store: withStore ? true : undefined,
       variants: withNotifiedVariants
         ? {
             where: (variants) =>
@@ -183,37 +159,17 @@ export function findFollowingProducts(options: FindFollowingProductsOptions) {
 }
 
 export type FindProductWithVariantsOptions = {
-  productPublicId: string;
+  collectionId: number;
 };
 
-export function findFullProductPublic(
-  options: FindProductWithVariantsOptions,
-): Promise<Public<FullProduct> | undefined> {
-  const { productPublicId } = options;
+export function findCollectionProducts(options: FindProductWithVariantsOptions) {
+  const { collectionId } = options;
 
-  return db.query.products.findFirst({
-    where: eq(products.publicId, productPublicId),
-    columns: { id: false, storeId: false },
+  return db.query.products.findMany({
+    where: eq(products.collectionId, collectionId),
     with: {
-      variants: { columns: { id: false, latestPriceId: false, productId: false } },
-      store: { columns: { id: false } },
+      variants: true,
+      collection: { with: { brand: true } },
     },
   });
-}
-
-export type UpdateProductsDelistedOptions = {
-  productIds: number[];
-  delisted: boolean;
-};
-
-export async function updateProductsDelisted(
-  options: UpdateProductsDelistedOptions,
-): Promise<void> {
-  const { productIds, delisted } = options;
-
-  if (productIds.length === 0) {
-    return;
-  }
-
-  await db.update(products).set({ delisted }).where(inArray(products.id, productIds));
 }

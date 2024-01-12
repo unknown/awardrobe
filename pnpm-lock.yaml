@@ -471,6 +471,9 @@ importers:
 
   packages/media-store:
     dependencies:
+      '@awardrobe/adapters':
+        specifier: workspace:^
+        version: link:../adapters
       axios:
         specifier: ^1.6.5
         version: 1.6.5

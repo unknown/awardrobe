@@ -2,14 +2,20 @@
 
 import { createContext, TransitionStartFunction, useContext, useTransition } from "react";
 
-import { FullProduct, Price, ProductVariant, Public } from "@awardrobe/db";
+import {
+  FullProduct,
+  Price,
+  ProductVariant,
+  ProductVariantListingWithPrices,
+  Public,
+} from "@awardrobe/db";
 
 type ProductInfoContextValue = {
   product: Public<FullProduct>;
   productOptions: Record<string, string[]>;
   variant: Public<ProductVariant> | null;
   attributes: Record<string, string>;
-  prices: Public<Price>[] | null;
+  listings: ProductVariantListingWithPrices[];
   isPending: boolean;
   startTransition: TransitionStartFunction;
 };
@@ -20,7 +26,7 @@ export const ProductInfoContext = createContext<ProductInfoContextValue>({
   productOptions: {},
   variant: null,
   attributes: {},
-  prices: null,
+  listings: [],
   isPending: false,
   startTransition: () => {},
 });
@@ -30,7 +36,7 @@ type ProductInfoProviderProps = {
   productOptions: Record<string, string[]>;
   variant: Public<ProductVariant> | null;
   attributes: Record<string, string>;
-  prices: Public<Price>[] | null;
+  listings: ProductVariantListingWithPrices[];
   children: React.ReactNode;
 };
 

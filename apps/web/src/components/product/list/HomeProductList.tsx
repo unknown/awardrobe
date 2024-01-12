@@ -1,5 +1,5 @@
 import { auth } from "@awardrobe/auth";
-import { findFeaturedProducts, findFollowingProducts } from "@awardrobe/db";
+import { findFeedProducts, findFollowingProducts } from "@awardrobe/db";
 
 import { Page } from "@/app/(app)/(browse)/home/types";
 import { ProductList } from "@/components/product/list/ProductList";
@@ -17,17 +17,17 @@ export async function HomeProductList({ page }: HomeProductListProps) {
 
   const products =
     page === "Featured"
-      ? await findFeaturedProducts({ limit: 24 })
+      ? await findFeedProducts({ type: "featured", limit: 24 })
       : session
-        ? await findFollowingProducts({ userId: session.user.id, withStore: true })
+        ? await findFeedProducts({ type: "following", userId: session.user.id, limit: 24 })
         : [];
 
   return (
     <ProductList
-      products={products.map(({ publicId, name, store }) => ({
+      products={products.map(({ publicId, name, collection }) => ({
         name,
         id: publicId,
-        storeName: store.name,
+        brand: collection.brand.name,
       }))}
     />
   );

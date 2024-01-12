@@ -22,13 +22,30 @@ export type NotificationWithVariant = ProductNotification & {
   productVariant: ProductVariant;
 };
 
+export type StoreListingWithStore = StoreListing & {
+  store: Store;
+};
+
+export type ProductVariantListingWithLatestPrice = ProductVariantListing & {
+  latestPrice: Price | null;
+};
+
+export type ProductVariantListingWithPrices = ProductVariantListing & {
+  prices: Price[];
+  storeListing: StoreListingWithStore;
+};
+
 export type ProductWithBrand = Product & {
-  brand: Brand;
+  collection: Collection & {
+    brand: Brand;
+  };
 };
 
 export type FullProduct = Product & {
   variants: ProductVariant[];
-  brand: Brand;
+  collection: Collection & {
+    brand: Brand;
+  };
 };
 
 export type ProductVariantWithPrice = ProductVariant & {

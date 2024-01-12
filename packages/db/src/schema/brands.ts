@@ -7,12 +7,12 @@ export const brands = mysqlTable(
   "brand",
   {
     id: serial("id").primaryKey(),
-    publicId: varchar("publicId", { length: 255 }).notNull(),
+    handle: varchar("handle", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     externalUrl: text("externalUrl").notNull(),
   },
   (brand) => ({
-    publicIdUnqIdx: uniqueIndex("publicIdUnqIdx").on(brand.publicId),
+    handleUnqIdx: uniqueIndex("handleUnqIdx").on(brand.handle),
   }),
 );
 

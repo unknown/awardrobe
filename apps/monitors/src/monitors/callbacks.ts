@@ -1,84 +1,49 @@
-import { VariantInfo } from "@awardrobe/adapters";
+import { VariantDetails } from "@awardrobe/adapters";
 import {
   createLatestPrice,
-  findNotificationsByProduct,
   findPriceDropNotifications,
   findRestockNotifications,
-  findStore,
   Product,
-  ProductVariant,
-  ProductWithStoreHandle,
+  ProductVariantListing,
+  StoreListing,
   updatePriceDropLastPing,
-  updateProductsDelisted,
   updateRestockLastPing,
+  updateStoreListings,
 } from "@awardrobe/db";
-import {
-  DelistedNotificationEmail,
-  PriceNotificationEmail,
-  render,
-  resend,
-  StockNotificationEmail,
-} from "@awardrobe/emails";
+import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
 
 // TODO: config file?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 
-export async function handleDelistedProduct(options: { product: ProductWithStoreHandle }) {
-  const { product } = options;
+export async function handleDelistedListing(options: { listing: StoreListing }) {
+  const { listing } = options;
 
-  console.log(`Delisting ${product.name}`);
+  console.log(`Delisting ${listing.externalListingId}`);
 
-  await updateProductsDelisted({ productIds: [product.id], delisted: true });
+  await updateStoreListings({ listingIds: [listing.id], active: false });
 
-  const store = await findStore({ storeHandle: product.store.handle });
-  const url = new URL(`/product/${product.publicId}`, baseUrl);
-
-  if (!store) {
-    throw new Error(`Store ${product.store.handle} not found`);
-  }
-
-  const notifications = await findNotificationsByProduct({ productId: product.id });
-
-  const renderedEmail = await render(
-    DelistedNotificationEmail({
-      productName: product.name,
-      storeName: store.name,
-      productUrl: url.toString(),
-    }),
-  );
-
-  await Promise.allSettled(
-    notifications.map(async (notification) => {
-      if (!notification.user.email) return;
-      await resend.emails.send({
-        to: [notification.user.email],
-        from: "Awardrobe <notifications@getawardrobe.com>",
-        subject: "Product delisted",
-        html: renderedEmail,
-      });
-    }),
-  );
+  // TODO: send an email?
 }
 
 export async function handleOutdatedVariant(options: {
-  variantInfo: VariantInfo;
-  productVariant: ProductVariant;
+  variantDetails: VariantDetails;
+  productVariantListing: ProductVariantListing;
 }) {
-  const { variantInfo, productVariant } = options;
+  const { variantDetails, productVariantListing } = options;
 
   await createLatestPrice({
-    variantInfo,
-    variantId: productVariant.id,
+    productVariantListingId: productVariantListing.id,
+    price: variantDetails.price,
   });
 }
 
 export async function handlePriceDrop(options: {
   product: Product;
-  variantInfo: VariantInfo;
-  productVariant: ProductVariant;
+  variantDetails: VariantDetails;
+  productVariantListing: ProductVariantListing;
 }) {
-  const { product, variantInfo, productVariant } = options;
-  const { attributes, priceInCents } = variantInfo;
+  const { product, variantDetails, productVariantListing } = options;
+  const { attributes, price } = variantDetails;
 
   const description = attributes.map(({ value }) => value).join(" - ");
   const url = new URL(`/product/${product.publicId}`, baseUrl);
@@ -86,11 +51,11 @@ export async function handlePriceDrop(options: {
     url.searchParams.set(name, value);
   });
 
-  console.log(`Price drop for ${product.name} - ${product.productCode} ${description}`);
+  console.log(`Price drop for ${product.name} - ${product.externalProductId} ${description}`);
 
   const notifications = await findPriceDropNotifications({
-    priceInCents,
-    variantId: productVariant.id,
+    variantId: productVariantListing.productVariantId,
+    priceInCents: price.priceInCents,
   });
 
   await updatePriceDropLastPing({
@@ -100,9 +65,9 @@ export async function handlePriceDrop(options: {
   const renderedEmail = await render(
     PriceNotificationEmail({
       description,
-      priceInCents,
       productName: product.name,
       productUrl: url.toString(),
+      priceInCents: price.priceInCents,
     }),
   );
 
@@ -121,11 +86,11 @@ export async function handlePriceDrop(options: {
 
 export async function handleRestock(options: {
   product: Product;
-  variantInfo: VariantInfo;
-  productVariant: ProductVariant;
+  variantDetails: VariantDetails;
+  productVariantListing: ProductVariantListing;
 }) {
-  const { product, variantInfo, productVariant } = options;
-  const { attributes, priceInCents } = variantInfo;
+  const { product, variantDetails, productVariantListing } = options;
+  const { attributes, price } = variantDetails;
 
   const description = attributes.map(({ value }) => value).join(" - ");
   const url = new URL(`/product/${product.publicId}`, baseUrl);
@@ -133,11 +98,11 @@ export async function handleRestock(options: {
     url.searchParams.set(name, value);
   });
 
-  console.log(`Restock for ${product.name} - ${product.productCode} ${description}`);
+  console.log(`Restock for ${product.name} - ${product.externalProductId} ${description}`);
 
   const notifications = await findRestockNotifications({
-    priceInCents,
-    variantId: productVariant.id,
+    variantId: productVariantListing.productVariantId,
+    priceInCents: price.priceInCents,
   });
 
   await updateRestockLastPing({
@@ -147,9 +112,9 @@ export async function handleRestock(options: {
   const renderedEmail = await render(
     StockNotificationEmail({
       description,
-      priceInCents,
       productName: product.name,
       productUrl: url.toString(),
+      priceInCents: price.priceInCents,
     }),
   );
 
