@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import {
   Select,
   SelectContent,
@@ -21,29 +21,28 @@ import { AreaClosed, Bar, Circle, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
-import { ProductVariantListingWithPrices } from "@awardrobe/db";
-
 import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
-import { DateRange } from "@/utils/dates";
+import { api } from "@/trpc/react";
+import { dateOffsets } from "@/utils/dates";
 import { formatCurrency, formatDate } from "@/utils/utils";
 
 export type PricesChartProps = {
-  dateRange: DateRange;
   augmentCurrentPrice?: boolean;
 };
 
-export function ProductChart({ dateRange, augmentCurrentPrice = true }: PricesChartProps) {
-  const { isPending, variantListings } = useProductInfo();
-  const [activeListing, setActiveListing] = useState<ProductVariantListingWithPrices | null>(
-    variantListings[0] ?? null,
-  );
+export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
+  const { collectionPublicId, attributes, dateRange, isPending } = useProductInfo();
 
-  useEffect(() => {
-    setActiveListing(variantListings[0] ?? null);
-  }, [variantListings]);
+  const { data: listings, isLoading } = api.variants.findVariantListings.useQuery({
+    attributes,
+    collectionPublicId,
+    startDateOffset: dateOffsets[dateRange],
+  });
 
-  const prices = activeListing?.prices ?? [];
+  const activeListing = listings?.[0] ?? null;
+
+  const prices = !isLoading && !isPending ? activeListing?.prices ?? [] : [];
   const lastPrice = prices.at(-1);
   const chartPrices: ChartPrice[] = prices
     .concat(augmentCurrentPrice && lastPrice ? { ...lastPrice, timestamp: new Date() } : [])
@@ -53,38 +52,32 @@ export function ProductChart({ dateRange, augmentCurrentPrice = true }: PricesCh
       stock: price.inStock ? 1 : 0,
     }));
 
-  const overlayComponent = isPending ? (
-    <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  ) : variantListings.length === 0 ? (
-    <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
-      <h2 className="text-xl font-medium">No price history</h2>
-      <p className="text-muted-foreground">
-        We have no data in this date range. Maybe try again later?
-      </p>
-    </div>
-  ) : null;
+  const overlayComponent =
+    isLoading || isPending ? (
+      <div className="bg-gradient-radial from-background absolute left-1/2 top-[calc((100%-36px)/2)] -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    ) : listings?.length === 0 ? (
+      <div className="bg-gradient-radial from-background absolute left-1/2 top-[calc((100%-36px)/2)] -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
+        <h2 className="text-xl font-medium">No price history</h2>
+        <p className="text-muted-foreground">
+          We have no data in this date range. Maybe try again later?
+        </p>
+      </div>
+    ) : null;
 
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-medium">Price History</h2>
       <div className="flex flex-wrap justify-between gap-2">
         <DateRangeControl dateRange={dateRange} />
-        <Select
-          value={activeListing?.storeListing.store.name ?? ""}
-          onValueChange={(value) => {
-            setActiveListing(
-              variantListings.find((listing) => listing.storeListing.store.name === value) ?? null,
-            );
-          }}
-        >
-          <SelectTrigger className="max-w-[180px]" id="listing-input">
+        <Select value={activeListing?.storeListing.store.name ?? ""}>
+          <SelectTrigger className="max-w-fit" id="listing-input">
             <SelectValue placeholder="Select listing" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {variantListings.map((listing) => (
+              {listings?.map((listing) => (
                 <SelectItem value={listing.storeListing.store.name} key={listing.id}>
                   {listing.storeListing.store.name}
                 </SelectItem>
@@ -135,7 +128,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     return null;
   }
 
-  const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 36 : 0, left: 0 };
+  const margin = { top: 0, right: 0, bottom: 36, left: 0 };
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -164,10 +157,17 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     const index = dateBisector(prices, invertedDate, 1);
     const price = prices[index - 1];
 
+    if (!price) {
+      return;
+    }
+
     showTooltip({
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
-      tooltipData: price,
+      tooltipData: {
+        ...price,
+        date: invertedDate,
+      },
     });
   };
 
@@ -285,9 +285,7 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
           offsetTop={8}
         >
           <p className="font-medium tabular-nums">
-            {`${tooltipData.price ? formatCurrency(tooltipData.price) : "N/A"}${
-              !tooltipData.stock ? "*" : ""
-            }`}
+            {`${tooltipData.price ? formatCurrency(tooltipData.price) : "N/A"}`}
           </p>
           <span className="text-muted-foreground tabular-nums">{formatDate(tooltipData.date)}</span>
         </TooltipWithBounds>

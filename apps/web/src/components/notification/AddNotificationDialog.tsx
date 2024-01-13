@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { api } from "@/trpc/react";
+import { dateOffsets } from "@/utils/dates";
 
 type AddNotificationOptions = {
   priceInCents: number;
@@ -23,19 +24,23 @@ type AddNotificationOptions = {
   restock: boolean;
 };
 
-export type AddNotificationDialogProps = {
-  attributes: Record<string, string>;
-  attributesOptions: Record<string, string[]>;
-};
+export function AddNotificationDialog() {
+  const {
+    collectionPublicId,
+    productPublicId,
+    attributesOptions,
+    attributes: initialAttributes,
+    dateRange,
+  } = useProductInfo();
 
-export function AddNotificationDialog({
-  attributesOptions,
-  attributes: initialAttributes,
-}: AddNotificationDialogProps) {
-  const { productPublicId, variants, variantListings: listings } = useProductInfo();
+  const { data: listings } = api.variants.findVariantListings.useQuery({
+    collectionPublicId,
+    attributes: initialAttributes,
+    startDateOffset: dateOffsets[dateRange],
+  });
 
   const cheapestPriceInCents =
-    listings.reduce(
+    listings?.reduce(
       (cheapestPrice, listing) => {
         const listingPrice = listing.prices.at(-1)?.priceInCents;
         if (!cheapestPrice || (listingPrice && listingPrice < cheapestPrice)) {
@@ -85,19 +90,9 @@ export function AddNotificationDialog({
         <form
           onSubmit={async (event) => {
             event.preventDefault();
-
-            const variant = variants.find((variant) => {
-              if (variant.attributes.length !== Object.keys(attributes).length) {
-                return false;
-              }
-              return variant.attributes.every(({ name, value }) => attributes[name] === value);
-            });
-
-            // TODO: handle this better
-            if (!variant) return;
-
             await addNotification.mutateAsync({
-              variantPublicId: variant.publicId,
+              attributes,
+              collectionPublicId,
               priceInCents: options.priceInCents,
               priceDrop: options.priceDrop,
               restock: options.restock,

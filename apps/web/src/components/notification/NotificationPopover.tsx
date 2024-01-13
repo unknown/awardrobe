@@ -11,16 +11,10 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { api } from "@/trpc/react";
 import { formatCurrency } from "@/utils/utils";
 
-export type NotificationPopoverProps = {
-  attributes: Record<string, string>;
-  attributesOptions: Record<string, string[]>;
-};
-
-export function NotificationPopover({ attributes, attributesOptions }: NotificationPopoverProps) {
+export function NotificationPopover() {
   const { productPublicId } = useProductInfo();
 
-  const listNotifications = api.notifications.list.useQuery({ productPublicId });
-  const notifications = listNotifications.data;
+  const { data: notifications, isLoading } = api.notifications.list.useQuery({ productPublicId });
 
   return (
     <Popover>
@@ -35,11 +29,7 @@ export function NotificationPopover({ attributes, attributesOptions }: Notificat
             <h4 className="font-medium leading-none">Notifications</h4>
             <p className="text-muted-foreground text-sm">Manage your product alerts.</p>
           </div>
-          {listNotifications.isLoading
-            ? "Loading..."
-            : notifications?.length === 0
-              ? "No notifications"
-              : null}
+          {isLoading ? "Loading..." : notifications?.length === 0 ? "No notifications" : null}
           <div className="grid grid-cols-[1fr_max-content_max-content] items-center gap-2">
             {notifications?.map((notification) => {
               const description = notification.productVariant.attributes
@@ -54,7 +44,7 @@ export function NotificationPopover({ attributes, attributesOptions }: Notificat
               );
             })}
           </div>
-          <AddNotificationDialog attributes={attributes} attributesOptions={attributesOptions} />
+          <AddNotificationDialog />
         </div>
       </PopoverContent>
     </Popover>

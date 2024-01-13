@@ -1,8 +1,6 @@
 import { getAdapter } from "@awardrobe/adapters";
-import { db, eq } from "@awardrobe/db";
+import { db, eq, schema } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
-
-import { products } from "../../../packages/db/src/schema/products";
 
 async function main() {
   const listings = await db.query.storeListings.findMany({ with: { store: true } });
@@ -35,7 +33,7 @@ async function main() {
       }
 
       const productRecord = await db.query.products.findFirst({
-        where: eq(products.externalProductId, product.productId),
+        where: eq(schema.products.externalProductId, product.productId),
       });
 
       if (!productRecord) {

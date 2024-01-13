@@ -1,11 +1,7 @@
 import { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import {
-  findCollectionProducts,
-  findProductByPublicId,
-  findProductVariantListings,
-} from "@awardrobe/db";
+import { findCollectionProducts, findProductByPublicId } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
 import { NotificationPopover } from "@/components/notification/NotificationPopover";
@@ -13,7 +9,7 @@ import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
 import { ProductChart } from "@/components/product/ProductChart";
 import { ProductInfoProvider } from "@/components/product/ProductInfoProvider";
-import { DateRange, getDateFromRange, isDateRange } from "@/utils/dates";
+import { DateRange, isDateRange } from "@/utils/dates";
 
 type ProductPageProps = {
   params: { productId: string };
@@ -48,66 +44,45 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     collectionId: product.collectionId,
   });
 
-  const variants = products.flatMap((product) => product.variants);
   const attributesOptions: Record<string, string[]> = {};
-  variants.forEach(({ attributes }) => {
-    attributes.forEach(({ name, value }) => {
-      const values = attributesOptions[name] ?? [];
-      if (!values.includes(value)) {
-        values.push(value);
-      }
-      attributesOptions[name] = values;
+  products.forEach((product) => {
+    product.variants.forEach(({ attributes }) => {
+      attributes.forEach(({ name, value }) => {
+        const values = attributesOptions[name] ?? [];
+        if (!values.includes(value)) {
+          values.push(value);
+        }
+        attributesOptions[name] = values;
+      });
     });
   });
 
-  const variant =
-    (Object.keys(attributesParams).length > 0
-      ? variants.find(({ attributes }) => {
-          if (attributes.length !== Object.keys(attributesParams).length) {
-            return false;
-          }
-          return attributes.every(({ name, value }) => attributesParams[name] === value);
-        })
-      : product.variants[0]) ?? null;
-
-  if (variant && variant.productId !== product.id) {
-    const newProduct = products.find((product) => product.id === variant.productId);
-    if (newProduct) {
-      const params = new URLSearchParams(searchParams);
-      redirect(`/product/${newProduct.publicId}?${params.toString()}`);
-    }
-  }
-
-  const dateRange: DateRange = isDateRange(range) ? range : "3m";
-
-  const listings = variant
-    ? await findProductVariantListings({
-        productVariantId: variant.id,
-        pricesStartDate: getDateFromRange(dateRange),
-      })
-    : [];
-
   const attributes: Record<string, string> = {};
-  if (variant) {
-    variant.attributes.forEach(({ name, value }) => {
-      attributes[name] = value;
-    });
-  } else {
+  if (Object.keys(attributesParams).length > 0) {
     Object.entries(attributesParams).forEach(([name, value]) => {
       if (attributesOptions[name]?.includes(value)) {
         attributes[name] = value;
       }
     });
+  } else {
+    product.variants[0]?.attributes.forEach(({ name, value }) => {
+      attributes[name] = value;
+    });
   }
 
+  const dateRange: DateRange = isDateRange(range) ? range : "3m";
+
   const mediaStorePath = getProductPath(product.publicId);
-  const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
+  const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).toString();
 
   return (
     <ProductInfoProvider
+      collectionPublicId={product.collection.publicId}
       productPublicId={product.publicId}
-      variants={variants}
-      variantListings={listings}
+      productPublicIds={products.map((product) => product.publicId)}
+      attributes={attributes}
+      attributesOptions={attributesOptions}
+      dateRange={dateRange}
     >
       <section className="space-y-12">
         <div className="container max-w-4xl">
@@ -124,19 +99,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 <p className="text-muted-foreground text-sm">{product.collection.brand.name}</p>
                 <h1 className="text-3xl font-medium">{product.name}</h1>
               </div>
-              <VariantControls attributes={attributes} attributesOptions={attributesOptions} />
+              <VariantControls />
               <div className="flex flex-wrap gap-3">
                 <PriceControls />
-                <NotificationPopover
-                  attributes={attributes}
-                  attributesOptions={attributesOptions}
-                />
+                <NotificationPopover />
               </div>
             </div>
           </div>
         </div>
         <div className="container max-w-4xl">
-          <ProductChart dateRange={dateRange} />
+          <ProductChart />
         </div>
       </section>
     </ProductInfoProvider>

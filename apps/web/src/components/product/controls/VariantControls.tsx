@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useOptimistic } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -12,22 +12,28 @@ import {
 } from "@ui/Select";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
+import { api } from "@/trpc/react";
 
 export type VariantControlsProps = {
   attributes: Record<string, string>;
   attributesOptions: Record<string, string[]>;
 };
 
-export function VariantControls({
-  attributesOptions,
-  attributes: initialAttributes,
-}: VariantControlsProps) {
+export function VariantControls() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { startTransition } = useProductInfo();
+  const {
+    collectionPublicId,
+    productPublicId,
+    productPublicIds,
+    attributesOptions,
+    attributes: initialAttributes,
+    startTransition,
+  } = useProductInfo();
   const [attributes, setAttributes] = useOptimistic(initialAttributes);
+
+  const utils = api.useUtils();
 
   return (
     <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:grid-cols-[max-content_1fr_max-content_1fr]">
@@ -38,14 +44,28 @@ export function VariantControls({
           </label>
           <Select
             value={attributes[name] ?? ""}
+            onOpenChange={(isOpen) => {
+              if (isOpen) {
+                productPublicIds.forEach((productPublicId) => {
+                  router.prefetch(`/product/${productPublicId}`);
+                });
+              }
+            }}
             onValueChange={(value) => {
-              startTransition(() => {
+              startTransition(async () => {
                 setAttributes((attributes) => ({ ...attributes, [name]: value }));
+
+                const variant = await utils.variants.findVariant.fetch({
+                  collectionPublicId,
+                  attributes: { ...attributes, [name]: value },
+                });
+
+                const pathname = `/product/${variant ? variant.product.publicId : productPublicId}`;
                 const params = new URLSearchParams({
                   ...attributes,
                   ...Object.fromEntries(searchParams),
+                  [name]: value,
                 });
-                params.set(name, value);
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               });
             }}

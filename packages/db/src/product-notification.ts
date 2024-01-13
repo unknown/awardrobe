@@ -8,8 +8,9 @@ import { NotificationWithUser, NotificationWithVariant, Public } from "./schema/
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateNotificationOptions = {
-  variantPublicId: string;
   userId: string;
+  productId: number;
+  productVariantId: number;
   priceInCents: number;
   priceDrop: boolean;
   restock: boolean;
@@ -18,24 +19,16 @@ export type CreateNotificationOptions = {
 export async function createNotification(
   options: CreateNotificationOptions,
 ): Promise<Public<NotificationWithVariant>> {
-  const { variantPublicId, userId, priceInCents, priceDrop, restock } = options;
-
-  const productVariant = await db.query.productVariants.findFirst({
-    where: eq(productVariants.publicId, variantPublicId),
-  });
-
-  if (!productVariant) {
-    throw new Error("Product variant does not exist");
-  }
+  const { userId, productId, productVariantId, priceInCents, priceDrop, restock } = options;
 
   const notificationsTable = await db.insert(productNotifications).values({
     userId,
     priceInCents,
     priceDrop,
     restock,
+    productId,
+    productVariantId,
     publicId: generatePublicId(),
-    productId: productVariant.productId,
-    productVariantId: productVariant.id,
   });
 
   const created = await db.query.productNotifications.findFirst({
