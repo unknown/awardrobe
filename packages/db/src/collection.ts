@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import { collections } from "./schema/collections";
 import { Collection } from "./schema/types";
+import { generatePublicId } from "./utils/public-id";
 
 export type FindOrCreateCollectionOptions = {
   brandId: number;
@@ -28,6 +29,7 @@ export async function findOrCreateCollection(
   const collectionsTable = await db.insert(collections).values({
     externalCollectionId,
     brandId,
+    publicId: generatePublicId(),
   });
 
   const created = await db.query.collections.findFirst({
