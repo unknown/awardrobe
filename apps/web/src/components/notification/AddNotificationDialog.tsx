@@ -24,7 +24,14 @@ type AddNotificationOptions = {
 };
 
 export function AddNotificationDialog() {
-  const { product, productOptions, attributes: initialAttributes, listings } = useProductInfo();
+  const {
+    productPublicId,
+    variants,
+    productOptions,
+    attributes: initialAttributes,
+    listings,
+  } = useProductInfo();
+
   const cheapestPriceInCents =
     listings.reduce(
       (cheapestPrice, listing) => {
@@ -48,7 +55,7 @@ export function AddNotificationDialog() {
   const utils = api.useUtils();
   const addNotification = api.notifications.create.useMutation({
     onSuccess: async () => {
-      await utils.notifications.list.invalidate({ productPublicId: product.publicId });
+      await utils.notifications.list.invalidate({ productPublicId });
       setOpen(false);
     },
     onError: (err) => {
@@ -77,7 +84,7 @@ export function AddNotificationDialog() {
           onSubmit={async (event) => {
             event.preventDefault();
 
-            const variant = product.variants.find((variant) => {
+            const variant = variants.find((variant) => {
               if (variant.attributes.length !== Object.keys(attributes).length) {
                 return false;
               }

@@ -36,6 +36,7 @@ export const productNotifications = mysqlTable(
       productNotification.productVariantId,
     ),
     userIdIdx: index("userIdIdx").on(productNotification.userId),
+    productIdIdx: index("productIdIdx").on(productNotification.productId),
     productVariantIdIdx: index("productVariantIdIdx").on(productNotification.productVariantId),
   }),
 );

@@ -1,6 +1,8 @@
 import { getAdapter } from "@awardrobe/adapters";
-import { db } from "@awardrobe/db";
+import { db, eq } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
+
+import { products } from "../../../packages/db/src/schema/products";
 
 async function main() {
   const listings = await db.query.storeListings.findMany({ with: { store: true } });
@@ -32,7 +34,16 @@ async function main() {
         continue;
       }
 
-      await addProductImage(product.productId, product.imageUrl)
+      const productRecord = await db.query.products.findFirst({
+        where: eq(products.externalProductId, product.productId),
+      });
+
+      if (!productRecord) {
+        console.error(`No product found for ${listing.store.handle} ${product.productId}`);
+        continue;
+      }
+
+      await addProductImage(productRecord.publicId, product.imageUrl)
         .then(() => console.log(`Added image for ${listing.store.handle} ${product.productId}`))
         .catch(() => {
           console.log(`Failed to add image for ${listing.store.handle} ${product.productId}`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useOptimistic } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
@@ -19,7 +19,7 @@ export function VariantControls() {
   const searchParams = useSearchParams();
 
   const { productOptions, attributes: initialAttributes, startTransition } = useProductInfo();
-  const [attributes, setAttributes] = useState(initialAttributes);
+  const [attributes, setAttributes] = useOptimistic(initialAttributes);
 
   return (
     <div className="grid grid-cols-[max-content_1fr] flex-wrap items-center gap-3 md:grid-cols-[max-content_1fr_max-content_1fr]">
@@ -31,8 +31,8 @@ export function VariantControls() {
           <Select
             value={attributes[name] ?? ""}
             onValueChange={(value) => {
-              setAttributes((attributes) => ({ ...attributes, [name]: value }));
               startTransition(() => {
+                setAttributes((attributes) => ({ ...attributes, [name]: value }));
                 const params = new URLSearchParams({
                   ...attributes,
                   ...Object.fromEntries(searchParams),
