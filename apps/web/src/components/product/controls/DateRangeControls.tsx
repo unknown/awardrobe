@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useOptimistic } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@ui/Tabs";
 
@@ -16,7 +16,7 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [dateRange, setDateRange] = useState(initialDateRange);
+  const [dateRange, setDateRange] = useOptimistic(initialDateRange);
   const { startTransition } = useProductInfo();
 
   return (
@@ -24,8 +24,8 @@ export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
       value={dateRange}
       onValueChange={(newRange: string) => {
         const range = isDateRange(newRange) ? newRange : "7d";
-        setDateRange(range);
         startTransition(() => {
+          setDateRange(range);
           const params = new URLSearchParams(searchParams);
           params.set("range", range);
           router.replace(`${pathname}?${params.toString()}`, { scroll: false });
