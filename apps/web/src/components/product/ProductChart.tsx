@@ -164,10 +164,17 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     const index = dateBisector(prices, invertedDate, 1);
     const price = prices[index - 1];
 
+    if (!price) {
+      return;
+    }
+
     showTooltip({
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
-      tooltipData: price,
+      tooltipData: {
+        ...price,
+        date: invertedDate,
+      },
     });
   };
 
