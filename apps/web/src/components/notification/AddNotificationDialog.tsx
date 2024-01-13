@@ -23,14 +23,16 @@ type AddNotificationOptions = {
   restock: boolean;
 };
 
-export function AddNotificationDialog() {
-  const {
-    productPublicId,
-    variants,
-    productOptions,
-    attributes: initialAttributes,
-    listings,
-  } = useProductInfo();
+export type AddNotificationDialogProps = {
+  attributes: Record<string, string>;
+  attributesOptions: Record<string, string[]>;
+};
+
+export function AddNotificationDialog({
+  attributesOptions,
+  attributes: initialAttributes,
+}: AddNotificationDialogProps) {
+  const { productPublicId, variants, listings } = useProductInfo();
 
   const cheapestPriceInCents =
     listings.reduce(
@@ -102,7 +104,7 @@ export function AddNotificationDialog() {
             });
           }}
         >
-          {Object.entries(productOptions).map(([name, values]) => (
+          {Object.entries(attributesOptions).map(([name, values]) => (
             <Fragment key={name}>
               <label htmlFor={`${name}-input`} className="text-primary text-sm font-medium">
                 {name}

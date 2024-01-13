@@ -50,14 +50,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   });
 
   const variants = products.flatMap((product) => product.variants);
-  const productOptions: Record<string, string[]> = {};
+  const attributesOptions: Record<string, string[]> = {};
   variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
-      const values = productOptions[name] ?? [];
+      const values = attributesOptions[name] ?? [];
       if (!values.includes(value)) {
         values.push(value);
       }
-      productOptions[name] = values;
+      attributesOptions[name] = values;
     });
   });
 
@@ -95,7 +95,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     });
   } else {
     Object.entries(attributesParams).forEach(([name, value]) => {
-      if (productOptions[name]?.includes(value)) {
+      if (attributesOptions[name]?.includes(value)) {
         attributes[name] = value;
       }
     });
@@ -107,10 +107,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   return (
     <ProductInfoProvider
       productPublicId={product.publicId}
-      productOptions={productOptions}
       variant={variant}
       variants={variants}
-      attributes={attributes}
       listings={listings}
     >
       <section className="space-y-12">
@@ -128,10 +126,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 <p className="text-muted-foreground text-sm">{product.collection.brand.name}</p>
                 <h1 className="text-3xl font-medium">{product.name}</h1>
               </div>
-              <VariantControls />
+              <VariantControls attributes={attributes} attributesOptions={attributesOptions} />
               <div className="flex flex-wrap gap-3">
                 <PriceControls />
-                <NotificationPopover />
+                <NotificationPopover
+                  attributes={attributes}
+                  attributesOptions={attributesOptions}
+                />
               </div>
             </div>
           </div>

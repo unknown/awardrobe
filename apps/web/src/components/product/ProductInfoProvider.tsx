@@ -6,10 +6,8 @@ import { ProductVariantListingWithPrices, ProductVariantWithProduct, Public } fr
 
 type ProductInfoContextValue = {
   productPublicId: string;
-  productOptions: Record<string, string[]>;
   variant: Public<ProductVariantWithProduct> | null;
   variants: Public<ProductVariantWithProduct>[];
-  attributes: Record<string, string>;
   listings: ProductVariantListingWithPrices[];
   isPending: boolean;
   startTransition: TransitionStartFunction;
@@ -18,10 +16,8 @@ type ProductInfoContextValue = {
 // TODO: is this the best way to do this?
 export const ProductInfoContext = createContext<ProductInfoContextValue>({
   productPublicId: "",
-  productOptions: {},
   variant: null,
   variants: [],
-  attributes: {},
   listings: [],
   isPending: false,
   startTransition: () => {},
@@ -29,10 +25,8 @@ export const ProductInfoContext = createContext<ProductInfoContextValue>({
 
 type ProductInfoProviderProps = {
   productPublicId: string;
-  productOptions: Record<string, string[]>;
   variant: Public<ProductVariantWithProduct> | null;
   variants: Public<ProductVariantWithProduct>[];
-  attributes: Record<string, string>;
   listings: ProductVariantListingWithPrices[];
   children: React.ReactNode;
 };
