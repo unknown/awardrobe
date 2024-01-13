@@ -24,11 +24,22 @@ type AddNotificationOptions = {
 };
 
 export function AddNotificationDialog() {
-  const { product, productOptions, attributes: initialAttributes, prices } = useProductInfo();
-  const lastPrice = prices?.at(-1);
+  const { product, productOptions, attributes: initialAttributes, listings } = useProductInfo();
+  const cheapestPriceInCents =
+    listings.reduce(
+      (cheapestPrice, listing) => {
+        const listingPrice = listing.prices.at(-1)?.priceInCents;
+        if (!cheapestPrice || (listingPrice && listingPrice < cheapestPrice)) {
+          return listingPrice;
+        }
+        return cheapestPrice;
+      },
+      listings[0]?.prices.at(-1)?.priceInCents,
+    ) ?? 5000;
+
   const [attributes, setAttributes] = useState<Record<string, string>>(initialAttributes);
   const [options, setOptions] = useState<AddNotificationOptions>({
-    priceInCents: lastPrice?.priceInCents ?? 5000,
+    priceInCents: cheapestPriceInCents,
     priceDrop: true,
     restock: true,
   });
@@ -127,7 +138,7 @@ export function AddNotificationDialog() {
               if (event.target.value === "") {
                 setOptions((options) => ({
                   ...options,
-                  priceInCents: lastPrice?.priceInCents ?? 5000,
+                  priceInCents: cheapestPriceInCents,
                 }));
               }
             }}
