@@ -4,23 +4,27 @@ import { buttonVariants } from "@ui/Button";
 import { twMerge } from "tailwind-merge";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
+import { api } from "@/trpc/react";
+import { dateOffsets } from "@/utils/dates";
 import { formatCurrency } from "@/utils/utils";
 
 export function PriceControls() {
-  const { variantListings, isPending } = useProductInfo();
+  const { collectionPublicId, attributes, dateRange, isPending } = useProductInfo();
 
-  const cheapestListing = variantListings.reduce((cheapest, listing) => {
+  const { data: listings, isLoading } = api.variants.findVariantListings.useQuery({
+    attributes,
+    collectionPublicId,
+    startDateOffset: dateOffsets[dateRange],
+  });
+
+  const cheapestListing = listings?.reduce((cheapest, listing) => {
     const cheapestPrice = cheapest?.prices.at(-1)?.priceInCents;
     const listingPrice = listing.prices.at(-1)?.priceInCents;
-    if (
-      !cheapest ||
-      !cheapestPrice ||
-      (listingPrice && cheapestPrice && listingPrice < cheapestPrice)
-    ) {
+    if (!cheapestPrice || (listingPrice && cheapestPrice && listingPrice < cheapestPrice)) {
       return listing;
     }
     return cheapest;
-  }, variantListings[0]);
+  }, listings[0]);
 
   const productUrl = cheapestListing?.productUrl;
   const storeName = cheapestListing?.storeListing.store.name;
@@ -37,7 +41,7 @@ export function PriceControls() {
       target="_blank"
       rel="noopener noreferrer"
     >
-      {isPending
+      {isLoading || isPending
         ? "Loading..."
         : isUnavailable
           ? "Unavailable"

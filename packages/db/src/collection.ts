@@ -42,3 +42,17 @@ export async function findOrCreateCollection(
 
   return created;
 }
+
+export type FindCollectionOptions = {
+  collectionPublicId: string;
+};
+
+export async function findCollection(options: FindCollectionOptions): Promise<Collection | null> {
+  const { collectionPublicId } = options;
+
+  const collection = await db.query.collections.findFirst({
+    where: eq(collections.publicId, collectionPublicId),
+  });
+
+  return collection ?? null;
+}

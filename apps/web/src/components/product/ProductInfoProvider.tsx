@@ -2,29 +2,37 @@
 
 import { createContext, TransitionStartFunction, useContext, useTransition } from "react";
 
-import { ProductVariantListingWithPrices, ProductVariantWithProduct, Public } from "@awardrobe/db";
+import { DateRange } from "@/utils/dates";
 
 type ProductInfoContextValue = {
+  collectionPublicId: string;
   productPublicId: string;
-  variants: Public<ProductVariantWithProduct>[];
-  variantListings: ProductVariantListingWithPrices[];
+  productPublicIds: string[];
+  attributes: Record<string, string>;
+  attributesOptions: Record<string, string[]>;
+  dateRange: DateRange;
   isPending: boolean;
   startTransition: TransitionStartFunction;
 };
 
-// TODO: is this the best way to do this?
 export const ProductInfoContext = createContext<ProductInfoContextValue>({
+  collectionPublicId: "",
   productPublicId: "",
-  variants: [],
-  variantListings: [],
+  productPublicIds: [],
+  attributes: {},
+  attributesOptions: {},
+  dateRange: "3m",
   isPending: false,
   startTransition: () => {},
 });
 
 type ProductInfoProviderProps = {
+  collectionPublicId: string;
   productPublicId: string;
-  variants: Public<ProductVariantWithProduct>[];
-  variantListings: ProductVariantListingWithPrices[];
+  productPublicIds: string[];
+  attributes: Record<string, string>;
+  attributesOptions: Record<string, string[]>;
+  dateRange: DateRange;
   children: React.ReactNode;
 };
 
