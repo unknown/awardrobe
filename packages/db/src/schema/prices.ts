@@ -1,31 +1,33 @@
 import { relations } from "drizzle-orm";
 import { boolean, datetime, index, int, mysqlTable, serial } from "drizzle-orm/mysql-core";
 
-import { productVariants } from "./product-variants";
+import { productVariantListings } from "./product-variant-listings";
 
 export const prices = mysqlTable(
   "price",
   {
     id: serial("id").primaryKey(),
-    productVariantId: int("productVariantId").notNull(),
+    productVariantListingId: int("productVariantListingId").notNull(),
     timestamp: datetime("timestamp", { mode: "date", fsp: 3 }).notNull(),
     priceInCents: int("priceInCents").notNull(),
     inStock: boolean("inStock").notNull(),
   },
   (price) => ({
-    productVariantIdIx: index("productVariantIdIx").on(price.productVariantId),
+    productVariantListingIdIdx: index("productVariantListingIdIdx").on(
+      price.productVariantListingId,
+    ),
   }),
 );
 
 export const pricesRelations = relations(prices, ({ one }) => ({
-  productVariant: one(productVariants, {
-    relationName: "PriceToProductVariant",
-    fields: [prices.productVariantId],
-    references: [productVariants.id],
+  listing: one(productVariantListings, {
+    relationName: "PriceToProductVariantListing",
+    fields: [prices.productVariantListingId],
+    references: [productVariantListings.id],
   }),
-  latestInProductVariant: one(productVariants, {
-    relationName: "LatestPrice",
+  latestInListing: one(productVariantListings, {
+    relationName: "LatestPriceToProductVariantListing",
     fields: [prices.id],
-    references: [productVariants.latestPriceId],
+    references: [productVariantListings.latestPriceId],
   }),
 }));

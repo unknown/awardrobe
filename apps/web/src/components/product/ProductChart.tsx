@@ -4,63 +4,49 @@ import { Fragment } from "react";
 import { AxisBottom } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
 import { localPoint } from "@visx/event";
-import { LinearGradient, RadialGradient } from "@visx/gradient";
+import { RadialGradient } from "@visx/gradient";
 import { Group } from "@visx/group";
 import { Pattern } from "@visx/pattern";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
-import { AreaClosed, Bar, Circle, LinePath } from "@visx/shape";
+import { Bar, Circle, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
-
-import { Price, Public } from "@awardrobe/db";
 
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency, formatDate } from "@/utils/utils";
 
-export type ChartPrice = {
-  date: string;
-  price: number;
-  stock: number;
-};
-
 export type PricesChartProps = {
-  prices: Public<Price>[] | null;
   augmentCurrentPrice?: boolean;
 };
 
-type VisxChartProps = {
-  prices: ChartPrice[];
-  width: number;
-  height: number;
-};
+export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
+  const { isPending, listings } = useProductInfo();
 
-// accessors
-const dateBisector = bisector<ChartPrice, Date>((d) => new Date(d.date)).left;
-const dateAccessor = (d: ChartPrice) => new Date(d.date);
-const priceAccessor = (d: ChartPrice) => d.price;
-const stockAccessor = (d: ChartPrice) => d.stock;
+  const cleanedListings: ChartListing[] = listings.map((listing) => {
+    const { prices } = listing;
 
-export function ProductChart({ prices, augmentCurrentPrice = true }: PricesChartProps) {
-  const { isPending } = useProductInfo();
+    const lastPrice = prices?.at(-1);
+    const chartPrices: ChartPrice[] = prices
+      .concat(augmentCurrentPrice && lastPrice ? { ...lastPrice, timestamp: new Date() } : [])
+      .map((price) => ({
+        date: price.timestamp,
+        price: price.priceInCents,
+        stock: price.inStock ? 1 : 0,
+      }));
 
-  const lastPrice = prices?.at(-1);
-  const chartPrices: ChartPrice[] | null =
-    prices !== null && lastPrice
-      ? prices
-          .concat(augmentCurrentPrice ? { ...lastPrice, timestamp: new Date() } : [])
-          .map((price) => ({
-            date: price.timestamp.toString(),
-            price: price.priceInCents,
-            stock: price.inStock ? 1 : 0,
-          }))
-      : null;
+    return {
+      id: listing.id.toString(),
+      storeName: listing.storeListing.store.name,
+      prices: chartPrices,
+    };
+  });
 
   const overlayComponent = isPending ? (
     <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
       <p className="text-muted-foreground">Loading...</p>
     </div>
-  ) : prices === null ? (
+  ) : listings.length === 0 ? (
     <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
       <h2 className="text-xl font-medium">No price history</h2>
       <p className="text-muted-foreground">
@@ -73,7 +59,7 @@ export function ProductChart({ prices, augmentCurrentPrice = true }: PricesChart
     <ParentSize className="relative">
       {({ width, height }) => (
         <Fragment>
-          <VisxChart prices={chartPrices ?? []} width={width} height={height} />
+          <VisxChart listings={cleanedListings} width={width} height={height} />
           {overlayComponent}
         </Fragment>
       )}
@@ -81,13 +67,46 @@ export function ProductChart({ prices, augmentCurrentPrice = true }: PricesChart
   );
 }
 
-function VisxChart({ prices, width, height }: VisxChartProps) {
+export type ChartListing = {
+  id: string;
+  storeName: string;
+  prices: ChartPrice[];
+};
+
+export type ChartPrice = {
+  date: Date;
+  price: number;
+  stock: number;
+};
+
+export type TooltipData = {
+  listings: {
+    storeName: string;
+    price: ChartPrice | null;
+  }[];
+  date: Date;
+};
+
+// accessors
+const dateBisector = bisector<ChartPrice, Date>((d) => new Date(d.date)).left;
+const dateAccessor = (d: ChartPrice) => new Date(d.date);
+const priceAccessor = (d: ChartPrice) => d.price;
+
+type VisxChartProps = {
+  listings: ChartListing[];
+  width: number;
+  height: number;
+};
+
+function VisxChart({ listings, width, height }: VisxChartProps) {
   const { tooltipData, tooltipLeft, tooltipOpen, showTooltip, hideTooltip } =
-    useTooltip<ChartPrice>();
+    useTooltip<TooltipData>();
 
   if (width <= 0 || height <= 0) {
     return null;
   }
+
+  const prices = listings.flatMap((listing) => listing.prices);
 
   const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 36 : 0, left: 0 };
 
@@ -107,27 +126,24 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
     range: [innerHeight, 0],
     domain: [0, (priceExtent[1] ?? 0) * 1.2],
   });
-  const stockScale = scaleLinear<number>({
-    range: [innerHeight, 0],
-    domain: [0, 1],
-  });
 
   const handleTooltip = (event: React.TouchEvent<SVGElement> | React.MouseEvent<SVGElement>) => {
     const coords = localPoint(event) ?? { x: 0, y: 0 };
     const invertedDate = timeScale.invert(coords.x - margin.left);
     const index = dateBisector(prices, invertedDate, 1);
-    const price = prices[index - 1];
 
-    if (!price) return;
-    const data = {
-      ...price,
-      date: invertedDate.toISOString(),
-    };
+    const tooltipListings = listings.map((listing) => ({
+      price: listing.prices[index - 1] ?? null,
+      storeName: listing.storeName,
+    }));
 
     showTooltip({
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
-      tooltipData: data,
+      tooltipData: {
+        listings: tooltipListings,
+        date: invertedDate,
+      },
     });
   };
 
@@ -142,13 +158,6 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             <stop offset="0.75" stopColor="white" />
             <stop offset="1" stopColor="black" />
           </linearGradient>
-          <LinearGradient
-            id="area-gradient"
-            from="#A8FF99"
-            fromOpacity={0.3}
-            to="#A8FF99"
-            toOpacity={0.15}
-          />
           <mask id="grid-mask">
             <Bar width={innerWidth} height={innerHeight} fill="url(#grid-gradient)" />
           </mask>
@@ -173,17 +182,6 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             fill="url(#grid-pattern)"
             mask="url(#grid-mask)"
           />
-          <AreaClosed<ChartPrice>
-            data={prices}
-            x={(d) => timeScale(dateAccessor(d))}
-            y={(d) => stockScale(stockAccessor(d))}
-            yScale={stockScale}
-            curve={curveStepAfter}
-            strokeWidth={1}
-            stroke="#398739"
-            fill="url(#area-gradient)"
-            mask="url(#chart-mask)"
-          />
           <AxisBottom
             top={innerHeight + 8}
             scale={timeScale}
@@ -203,14 +201,17 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
             hideTicks
             hideAxisLine
           />
-          <LinePath<ChartPrice>
-            data={prices}
-            x={(d) => timeScale(dateAccessor(d))}
-            y={(d) => priceScale(priceAccessor(d))}
-            curve={curveStepAfter}
-            strokeWidth={2}
-            stroke="#2b8bad"
-          />
+          {listings.map((listing) => (
+            <LinePath<ChartPrice>
+              key={listing.id}
+              data={listing.prices}
+              x={(d) => timeScale(dateAccessor(d))}
+              y={(d) => priceScale(priceAccessor(d))}
+              curve={curveStepAfter}
+              strokeWidth={2}
+              stroke="#2b8bad"
+            />
+          ))}
           <Bar
             width={innerWidth}
             height={innerHeight}
@@ -238,19 +239,20 @@ function VisxChart({ prices, width, height }: VisxChartProps) {
       </svg>
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds
-          className="bg-background absolute flex items-center justify-center gap-1.5 rounded-md border p-2 text-sm shadow-sm"
+          className="bg-background absolute flex flex-col justify-center gap-1.5 rounded-md border p-2 text-sm shadow-sm"
           unstyled={true}
           left={tooltipLeft}
           offsetLeft={8}
           offsetTop={8}
         >
-          <span className="font-medium tabular-nums">
-            {formatCurrency(priceAccessor(tooltipData))}
-            {!stockAccessor(tooltipData) ? "*" : undefined}
-          </span>
-          <span className="text-muted-foreground tabular-nums">
-            {formatDate(new Date(dateAccessor(tooltipData)))}
-          </span>
+          {tooltipData.listings.map((listing) => (
+            <p key={listing.storeName} className="font-medium tabular-nums">
+              {`${listing.storeName}: ${
+                listing.price ? formatCurrency(listing.price.price) : "N/A"
+              }${!listing.price?.stock ? "*" : ""}`}
+            </p>
+          ))}
+          <span className="text-muted-foreground tabular-nums">{formatDate(tooltipData.date)}</span>
         </TooltipWithBounds>
       )}
     </Fragment>

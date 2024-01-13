@@ -10,6 +10,7 @@
     "clean": "rm -rf .turbo node_modules dist"
   },
   "dependencies": {
+    "@awardrobe/adapters": "workspace:^",
     "axios": "^1.6.5"
   },
   "devDependencies": {

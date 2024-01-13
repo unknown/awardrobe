@@ -2,7 +2,7 @@ import { proxiedAxios } from "@awardrobe/proxied-axios";
 
 import { dollarsToCents } from "../../utils/formatter";
 import { AdaptersError, handleAxiosError } from "../errors";
-import { StoreAdapter, VariantAttribute, VariantInfo } from "../types";
+import { ProductDetails, StoreAdapter, VariantAttribute, VariantDetails } from "../types";
 import { detailsSchema, l2sSchema, Option, productsSchema } from "./schemas";
 
 function getProductUrl(
@@ -23,7 +23,7 @@ export const UniqloUS: StoreAdapter = {
   urlRegex: /^(?:www.)?uniqlo\.com\/us\//,
   storeHandle: "uniqlo-us",
 
-  async getProducts(limit?: number) {
+  async getListingIds(limit) {
     const productsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products`;
 
     const productCodes = new Set<string>();
@@ -61,7 +61,7 @@ export const UniqloUS: StoreAdapter = {
     return productCodes;
   },
 
-  getProductCode: async function getProductCode(url: string) {
+  getListingId: async function getProductCode(url) {
     const productCodeRegex = /([a-zA-Z0-9]{7}-[0-9]{3})/;
     const matches = url.match(productCodeRegex);
 
@@ -96,9 +96,9 @@ export const UniqloUS: StoreAdapter = {
     return productCode;
   },
 
-  async getProductDetails(productCode: string) {
-    const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
-    const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productCode}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
+  async getListingDetails(productId) {
+    const l2sEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/l2s?withPrices=true&withStocks=true&httpFailure=true`;
+    const detailsEndpoint = `https://www.uniqlo.com/us/api/commerce/v5/en/products/${productId}/price-groups/00/details?includeModelSize=false&httpFailure=true`;
 
     const [l2sResponse, detailsResponse] = await Promise.all([
       proxiedAxios.get(l2sEndpoint),
@@ -134,7 +134,7 @@ export const UniqloUS: StoreAdapter = {
     const { l2s, stocks, prices } = l2sResult.data.result;
     const { name, longDescription, images, ...options } = detailsResult.data.result;
 
-    const variants: VariantInfo[] = [];
+    const variants: VariantDetails[] = [];
     l2s.forEach((variant) => {
       const stocksEntry = stocks[variant.l2Id];
       const pricesEntry = prices[variant.l2Id];
@@ -169,29 +169,38 @@ export const UniqloUS: StoreAdapter = {
       }
 
       variants.push({
-        timestamp,
         attributes,
-        productUrl: getProductUrl(productCode, { color, size, pld }),
-        priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
-        inStock: comingSoon ? false : stocksEntry.quantity > 0,
+        productUrl: getProductUrl(productId, { color, size, pld }),
+        price: {
+          timestamp,
+          priceInCents: dollarsToCents(pricesEntry.base.value.toString()),
+          inStock: comingSoon ? false : stocksEntry.quantity > 0,
+        },
       });
     });
 
     // filter variants that don't have all attributes
     const totalNumAttributes = Math.max(...variants.map(({ attributes }) => attributes.length));
-    const filteredVariants = variants.filter(({ attributes, inStock }) => {
-      return attributes.length === totalNumAttributes || inStock;
+    const filteredVariants = variants.filter(({ attributes, price }) => {
+      return attributes.length === totalNumAttributes || price.inStock;
     });
 
     const filteredImages = images.sub.filter(
       (image): image is { image: string } => "image" in image,
     );
 
-    return {
+    const product: ProductDetails = {
       name,
+      productId,
       variants: filteredVariants,
       description: longDescription,
-      imageUrl: filteredImages[0]?.image,
+      imageUrl: filteredImages[0]?.image ?? null,
+    };
+
+    return {
+      brand: "uniqlo",
+      collectionId: productId,
+      products: [product],
     };
   },
 };

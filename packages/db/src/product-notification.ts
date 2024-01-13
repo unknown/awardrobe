@@ -41,7 +41,7 @@ export async function createNotification(
   const created = await db.query.productNotifications.findFirst({
     where: eq(productNotifications.id, Number(notificationsTable.insertId)),
     columns: { id: false, productVariantId: false, productId: false },
-    with: { productVariant: { columns: { id: false, latestPriceId: false, productId: false } } },
+    with: { productVariant: { columns: { id: false, productId: false } } },
   });
 
   if (!created) {
@@ -82,16 +82,16 @@ export async function findUserNotifications(
         ),
       ),
     columns: { id: false, productId: false, productVariantId: false },
-    with: { productVariant: { columns: { id: false, productId: false, latestPriceId: false } } },
+    with: { productVariant: { columns: { id: false, productId: false } } },
   });
 }
 
-export type FindNotificaitonsByProductOptions = {
+export type FindNotificationsByProductOptions = {
   productId: number;
 };
 
 export function findNotificationsByProduct(
-  options: FindNotificaitonsByProductOptions,
+  options: FindNotificationsByProductOptions,
 ): Promise<NotificationWithUser[]> {
   const { productId } = options;
 

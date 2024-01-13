@@ -1,9 +1,16 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { AdaptersError, downloadImage, getAdapterFromUrl } from "@awardrobe/adapters";
-import { createProduct, createProductVariants, findProductPublic, findStore } from "@awardrobe/db";
-import type { Product, Public } from "@awardrobe/db";
+import { AdaptersError, getAdapterFromUrl } from "@awardrobe/adapters";
+import {
+  createProduct,
+  findBrand,
+  findOrCreateCollection,
+  findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
+  findProduct,
+  findStore,
+} from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -29,7 +36,7 @@ export const productsRouter = router({
         throw new Error("Store not yet supported");
       }
 
-      const productCode = await adapter.getProductCode(productUrl).catch((error) => {
+      const externalListingId = await adapter.getListingId(productUrl).catch((error) => {
         if (error instanceof AdaptersError) {
           if (error.name === "PRODUCT_CODE_NOT_FOUND") {
             return null;
@@ -38,54 +45,81 @@ export const productsRouter = router({
         throw error;
       });
 
-      if (!productCode) {
+      if (!externalListingId) {
         throw new Error("Error retrieving product code");
       }
 
-      const existingProduct = await findProductPublic({ productCode, storeId: store.id });
-      if (existingProduct) {
-        return existingProduct;
-      }
-
-      const details = await adapter.getProductDetails(productCode).catch((error) => {
+      const details = await adapter.getListingDetails(externalListingId).catch(async (error) => {
         console.error(error);
         throw new Error("Error retrieving product details");
       });
 
-      const product = await createProduct({
-        productCode,
-        name: details.name,
-        storeId: store.id,
+      const brand = await findBrand({ brandHandle: details.brand });
+      if (!brand) {
+        throw new Error(`Brand ${details.brand} not found`);
+      }
+
+      const collection = await findOrCreateCollection({
+        externalCollectionId: details.collectionId,
+        brandId: brand.id,
       });
 
-      const createVariantsPromise = createProductVariants({
-        productId: product.id,
-        variantInfos: details.variants,
-      });
+      for (const productDetails of details.products) {
+        let product = await findProduct({
+          collectionId: collection.id,
+          externalProductId: productDetails.productId,
+        });
 
-      const addProductToSearchPromise = addProduct({
-        id: product.publicId,
-        name: details.name,
-        storeName: store.name,
-      });
+        if (!product) {
+          product = await createProduct({
+            productDetails,
+            collectionId: collection.id,
+          });
 
-      const addImagePromise = details.imageUrl
-        ? downloadImage(details.imageUrl).then((imageBuffer) =>
-            addProductImage(product.publicId, imageBuffer),
-          )
-        : undefined;
+          const addProductToSearchPromise = addProduct({
+            id: product.publicId,
+            name: product.name,
+            brand: brand.name,
+          });
 
-      await Promise.allSettled([createVariantsPromise, addProductToSearchPromise, addImagePromise]);
+          const addImagePromise = productDetails.imageUrl
+            ? addProductImage(product.publicId, productDetails.imageUrl)
+            : undefined;
 
-      revalidatePath("/(app)/(browse)/search", "page");
+          revalidatePath("/(app)/(browse)/search", "page");
 
-      const publicProduct: Public<Product> = {
-        name: product.name,
-        productCode: product.productCode,
-        publicId: product.publicId,
-        delisted: product.delisted,
-      };
+          await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
+        }
 
-      return publicProduct;
+        const storeListing = await findOrCreateStoreListing({
+          externalListingId,
+          storeId: store.id,
+        });
+        const typedProduct = product; // hack to allow typescript to type product as non-null
+
+        await Promise.all(
+          productDetails.variants.map((variantDetails) =>
+            findOrCreateProductVariantListing({
+              variantDetails,
+              productId: typedProduct.id,
+              storeListingId: storeListing.id,
+            }),
+          ),
+        );
+      }
+
+      const firstProductId = details.products[0]?.productId;
+      const product = firstProductId
+        ? await findProduct({
+            collectionId: collection.id,
+            externalProductId: firstProductId,
+          })
+        : null;
+
+      if (!product) {
+        throw new Error("Could not find product");
+      }
+
+      return product;
     }),
 });

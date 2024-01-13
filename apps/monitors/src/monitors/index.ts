@@ -1,26 +1,20 @@
-import {
-  AdaptersError,
-  downloadImage,
-  getAdapter,
-  VariantAttribute,
-  VariantInfo,
-} from "@awardrobe/adapters";
+import { AdaptersError, getAdapter, PriceDatum } from "@awardrobe/adapters";
 import {
   createProduct,
-  createProductVariant,
-  createProductVariants,
-  findProductVariants,
+  findBrand,
+  findOrCreateCollection,
+  findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
+  findProduct,
   Price,
-  ProductVariantWithPrice,
-  ProductWithStoreHandle,
   Store,
+  StoreListingWithStore,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
-import { shallowEquals } from "../utils/utils";
 import {
-  handleDelistedProduct,
+  handleDelistedListing,
   handleOutdatedVariant,
   handlePriceDrop,
   handleRestock,
@@ -33,16 +27,16 @@ if (!baseUrl) {
 }
 const revalidateUrl = new URL("/api/products/revalidate", baseUrl);
 
-export async function insertProduct(productCode: string, store: Store) {
+export async function insertStoreListing(externalListingId: string, store: Store): Promise<void> {
   const adapter = getAdapter(store.handle);
   if (!adapter) {
     throw new Error(`No adapter found for ${store.handle}`);
   }
 
-  const details = await adapter.getProductDetails(productCode).catch(async (error) => {
+  const details = await adapter.getListingDetails(externalListingId).catch(async (error) => {
     if (error instanceof AdaptersError) {
       if (error.name === "PRODUCT_NOT_FOUND") {
-        console.error(`Product ${productCode} not found`);
+        console.error(`Product ${externalListingId} not found`);
         return null;
       } else if (error.name === "INVALID_RESPONSE") {
         console.error(error);
@@ -56,114 +50,132 @@ export async function insertProduct(productCode: string, store: Store) {
     return;
   }
 
-  const product = await createProduct({
-    productCode,
-    storeId: store.id,
-    name: details.name,
-  });
-
-  const createVariantsPromise = createProductVariants({
-    productId: product.id,
-    variantInfos: details.variants,
-  });
-
-  const addProductToSearchPromise = addProduct({
-    id: product.publicId,
-    name: product.name,
-    storeName: store.name,
-  });
-
-  const addImagePromise = details.imageUrl
-    ? downloadImage(details.imageUrl).then((imageBuffer) =>
-        addProductImage(product.publicId, imageBuffer),
-      )
-    : undefined;
-
-  const revalidatePromise = fetch(revalidateUrl.toString());
-
-  const results = await Promise.allSettled([
-    createVariantsPromise,
-    addProductToSearchPromise,
-    addImagePromise,
-    revalidatePromise,
-  ]);
-
-  if (results.some((result) => result.status === "rejected")) {
-    throw new Error("Partial product insert");
+  const brand = await findBrand({ brandHandle: details.brand });
+  if (!brand) {
+    throw new Error(`Brand ${details.brand} not found`);
   }
 
-  return product;
-}
-
-export async function updateProduct(product: ProductWithStoreHandle) {
-  const variants = await findProductVariants({ productId: product.id });
-
-  const adapter = getAdapter(product.store.handle);
-  if (!adapter) {
-    throw new Error(`No adapter found for ${product.store.handle}`);
-  }
-
-  const details = await adapter.getProductDetails(product.productCode).catch(async (error) => {
-    if (error instanceof AdaptersError) {
-      if (error.name === "PRODUCT_NOT_FOUND") {
-        await handleDelistedProduct({ product });
-        return null;
-      } else if (error.name === "INVALID_RESPONSE") {
-        // TODO: log this better
-        console.error(error);
-        return null;
-      }
-    }
-    throw error;
+  const collection = await findOrCreateCollection({
+    externalCollectionId: details.collectionId,
+    brandId: brand.id,
   });
 
-  if (!details) {
-    return;
-  }
+  for (const productDetails of details.products) {
+    let product = await findProduct({
+      collectionId: collection.id,
+      externalProductId: productDetails.productId,
+    });
 
-  const allVariantsCallbacks = details.variants.map((variantInfo) => {
-    const productVariant = getExistingVariant(variants, variantInfo);
+    if (!product) {
+      product = await createProduct({
+        productDetails,
+        collectionId: collection.id,
+      });
 
-    if (!productVariant) {
-      return createProductVariant({ variantInfo, productId: product.id });
+      const addProductToSearchPromise = addProduct({
+        id: product.publicId,
+        name: product.name,
+        brand: brand.name,
+      });
+
+      const addImagePromise = productDetails.imageUrl
+        ? addProductImage(product.publicId, productDetails.imageUrl)
+        : undefined;
+
+      const revalidatePromise = fetch(revalidateUrl.toString());
+
+      await Promise.allSettled([addProductToSearchPromise, addImagePromise, revalidatePromise]);
     }
 
-    const { isOutdated, hasPriceDropped, hasRestocked } = getFlags(
-      variantInfo,
-      productVariant.latestPrice,
+    const storeListing = await findOrCreateStoreListing({ externalListingId, storeId: store.id });
+    const typedProduct = product; // hack to allow typescript to type product as non-null
+
+    await Promise.all(
+      productDetails.variants.map((variantDetails) =>
+        findOrCreateProductVariantListing({
+          variantDetails,
+          productId: typedProduct.id,
+          storeListingId: storeListing.id,
+        }),
+      ),
     );
+  }
+}
 
-    return Promise.allSettled([
-      isOutdated ? handleOutdatedVariant({ variantInfo, productVariant }) : null,
-      hasPriceDropped ? handlePriceDrop({ product, variantInfo, productVariant }) : null,
-      hasRestocked ? handleRestock({ product, variantInfo, productVariant }) : null,
-    ]);
+export async function pollStoreListing(listing: StoreListingWithStore) {
+  const adapter = getAdapter(listing.store.handle);
+  if (!adapter) {
+    throw new Error(`No adapter found for ${listing.store.handle}`);
+  }
+
+  const details = await adapter
+    .getListingDetails(listing.externalListingId)
+    .catch(async (error) => {
+      if (error instanceof AdaptersError) {
+        if (error.name === "PRODUCT_NOT_FOUND") {
+          await handleDelistedListing({ listing });
+          return null;
+        } else if (error.name === "INVALID_RESPONSE") {
+          // TODO: log this better
+          console.error(error);
+          return null;
+        }
+      }
+      throw error;
+    });
+
+  if (!details) {
+    return;
+  }
+
+  const brand = await findBrand({ brandHandle: details.brand });
+  if (!brand) {
+    throw new Error(`Brand ${details.brand} not found`);
+  }
+
+  const collection = await findOrCreateCollection({
+    externalCollectionId: details.collectionId,
+    brandId: brand.id,
   });
 
-  await Promise.allSettled(allVariantsCallbacks);
+  const allHandlers: Promise<void>[] = [];
+  details.products.forEach(async (productDetails) => {
+    const product = await findProduct({
+      collectionId: collection.id,
+      externalProductId: productDetails.productId,
+    });
+
+    if (!product) {
+      // TODO: create the product
+      console.error(`Product ${productDetails.productId} not found`);
+      return;
+    }
+
+    productDetails.variants.forEach(async (variantDetails) => {
+      const productVariantListing = await findOrCreateProductVariantListing({
+        variantDetails,
+        productId: product.id,
+        storeListingId: listing.id,
+      });
+
+      const flags = getFlags(variantDetails.price, productVariantListing.latestPrice);
+
+      if (flags.isOutdated) {
+        allHandlers.push(handleOutdatedVariant({ variantDetails, productVariantListing }));
+      }
+      if (flags.hasPriceDropped) {
+        allHandlers.push(handlePriceDrop({ product, variantDetails, productVariantListing }));
+      }
+      if (flags.hasRestocked) {
+        allHandlers.push(handleRestock({ product, variantDetails, productVariantListing }));
+      }
+    });
+  });
+
+  await Promise.allSettled(allHandlers);
 }
 
-function getExistingVariant(variants: ProductVariantWithPrice[], variantInfo: VariantInfo) {
-  const inputAttributeMap = attributesToMap(variantInfo.attributes);
-
-  const existingVariant = variants.find((productVariant) =>
-    shallowEquals(inputAttributeMap, attributesToMap(productVariant.attributes)),
-  );
-
-  return existingVariant;
-}
-
-function attributesToMap(attributes: VariantAttribute[]) {
-  return attributes.reduce(
-    (acc, attribute) => {
-      acc[attribute.name] = attribute.value;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-}
-
-function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
+function getFlags(price: PriceDatum, latestPrice: Price | null) {
   if (!latestPrice) {
     return {
       hasPriceDropped: false,
@@ -172,15 +184,15 @@ function getFlags(variantInfo: VariantInfo, latestPrice: Price | null) {
     };
   }
 
-  const diffTime = variantInfo.timestamp.getTime() - latestPrice.timestamp.getTime();
+  const diffTime = price.timestamp.getTime() - latestPrice.timestamp.getTime();
   const diffHours = diffTime / (1000 * 60 * 60);
   const isStale = diffHours >= 12;
 
-  const hasPriceChanged = variantInfo.priceInCents !== latestPrice.priceInCents;
-  const hasPriceDropped = variantInfo.priceInCents < latestPrice.priceInCents;
+  const hasPriceChanged = price.priceInCents !== latestPrice.priceInCents;
+  const hasPriceDropped = price.priceInCents < latestPrice.priceInCents;
 
-  const hasStockChanged = variantInfo.inStock !== latestPrice.inStock;
-  const hasRestocked = variantInfo.inStock && !latestPrice.inStock;
+  const hasStockChanged = price.inStock !== latestPrice.inStock;
+  const hasRestocked = price.inStock && !latestPrice.inStock;
 
   const isOutdated = isStale || hasPriceChanged || hasStockChanged;
 

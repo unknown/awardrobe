@@ -1,16 +1,19 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import { findFullProductPublic, findPublicPrices } from "@awardrobe/db";
+import {
+  findCollectionProducts,
+  findProductByPublicId,
+  findProductVariantListings,
+} from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
 import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
 import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
-import { ChartPrice, ProductChart } from "@/components/product/ProductChart";
+import { ProductChart } from "@/components/product/ProductChart";
 import { ProductInfoProvider } from "@/components/product/ProductInfoProvider";
 import { DateRange, getDateFromRange, isDateRange } from "@/utils/dates";
-import { formatCurrency } from "@/utils/utils";
 
 type ProductPageProps = {
   params: { productId: string };
@@ -22,7 +25,7 @@ type ProductPageProps = {
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata | undefined> {
-  const product = await findFullProductPublic({ productPublicId: params.productId });
+  const product = await findProductByPublicId({ productPublicId: params.productId });
   if (!product) {
     return undefined;
   }
@@ -32,18 +35,22 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({
-  params,
-  searchParams: { range, ...attributesParams },
-}: ProductPageProps) {
-  const product = await findFullProductPublic({ productPublicId: params.productId });
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+  const { range, ...attributesParams } = searchParams;
+
+  const product = await findProductByPublicId({ productPublicId: params.productId });
 
   if (!product) {
     notFound();
   }
 
+  const products = await findCollectionProducts({
+    collectionId: product.collectionId,
+  });
+  const variants = products.flatMap((product) => product.variants);
+
   const productOptions: Record<string, string[]> = {};
-  product.variants.forEach(({ attributes }) => {
+  variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
       const values = productOptions[name] ?? [];
       if (!values.includes(value)) {
@@ -55,7 +62,7 @@ export default async function ProductPage({
 
   const variant =
     (Object.keys(attributesParams).length > 0
-      ? product.variants.find(({ attributes }) => {
+      ? variants.find(({ attributes }) => {
           if (attributes.length !== Object.keys(attributesParams).length) {
             return false;
           }
@@ -63,39 +70,35 @@ export default async function ProductPage({
         })
       : product.variants[0]) ?? null;
 
-  const initialDateRange: DateRange = isDateRange(range) ? range : "3m";
-  const initialAttributes: Record<string, string> = {};
+  if (variant && variant.productId !== product.id) {
+    const newProduct = products.find((product) => product.id === variant.productId);
+    if (newProduct) {
+      const params = new URLSearchParams(searchParams);
+      redirect(`/product/${newProduct.publicId}?${params.toString()}`);
+    }
+  }
+
+  const dateRange: DateRange = isDateRange(range) ? range : "3m";
+
+  const listings = variant
+    ? await findProductVariantListings({
+        productVariantId: variant.id,
+        pricesStartDate: getDateFromRange(dateRange),
+      })
+    : [];
+
+  const attributes: Record<string, string> = {};
   if (variant) {
     variant.attributes.forEach(({ name, value }) => {
-      initialAttributes[name] = value;
+      attributes[name] = value;
     });
   } else {
     Object.entries(attributesParams).forEach(([name, value]) => {
       if (productOptions[name]?.includes(value)) {
-        initialAttributes[name] = value;
+        attributes[name] = value;
       }
     });
   }
-
-  const prices = variant
-    ? await findPublicPrices({
-        variantPublicId: variant.publicId,
-        startDate: getDateFromRange(initialDateRange),
-      })
-    : null;
-  const lastPrice = prices?.at(-1);
-  const minMaxPrices = prices?.reduce(
-    (acc, price) => {
-      if (acc.min === null || price.priceInCents < acc.min) {
-        acc.min = price.priceInCents;
-      }
-      if (acc.max === null || price.priceInCents > acc.max) {
-        acc.max = price.priceInCents;
-      }
-      return acc;
-    },
-    { min: null as number | null, max: null as number | null },
-  );
 
   const mediaStorePath = getProductPath(product.publicId);
   const mediaUrl = new URL(mediaStorePath, process.env.NEXT_PUBLIC_MEDIA_STORE_URL).href;
@@ -105,8 +108,8 @@ export default async function ProductPage({
       product={product}
       productOptions={productOptions}
       variant={variant}
-      attributes={initialAttributes}
-      prices={prices}
+      attributes={attributes}
+      listings={listings}
     >
       <section className="space-y-12">
         <div className="container max-w-4xl">
@@ -120,7 +123,7 @@ export default async function ProductPage({
             </div>
             <div className="flex w-full flex-col gap-3">
               <div className="space-y-1">
-                <p className="text-muted-foreground text-sm">{product.store.name}</p>
+                <p className="text-muted-foreground text-sm">{product.collection.brand.name}</p>
                 <h1 className="text-3xl font-medium">{product.name}</h1>
               </div>
               <VariantControls />
@@ -130,39 +133,9 @@ export default async function ProductPage({
         </div>
         <div className="container max-w-4xl space-y-3">
           <h2 className="text-xl font-medium">Price History</h2>
-          <div className="flex flex-wrap justify-between gap-4">
-            <DateRangeControl initialDateRange={initialDateRange} />
-            <div className="text-muted-foreground flex flex-row flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-              <span className="flex items-center gap-2.5">
-                <div className="h-2 w-2 border border-[#398739] bg-[#A8FF99]/[0.3]" /> In Stock
-              </span>
-              <span className="flex items-center gap-2.5">
-                <div className="h-2 w-2 rounded-full bg-[#2b8bad]" /> {product.store.name}
-              </span>
-            </div>
-          </div>
+          <DateRangeControl initialDateRange={dateRange} />
           <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
-            <ProductChart prices={prices} />
-          </div>
-          <div className="flex flex-wrap items-center justify-stretch gap-3 text-sm font-medium">
-            {lastPrice ? (
-              <div className="flex flex-1 justify-between rounded-md border p-4">
-                <p className="text-muted-foreground">Current price</p>
-                <p className="tabular-nums">{formatCurrency(lastPrice.priceInCents)}</p>
-              </div>
-            ) : null}
-            {minMaxPrices?.min ? (
-              <div className="flex flex-1 justify-between rounded-md border p-4">
-                <p className="text-muted-foreground">Lowest price</p>
-                <p className="tabular-nums">{formatCurrency(minMaxPrices.min)}</p>
-              </div>
-            ) : null}
-            {minMaxPrices?.max ? (
-              <div className="flex flex-1 justify-between rounded-md border p-4">
-                <p className="text-muted-foreground">Highest price</p>
-                <p className="tabular-nums">{formatCurrency(minMaxPrices.max)}</p>
-              </div>
-            ) : null}
+            <ProductChart />
           </div>
         </div>
       </section>

@@ -42,7 +42,7 @@ export async function ProductList({ products }: ProductListProps) {
               </div>
             ) : null}
             <div className="mt-3">
-              <p className="text-muted-foreground text-sm">{product.storeName}</p>
+              <p className="text-muted-foreground text-sm">{product.brand}</p>
               <p>{product.name}</p>
             </div>
           </div>

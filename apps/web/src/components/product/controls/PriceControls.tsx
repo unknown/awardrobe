@@ -8,11 +8,25 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
 export function PriceControls() {
-  const { product, variant, prices, isPending } = useProductInfo();
+  const { listings, isPending } = useProductInfo();
 
-  const storeName = product.store.shortenedName ?? product.store.name;
-  const productUrl = variant?.productUrl;
-  const lastPrice = prices?.at(-1);
+  const cheapestListing = listings.reduce((cheapest, listing) => {
+    const cheapestPrice = cheapest?.prices.at(-1)?.priceInCents;
+    const listingPrice = listing.prices.at(-1)?.priceInCents;
+    if (
+      !cheapest ||
+      !cheapestPrice ||
+      (listingPrice && cheapestPrice && listingPrice < cheapestPrice)
+    ) {
+      return listing;
+    }
+    return cheapest;
+  }, listings[0]);
+
+  const productUrl = cheapestListing?.productUrl;
+  const storeName = cheapestListing?.storeListing.store.name;
+  const isUnavailable = !cheapestListing?.active || !productUrl;
+  const lastPrice = cheapestListing?.prices.at(-1);
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -27,13 +41,11 @@ export function PriceControls() {
       >
         {isPending
           ? "Loading..."
-          : product.delisted
+          : isUnavailable
             ? "Unavailable"
-            : !productUrl
-              ? "Not available"
-              : !lastPrice
-                ? "See price"
-                : `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`}
+            : lastPrice
+              ? `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`
+              : "See price"}
       </a>
       <NotificationPopover />
     </div>

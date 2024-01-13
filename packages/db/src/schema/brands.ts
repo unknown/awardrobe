@@ -1,21 +1,21 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, serial, text, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
-import { storeListings } from "./store-listings";
+import { collections } from "./collections";
 
-export const stores = mysqlTable(
-  "store",
+export const brands = mysqlTable(
+  "brand",
   {
     id: serial("id").primaryKey(),
     handle: varchar("handle", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     externalUrl: text("externalUrl").notNull(),
   },
-  (store) => ({
-    handleUnqIdx: uniqueIndex("handleUnqIdx").on(store.handle),
+  (brand) => ({
+    handleUnqIdx: uniqueIndex("handleUnqIdx").on(brand.handle),
   }),
 );
 
-export const storesRelations = relations(stores, ({ many }) => ({
-  productListings: many(storeListings, { relationName: "StoreToProductListing" }),
+export const brandsRelations = relations(brands, ({ many }) => ({
+  collections: many(collections, { relationName: "BrandToCollection" }),
 }));

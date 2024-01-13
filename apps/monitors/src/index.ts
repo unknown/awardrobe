@@ -2,17 +2,17 @@ import PgBoss, { Job } from "pg-boss";
 
 import { getAdapter } from "@awardrobe/adapters";
 import {
-  findFrequentProducts,
-  findPeriodicProducts,
-  findProductsByProductCodes,
+  findFrequentStoreListings,
+  findPeriodicStoreListings,
+  findStoreListingsFromExternalIds,
   findStores,
-  ProductWithStoreHandle,
   Store,
-  updateProductsDelisted,
+  StoreListingWithStore,
+  updateStoreListings,
 } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
 
-import { insertProduct, updateProduct } from "./monitors";
+import { insertStoreListing, pollStoreListing } from "./monitors";
 
 async function main() {
   const { numSuccesses, numFailures } = await proxies.testProxies();
@@ -28,75 +28,75 @@ async function main() {
   const schedules = await boss.getSchedules();
   await Promise.all(schedules.map((schedule) => boss.unschedule(schedule.name)));
 
-  await boss.schedule("update-products-frequent", "*/10 * * * *");
-  await boss.schedule("update-products-periodic", "0 0 * * *");
-  await boss.schedule("update-products-list", "0 12 * * *");
+  await boss.schedule("poll-store-listings-frequent", "*/10 * * * *");
+  await boss.schedule("poll-store-listings-periodic", "0 0 * * *");
+  await boss.schedule("update-store-listings", "0 12 * * *");
 
   boss.on("error", (error) => console.error(error));
 
-  await boss.work("update-products-frequent", async () => {
-    const products = await findFrequentProducts();
-    console.log(`[Frequent] Updating ${products.length} products`);
+  await boss.work("poll-store-listings-frequent", async () => {
+    const listings = await findFrequentStoreListings();
+    console.log(`[Frequent] Updating ${listings.length} store listings`);
 
     await boss.insert(
-      products.map((product) => ({
-        name: "update-product",
-        data: { product },
-        singletonKey: product.id.toString(),
+      listings.map((listing) => ({
+        name: "poll-store-listing",
+        data: { listing },
+        singletonKey: listing.id.toString(),
         priority: 10,
         expireInSeconds: 3 * 60 * 60,
       })),
     );
   });
 
-  await boss.work("update-products-periodic", async () => {
-    const products = await findPeriodicProducts();
-    console.log(`[Periodic] Updating ${products.length} products`);
+  await boss.work("poll-store-listings-periodic", async () => {
+    const listings = await findPeriodicStoreListings();
+    console.log(`[Periodic] Updating ${listings.length} store listings`);
 
     await boss.insert(
-      products.map((product) => ({
-        name: "update-product",
-        data: { product },
-        singletonKey: product.id.toString(),
+      listings.map((listing) => ({
+        name: "poll-store-listing",
+        data: { listing },
+        singletonKey: listing.id.toString(),
         expireInSeconds: 3 * 60 * 60,
       })),
     );
   });
 
   await boss.work(
-    "update-product",
+    "poll-store-listing",
     {
       teamSize: proxies.getNumProxies(),
       teamConcurrency: proxies.getNumProxies(),
       teamRefill: true,
       newJobCheckInterval: 500,
     },
-    async (job: Job<{ product: ProductWithStoreHandle }>) => {
-      const { product } = job.data;
+    async (job: Job<{ listing: StoreListingWithStore }>) => {
+      const { listing } = job.data;
 
-      await updateProduct(product);
+      await pollStoreListing(listing);
     },
   );
 
   await boss.work(
-    "insert-product",
+    "insert-store-listing",
     {
       teamSize: proxies.getNumProxies(),
       teamConcurrency: proxies.getNumProxies(),
       teamRefill: true,
       newJobCheckInterval: 2000,
     },
-    async (job: Job<{ productCode: string; store: Store }>) => {
-      const { productCode, store } = job.data;
+    async (job: Job<{ externalListingId: string; store: Store }>) => {
+      const { externalListingId, store } = job.data;
 
-      const product = await insertProduct(productCode, store);
-      console.log(`Inserted ${product.name} for ${store.name}`);
+      await insertStoreListing(externalListingId, store);
+      console.log(`Inserted ${externalListingId} for ${store.name}`);
     },
   );
 
-  await boss.work("update-products-list", async () => {
+  await boss.work("update-store-listings", async () => {
     const stores = await findStores();
-    console.log(`Updating ${stores.length} stores`);
+    console.log(`Updating listings for ${stores.length} stores`);
 
     for (const store of stores) {
       const adapter = getAdapter(store.handle);
@@ -107,40 +107,40 @@ async function main() {
       }
 
       const limit = process.env.NODE_ENV === "production" ? undefined : 10;
-      const productCodes = await adapter.getProducts(limit);
-      if (productCodes.size === 0) {
+      const listingIds = await adapter.getListingIds(limit);
+      if (listingIds.size === 0) {
         console.warn(`No products found for ${store.handle}`);
         continue;
       }
 
-      const products = await findProductsByProductCodes({
+      const existingListings = await findStoreListingsFromExternalIds({
         storeId: store.id,
-        productCodes: Array.from(productCodes),
+        externalListingIds: Array.from(listingIds),
       });
 
-      const newProductCodes = new Set(productCodes);
-      const delistedProductIds: number[] = [];
-      products.forEach((product) => {
-        if (product.delisted) {
-          delistedProductIds.push(product.id);
+      const newExternalListingIds = new Set(listingIds);
+      const reactivatedListingIds: number[] = [];
+      existingListings.forEach((listing) => {
+        if (!listing.active) {
+          reactivatedListingIds.push(listing.id);
         }
-        newProductCodes.delete(product.productCode);
+        newExternalListingIds.delete(listing.externalListingId);
       });
 
       console.log(
-        `Inserting ${newProductCodes.size} and relisting ${delistedProductIds.length} products for ${store.handle}`,
+        `Inserting ${newExternalListingIds.size} listings and reactivating ${reactivatedListingIds.length} listings for ${store.handle}`,
       );
 
-      await updateProductsDelisted({
-        productIds: delistedProductIds,
-        delisted: false,
+      await updateStoreListings({
+        listingIds: reactivatedListingIds,
+        active: true,
       });
 
       await boss.insert(
-        [...newProductCodes].map((productCode) => ({
-          name: "insert-product",
-          data: { productCode, store },
-          singletonKey: `${store.handle}:${productCode}`,
+        Array.from(newExternalListingIds).map((externalListingId) => ({
+          name: "insert-store-listing",
+          data: { externalListingId, store },
+          singletonKey: `${store.handle}:${externalListingId}`,
           expireInSeconds: 3 * 60 * 60,
         })),
       );

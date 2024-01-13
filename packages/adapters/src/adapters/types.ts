@@ -1,28 +1,42 @@
+export const Brands = ["uniqlo", "abercrombie", "zara", "jcrew", "levis"] as const;
+export type Brand = (typeof Brands)[number];
+
+export type PriceDatum = {
+  timestamp: Date;
+  priceInCents: number;
+  inStock: boolean;
+};
+
 export type VariantAttribute = {
   name: string;
   value: string;
 };
 
-export type VariantInfo = {
-  timestamp: Date;
-  productUrl: string;
+export type VariantDetails = {
   attributes: VariantAttribute[];
-  priceInCents: number;
-  inStock: boolean;
+  productUrl: string;
+  price: PriceDatum;
 };
 
 export type ProductDetails = {
   name: string;
-  variants: VariantInfo[];
-  description?: string;
-  imageUrl?: string;
+  productId: string;
+  variants: VariantDetails[];
+  description: string | null;
+  imageUrl: string | null;
+};
+
+export type ListingDetails = {
+  brand: Brand;
+  collectionId: string;
+  products: ProductDetails[];
 };
 
 export interface StoreAdapter {
   urlRegex: RegExp;
   storeHandle: string;
   // TODO: create pagination interface?
-  getProducts: (limit?: number) => Promise<Set<string>>;
-  getProductCode: (url: string) => Promise<string>;
-  getProductDetails: (productCode: string) => Promise<ProductDetails>;
+  getListingIds: (limit?: number) => Promise<Set<string>>;
+  getListingId: (url: string) => Promise<string>;
+  getListingDetails: (externalListingId: string) => Promise<ListingDetails>;
 }

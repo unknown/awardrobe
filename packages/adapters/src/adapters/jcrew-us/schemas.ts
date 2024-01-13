@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-export const productSchema = z.object({
+const productSchema = z.object({
   id: z.string(),
   name: z.string(),
   long_description: z.string(),
+  c_familyId: z.string(),
   c_imageURL: z.string(),
   variants: z.array(
     z.object({
@@ -27,10 +28,9 @@ export const productSchema = z.object({
   ),
 });
 
-export const productInfoSchema = z.union([
-  z.object({
-    name: z.string(),
-    set_products: z.array(productSchema),
-  }),
-  productSchema,
-]);
+const setProductSchema = z.object({
+  id: z.string(),
+  set_products: z.array(productSchema),
+});
+
+export const productsSchema = z.union([productSchema, setProductSchema]);

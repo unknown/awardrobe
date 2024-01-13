@@ -1,22 +1,18 @@
-import { accounts } from "./accounts";
-import { prices } from "./prices";
-import { productNotifications } from "./product-notifications";
-import { productVariants } from "./product-variants";
-import { products } from "./products";
-import { sessions } from "./sessions";
-import { stores } from "./stores";
-import { users } from "./users";
-import { verificationTokens } from "./verification-tokens";
+import { schema } from "./schema";
 
-export type Account = typeof accounts.$inferSelect;
-export type Price = typeof prices.$inferSelect;
-export type ProductNotification = typeof productNotifications.$inferSelect;
-export type ProductVariant = typeof productVariants.$inferSelect;
-export type Product = typeof products.$inferSelect;
-export type Session = typeof sessions.$inferSelect;
-export type Store = typeof stores.$inferSelect;
-export type User = typeof users.$inferSelect;
-export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type Account = typeof schema.accounts.$inferSelect;
+export type Brand = typeof schema.brands.$inferSelect;
+export type Collection = typeof schema.collections.$inferSelect;
+export type Price = typeof schema.prices.$inferSelect;
+export type ProductNotification = typeof schema.productNotifications.$inferSelect;
+export type ProductVariantListing = typeof schema.productVariantListings.$inferSelect;
+export type ProductVariant = typeof schema.productVariants.$inferSelect;
+export type Product = typeof schema.products.$inferSelect;
+export type Session = typeof schema.sessions.$inferSelect;
+export type StoreListing = typeof schema.storeListings.$inferSelect;
+export type Store = typeof schema.stores.$inferSelect;
+export type User = typeof schema.users.$inferSelect;
+export type VerificationToken = typeof schema.verificationTokens.$inferSelect;
 
 export type NotificationWithUser = ProductNotification & {
   user: User;
@@ -26,30 +22,48 @@ export type NotificationWithVariant = ProductNotification & {
   productVariant: ProductVariant;
 };
 
-export type ProductWithStore = Product & {
+export type StoreListingWithStore = StoreListing & {
   store: Store;
 };
 
-export type ProductWithStoreHandle = Product & {
-  store: { handle: string };
+export type ProductVariantListingWithLatestPrice = ProductVariantListing & {
+  latestPrice: Price | null;
+};
+
+export type ProductVariantListingWithPrices = ProductVariantListing & {
+  prices: Price[];
+  storeListing: StoreListingWithStore;
+};
+
+export type ProductWithBrand = Product & {
+  collection: Collection & {
+    brand: Brand;
+  };
 };
 
 export type FullProduct = Product & {
   variants: ProductVariant[];
-  store: Store;
+  collection: Collection & {
+    brand: Brand;
+  };
 };
 
 export type ProductVariantWithPrice = ProductVariant & {
   latestPrice: Price | null;
 };
 
-export type PublicPrice = Omit<Price, "id" | "productVariantId">;
+export type PublicPrice = Omit<Price, "id" | "productVariantListingId">;
 export type PublicProductNotification = Omit<
   ProductNotification,
   "id" | "productVariantId" | "productId"
 >;
+export type PublicProductVariantListing = Omit<
+  ProductVariantListing,
+  "id" | "storeListingId" | "latestPriceId" | "productVariantId"
+>;
 export type PublicProductVariant = Omit<ProductVariant, "id" | "productId" | "latestPriceId">;
 export type PublicProduct = Omit<Product, "id" | "storeId">;
+export type PublicStoreListing = Omit<StoreListing, "id" | "storeId">;
 export type PublicStore = Omit<Store, "id">;
 
 type ExcludedBuiltinTypes = Date | Function | Promise<any> | RegExp;
@@ -87,10 +101,20 @@ type SubstituteProductNotification<T> = SubstituteType<
   ProductNotification,
   PublicProductNotification
 >;
+type SubstituteProductVariantListing<T> = SubstituteType<
+  T,
+  ProductVariantListing,
+  PublicProductVariantListing
+>;
 type SubstituteProductVariant<T> = SubstituteType<T, ProductVariant, PublicProductVariant>;
 type SubstituteProduct<T> = SubstituteType<T, Product, PublicProduct>;
+type SubstituteStoreListing<T> = SubstituteType<T, StoreListing, PublicStoreListing>;
 type SubstituteStore<T> = SubstituteType<T, Store, PublicStore>;
 
 export type Public<T> = SubstitutePrice<
-  SubstituteProductNotification<SubstituteProductVariant<SubstituteProduct<SubstituteStore<T>>>>
+  SubstituteProductNotification<
+    SubstituteProductVariantListing<
+      SubstituteProductVariant<SubstituteProduct<SubstituteStoreListing<SubstituteStore<T>>>>
+    >
+  >
 >;

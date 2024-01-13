@@ -1,24 +1,52 @@
-import { downloadImage, ProductDetails, UniqloUS } from "@awardrobe/adapters";
+import { ListingDetails, UniqloUS } from "@awardrobe/adapters";
 import {
-  and,
+  createBrand,
   createProduct,
-  createProductVariants,
   createStore,
   db,
-  eq,
+  findBrand,
+  findOrCreateCollection,
+  findOrCreateProductVariantListing,
+  findOrCreateStoreListing,
+  findProduct,
   findStore,
-  schema,
+  findStoreListingsFromExternalIds,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
-import { meilisearch, Product } from "@awardrobe/meilisearch-types";
+import { addProduct, meilisearch, Product } from "@awardrobe/meilisearch-types";
+
+const stores = [
+  { handle: "uniqlo-us", name: "Uniqlo US", externalUrl: "https://www.uniqlo.com/us/en/" },
+  {
+    handle: "abercrombie-us",
+    name: "Abercrombie & Fitch US",
+    externalUrl: "https://www.abercrombie.com/shop/us",
+  },
+  { handle: "zara-us", name: "Zara US", externalUrl: "https://www.zara.com/us/" },
+  { handle: "jcrew-us", name: "J.Crew US", externalUrl: "https://www.jcrew.com/" },
+  { handle: "levis-us", name: "Levi's US", externalUrl: "https://www.levi.com/US/en_US/" },
+];
+const brands = [
+  { name: "Uniqlo", handle: "uniqlo", externalUrl: "https://www.uniqlo.com/" },
+  {
+    name: "Abercrombie & Fitch",
+    handle: "abercrombie",
+    externalUrl: "https://www.abercrombie.com/",
+  },
+  { name: "Zara", handle: "zara", externalUrl: "https://www.zara.com/" },
+  { name: "J.Crew", handle: "jcrew", externalUrl: "https://www.jcrew.com/" },
+  { name: "Levi's", handle: "levis", externalUrl: "https://www.levi.com/" },
+];
 
 async function populateMeilisearch() {
-  const products = await db.query.products.findMany({ with: { store: true } });
+  const products = await db.query.products.findMany({
+    with: { collection: { with: { brand: true } } },
+  });
 
-  const productDocuments: Product[] = products.map(({ publicId, name, store }) => ({
+  const productDocuments: Product[] = products.map(({ publicId, name, collection }) => ({
     name,
     id: publicId,
-    storeName: store.name,
+    brand: collection.brand.name,
   }));
 
   await meilisearch.index("products").deleteAllDocuments();
@@ -27,36 +55,58 @@ async function populateMeilisearch() {
   console.log(`Added ${productDocuments.length} products to Meilisearch`);
 }
 
-async function addProduct(storeId: number, productCode: string, details: ProductDetails) {
-  const existingProduct = await db.query.products.findFirst({
-    where: and(eq(schema.products.storeId, storeId), eq(schema.products.productCode, productCode)),
-  });
-
-  if (existingProduct) {
-    console.log(`Product ${productCode} already exists`);
-    return;
+async function addListing(storeId: number, listingId: string, details: ListingDetails) {
+  const brand = await findBrand({ brandHandle: details.brand });
+  if (!brand) {
+    throw new Error(`Brand ${details.brand} not found`);
   }
 
-  const product = await createProduct({
-    productCode,
-    storeId,
-    name: details.name,
+  const collection = await findOrCreateCollection({
+    externalCollectionId: details.collectionId,
+    brandId: brand.id,
   });
 
-  await createProductVariants({
-    productId: product.id,
-    variantInfos: details.variants,
-  });
+  for (const productDetails of details.products) {
+    let product = await findProduct({
+      collectionId: collection.id,
+      externalProductId: productDetails.productId,
+    });
 
-  if (details.imageUrl) {
-    await downloadImage(details.imageUrl)
-      .then(async (imageBuffer) => addProductImage(product.publicId, imageBuffer))
-      .catch(() => console.error(`Failed to add image for ${productCode}`));
-  } else {
-    console.log(`No image found for ${productCode}`);
+    if (!product) {
+      product = await createProduct({
+        productDetails,
+        collectionId: collection.id,
+      });
+
+      const addProductToSearchPromise = addProduct({
+        id: product.publicId,
+        name: product.name,
+        brand: brand.name,
+      });
+
+      const addImagePromise = productDetails.imageUrl
+        ? addProductImage(product.publicId, productDetails.imageUrl)
+        : undefined;
+
+      await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
+    }
+
+    const storeListing = await findOrCreateStoreListing({
+      externalListingId: listingId,
+      storeId: storeId,
+    });
+    const typedProduct = product; // hack to allow typescript to type product as non-null
+
+    await Promise.all(
+      productDetails.variants.map((variantDetails) =>
+        findOrCreateProductVariantListing({
+          variantDetails,
+          productId: typedProduct.id,
+          storeListingId: storeListing.id,
+        }),
+      ),
+    );
   }
-
-  return product;
 }
 
 async function seedUniqloUS() {
@@ -67,7 +117,7 @@ async function seedUniqloUS() {
     throw new Error("Could not find Uniqlo US store");
   }
 
-  const productCodes = [
+  const listingIds = [
     "E459592-000",
     "E462197-000",
     "E465185-000",
@@ -76,9 +126,18 @@ async function seedUniqloUS() {
     "E463996-000",
   ];
 
-  for (const productCode of productCodes) {
-    const details = await UniqloUS.getProductDetails(productCode).catch((error) => {
-      console.error(`Failed to get product details for ${productCode}\n${error}`);
+  const existingListings = await findStoreListingsFromExternalIds({
+    externalListingIds: listingIds,
+    storeId: uniqlo.id,
+  });
+
+  const newListingIds = listingIds.filter(
+    (listingId) => !existingListings.some((listing) => listing.externalListingId === listingId),
+  );
+
+  for (const listingId of newListingIds) {
+    const details = await UniqloUS.getListingDetails(listingId).catch((error) => {
+      console.error(`Failed to get listing details for ${listingId}\n${error}`);
       return null;
     });
 
@@ -86,47 +145,13 @@ async function seedUniqloUS() {
       continue;
     }
 
-    const product = await addProduct(uniqlo.id, productCode, details);
-    if (product) {
-      console.log(`Added ${product.name} for ${uniqlo.name}`);
-    }
+    await addListing(uniqlo.id, listingId, details);
+
+    console.log(`Added ${details.collectionId} to Uniqlo US`);
   }
 }
 
 async function seedStores() {
-  const stores = [
-    {
-      handle: "uniqlo-us",
-      name: "Uniqlo US",
-      shortenedName: "Uniqlo",
-      externalUrl: "https://www.uniqlo.com/us/en/",
-    },
-    {
-      handle: "abercrombie-us",
-      name: "Abercrombie & Fitch US",
-      shortenedName: "Abercrombie",
-      externalUrl: "https://www.abercrombie.com/shop/us",
-    },
-    {
-      handle: "zara-us",
-      name: "Zara US",
-      shortenedName: "Zara",
-      externalUrl: "https://www.zara.com/us/",
-    },
-    {
-      handle: "jcrew-us",
-      name: "J.Crew US",
-      shortenedName: "J.Crew",
-      externalUrl: "https://www.jcrew.com/",
-    },
-    {
-      handle: "levis-us",
-      name: "Levi's US",
-      shortenedName: "Levi's",
-      externalUrl: "https://www.levi.com/US/en_US/",
-    },
-  ];
-
   return Promise.allSettled(
     stores.map(async (store) => {
       const existingStore = await findStore({ storeHandle: store.handle });
@@ -141,8 +166,24 @@ async function seedStores() {
   );
 }
 
+async function seedBrands() {
+  return Promise.allSettled(
+    brands.map(async (brand) => {
+      const existingBrand = await findBrand({ brandHandle: brand.handle });
+
+      if (existingBrand) {
+        return;
+      }
+
+      await createBrand(brand);
+      console.log(`Added brand ${brand.name}`);
+    }),
+  );
+}
+
 async function main() {
   await seedStores();
+  await seedBrands();
   await seedUniqloUS();
   await populateMeilisearch();
 }
