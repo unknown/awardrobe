@@ -11,7 +11,12 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { api } from "@/trpc/react";
 import { formatCurrency } from "@/utils/utils";
 
-export function NotificationPopover() {
+export type NotificationPopoverProps = {
+  attributes: Record<string, string>;
+  attributesOptions: Record<string, string[]>;
+};
+
+export function NotificationPopover({ attributes, attributesOptions }: NotificationPopoverProps) {
   const { productPublicId } = useProductInfo();
 
   const listNotifications = api.notifications.list.useQuery({ productPublicId });
@@ -49,7 +54,7 @@ export function NotificationPopover() {
               );
             })}
           </div>
-          <AddNotificationDialog />
+          <AddNotificationDialog attributes={attributes} attributesOptions={attributesOptions} />
         </div>
       </PopoverContent>
     </Popover>

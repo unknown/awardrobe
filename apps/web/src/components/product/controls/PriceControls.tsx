@@ -3,14 +3,13 @@
 import { buttonVariants } from "@ui/Button";
 import { twMerge } from "tailwind-merge";
 
-import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
 export function PriceControls() {
-  const { listings, isPending } = useProductInfo();
+  const { variantListings, isPending } = useProductInfo();
 
-  const cheapestListing = listings.reduce((cheapest, listing) => {
+  const cheapestListing = variantListings.reduce((cheapest, listing) => {
     const cheapestPrice = cheapest?.prices.at(-1)?.priceInCents;
     const listingPrice = listing.prices.at(-1)?.priceInCents;
     if (
@@ -21,7 +20,7 @@ export function PriceControls() {
       return listing;
     }
     return cheapest;
-  }, listings[0]);
+  }, variantListings[0]);
 
   const productUrl = cheapestListing?.productUrl;
   const storeName = cheapestListing?.storeListing.store.name;
@@ -29,25 +28,22 @@ export function PriceControls() {
   const lastPrice = cheapestListing?.prices.at(-1);
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <a
-        className={twMerge(
-          buttonVariants({ variant: "primary" }),
-          "text-md bg-sky-500 font-medium text-white hover:bg-sky-600",
-        )}
-        href={productUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {isPending
-          ? "Loading..."
-          : isUnavailable
-            ? "Unavailable"
-            : lastPrice
-              ? `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`
-              : "See price"}
-      </a>
-      <NotificationPopover />
-    </div>
+    <a
+      className={twMerge(
+        buttonVariants({ variant: "primary" }),
+        "text-md bg-sky-500 font-medium text-white hover:bg-sky-600",
+      )}
+      href={productUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {isPending
+        ? "Loading..."
+        : isUnavailable
+          ? "Unavailable"
+          : lastPrice
+            ? `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`
+            : "See price"}
+    </a>
   );
 }

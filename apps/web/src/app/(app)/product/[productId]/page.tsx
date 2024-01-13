@@ -8,7 +8,7 @@ import {
 } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
-import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
+import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
 import { ProductChart } from "@/components/product/ProductChart";
@@ -49,14 +49,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   });
 
   const variants = products.flatMap((product) => product.variants);
-  const productOptions: Record<string, string[]> = {};
+  const attributesOptions: Record<string, string[]> = {};
   variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
-      const values = productOptions[name] ?? [];
+      const values = attributesOptions[name] ?? [];
       if (!values.includes(value)) {
         values.push(value);
       }
-      productOptions[name] = values;
+      attributesOptions[name] = values;
     });
   });
 
@@ -94,7 +94,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     });
   } else {
     Object.entries(attributesParams).forEach(([name, value]) => {
-      if (productOptions[name]?.includes(value)) {
+      if (attributesOptions[name]?.includes(value)) {
         attributes[name] = value;
       }
     });
@@ -106,11 +106,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   return (
     <ProductInfoProvider
       productPublicId={product.publicId}
-      productOptions={productOptions}
-      variant={variant}
       variants={variants}
-      attributes={attributes}
-      listings={listings}
+      variantListings={listings}
     >
       <section className="space-y-12">
         <div className="container max-w-4xl">
@@ -127,17 +124,19 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 <p className="text-muted-foreground text-sm">{product.collection.brand.name}</p>
                 <h1 className="text-3xl font-medium">{product.name}</h1>
               </div>
-              <VariantControls />
-              <PriceControls />
+              <VariantControls attributes={attributes} attributesOptions={attributesOptions} />
+              <div className="flex flex-wrap gap-3">
+                <PriceControls />
+                <NotificationPopover
+                  attributes={attributes}
+                  attributesOptions={attributesOptions}
+                />
+              </div>
             </div>
           </div>
         </div>
-        <div className="container max-w-4xl space-y-3">
-          <h2 className="text-xl font-medium">Price History</h2>
-          <DateRangeControl initialDateRange={dateRange} />
-          <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
-            <ProductChart />
-          </div>
+        <div className="container max-w-4xl">
+          <ProductChart dateRange={dateRange} />
         </div>
       </section>
     </ProductInfoProvider>

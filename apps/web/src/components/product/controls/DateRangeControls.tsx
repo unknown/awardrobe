@@ -8,10 +8,10 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { DateRange, DateRanges, isDateRange } from "@/utils/dates";
 
 export type DateRangeControlProps = {
-  initialDateRange: DateRange;
+  dateRange: DateRange;
 };
 
-export function DateRangeControl({ initialDateRange }: DateRangeControlProps) {
+export function DateRangeControl({ dateRange: initialDateRange }: DateRangeControlProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
