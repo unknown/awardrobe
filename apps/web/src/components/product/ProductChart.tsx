@@ -1,46 +1,57 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@ui/Select";
 import { AxisBottom } from "@visx/axis";
 import { curveStepAfter } from "@visx/curve";
 import { localPoint } from "@visx/event";
-import { RadialGradient } from "@visx/gradient";
+import { LinearGradient, RadialGradient } from "@visx/gradient";
 import { Group } from "@visx/group";
 import { Pattern } from "@visx/pattern";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
-import { Bar, Circle, LinePath } from "@visx/shape";
+import { AreaClosed, Bar, Circle, LinePath } from "@visx/shape";
 import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { bisector, extent } from "d3-array";
 
+import { ProductVariantListingWithPrices } from "@awardrobe/db";
+
+import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
+import { DateRange } from "@/utils/dates";
 import { formatCurrency, formatDate } from "@/utils/utils";
 
 export type PricesChartProps = {
+  dateRange: DateRange;
   augmentCurrentPrice?: boolean;
 };
 
-export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
+export function ProductChart({ dateRange, augmentCurrentPrice = true }: PricesChartProps) {
   const { isPending, variantListings } = useProductInfo();
+  const [activeListing, setActiveListing] = useState<ProductVariantListingWithPrices | null>(
+    variantListings[0] ?? null,
+  );
 
-  const cleanedListings: ChartListing[] = variantListings.map((listing) => {
-    const { prices } = listing;
+  useEffect(() => {
+    setActiveListing(variantListings[0] ?? null);
+  }, [variantListings]);
 
-    const lastPrice = prices?.at(-1);
-    const chartPrices: ChartPrice[] = prices
-      .concat(augmentCurrentPrice && lastPrice ? { ...lastPrice, timestamp: new Date() } : [])
-      .map((price) => ({
-        date: price.timestamp,
-        price: price.priceInCents,
-        stock: price.inStock ? 1 : 0,
-      }));
-
-    return {
-      id: listing.id.toString(),
-      storeName: listing.storeListing.store.name,
-      prices: chartPrices,
-    };
-  });
+  const prices = activeListing?.prices ?? [];
+  const lastPrice = prices.at(-1);
+  const chartPrices: ChartPrice[] = prices
+    .concat(augmentCurrentPrice && lastPrice ? { ...lastPrice, timestamp: new Date() } : [])
+    .map((price) => ({
+      date: price.timestamp,
+      price: price.priceInCents,
+      stock: price.inStock ? 1 : 0,
+    }));
 
   const overlayComponent = isPending ? (
     <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
@@ -56,22 +67,45 @@ export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
   ) : null;
 
   return (
-    <ParentSize className="relative">
-      {({ width, height }) => (
-        <Fragment>
-          <VisxChart listings={cleanedListings} width={width} height={height} />
-          {overlayComponent}
-        </Fragment>
-      )}
-    </ParentSize>
+    <div className="space-y-3">
+      <h2 className="text-xl font-medium">Price History</h2>
+      <div className="flex flex-wrap justify-between gap-2">
+        <DateRangeControl dateRange={dateRange} />
+        <Select
+          value={activeListing?.storeListing.store.name ?? ""}
+          onValueChange={(value) => {
+            setActiveListing(
+              variantListings.find((listing) => listing.storeListing.store.name === value) ?? null,
+            );
+          }}
+        >
+          <SelectTrigger className="max-w-[180px]" id="listing-input">
+            <SelectValue placeholder="Select listing" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {variantListings.map((listing) => (
+                <SelectItem value={listing.storeListing.store.name} key={listing.id}>
+                  {listing.storeListing.store.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
+        <ParentSize className="relative">
+          {({ width, height }) => (
+            <Fragment>
+              <VisxChart prices={chartPrices} width={width} height={height} />
+              {overlayComponent}
+            </Fragment>
+          )}
+        </ParentSize>
+      </div>
+    </div>
   );
 }
-
-export type ChartListing = {
-  id: string;
-  storeName: string;
-  prices: ChartPrice[];
-};
 
 export type ChartPrice = {
   date: Date;
@@ -79,34 +113,27 @@ export type ChartPrice = {
   stock: number;
 };
 
-export type TooltipData = {
-  listings: {
-    storeName: string;
-    price: ChartPrice | null;
-  }[];
-  date: Date;
-};
+export type TooltipData = ChartPrice;
 
 // accessors
 const dateBisector = bisector<ChartPrice, Date>((d) => new Date(d.date)).left;
 const dateAccessor = (d: ChartPrice) => new Date(d.date);
 const priceAccessor = (d: ChartPrice) => d.price;
+const stockAccessor = (d: ChartPrice) => d.stock;
 
 type VisxChartProps = {
-  listings: ChartListing[];
+  prices: ChartPrice[];
   width: number;
   height: number;
 };
 
-function VisxChart({ listings, width, height }: VisxChartProps) {
+function VisxChart({ prices, width, height }: VisxChartProps) {
   const { tooltipData, tooltipLeft, tooltipOpen, showTooltip, hideTooltip } =
     useTooltip<TooltipData>();
 
   if (width <= 0 || height <= 0) {
     return null;
   }
-
-  const prices = listings.flatMap((listing) => listing.prices);
 
   const margin = { top: 0, right: 0, bottom: prices.length > 0 ? 36 : 0, left: 0 };
 
@@ -126,24 +153,21 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
     range: [innerHeight, 0],
     domain: [0, (priceExtent[1] ?? 0) * 1.2],
   });
+  const stockScale = scaleLinear<number>({
+    range: [innerHeight, 0],
+    domain: [0, 1],
+  });
 
   const handleTooltip = (event: React.TouchEvent<SVGElement> | React.MouseEvent<SVGElement>) => {
     const coords = localPoint(event) ?? { x: 0, y: 0 };
     const invertedDate = timeScale.invert(coords.x - margin.left);
     const index = dateBisector(prices, invertedDate, 1);
-
-    const tooltipListings = listings.map((listing) => ({
-      price: listing.prices[index - 1] ?? null,
-      storeName: listing.storeName,
-    }));
+    const price = prices[index - 1];
 
     showTooltip({
       tooltipLeft: coords.x,
       tooltipTop: coords.y,
-      tooltipData: {
-        listings: tooltipListings,
-        date: invertedDate,
-      },
+      tooltipData: price,
     });
   };
 
@@ -158,6 +182,13 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
             <stop offset="0.75" stopColor="white" />
             <stop offset="1" stopColor="black" />
           </linearGradient>
+          <LinearGradient
+            id="area-gradient"
+            from="#A8FF99"
+            fromOpacity={0.3}
+            to="#A8FF99"
+            toOpacity={0.15}
+          />
           <mask id="grid-mask">
             <Bar width={innerWidth} height={innerHeight} fill="url(#grid-gradient)" />
           </mask>
@@ -182,6 +213,17 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
             fill="url(#grid-pattern)"
             mask="url(#grid-mask)"
           />
+          <AreaClosed<ChartPrice>
+            data={prices}
+            x={(d) => timeScale(dateAccessor(d))}
+            y={(d) => stockScale(stockAccessor(d))}
+            yScale={stockScale}
+            curve={curveStepAfter}
+            strokeWidth={1}
+            stroke="#398739"
+            fill="url(#area-gradient)"
+            mask="url(#chart-mask)"
+          />
           <AxisBottom
             top={innerHeight + 8}
             scale={timeScale}
@@ -201,17 +243,14 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
             hideTicks
             hideAxisLine
           />
-          {listings.map((listing) => (
-            <LinePath<ChartPrice>
-              key={listing.id}
-              data={listing.prices}
-              x={(d) => timeScale(dateAccessor(d))}
-              y={(d) => priceScale(priceAccessor(d))}
-              curve={curveStepAfter}
-              strokeWidth={2}
-              stroke="#2b8bad"
-            />
-          ))}
+          <LinePath<ChartPrice>
+            data={prices}
+            x={(d) => timeScale(dateAccessor(d))}
+            y={(d) => priceScale(priceAccessor(d))}
+            curve={curveStepAfter}
+            strokeWidth={2}
+            stroke="#2b8bad"
+          />
           <Bar
             width={innerWidth}
             height={innerHeight}
@@ -239,19 +278,17 @@ function VisxChart({ listings, width, height }: VisxChartProps) {
       </svg>
       {tooltipOpen && tooltipData && (
         <TooltipWithBounds
-          className="bg-background absolute flex flex-col justify-center gap-1.5 rounded-md border p-2 text-sm shadow-sm"
+          className="bg-background absolute flex justify-center gap-1.5 rounded-md border p-2 text-sm shadow-sm"
           unstyled={true}
           left={tooltipLeft}
           offsetLeft={8}
           offsetTop={8}
         >
-          {tooltipData.listings.map((listing) => (
-            <p key={listing.storeName} className="font-medium tabular-nums">
-              {`${listing.storeName}: ${
-                listing.price ? formatCurrency(listing.price.price) : "N/A"
-              }${!listing.price?.stock ? "*" : ""}`}
-            </p>
-          ))}
+          <p className="font-medium tabular-nums">
+            {`${tooltipData.price ? formatCurrency(tooltipData.price) : "N/A"}${
+              !tooltipData.stock ? "*" : ""
+            }`}
+          </p>
           <span className="text-muted-foreground tabular-nums">{formatDate(tooltipData.date)}</span>
         </TooltipWithBounds>
       )}
