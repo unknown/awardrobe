@@ -58,6 +58,10 @@ export async function handlePriceDrop(options: {
     priceInCents: price.priceInCents,
   });
 
+  if (notifications.length === 0) {
+    return;
+  }
+
   await updatePriceDropLastPing({
     notificationIds: notifications.map((notification) => notification.id),
   });
@@ -104,6 +108,10 @@ export async function handleRestock(options: {
     variantId: productVariantListing.productVariantId,
     priceInCents: price.priceInCents,
   });
+
+  if (notifications.length === 0) {
+    return;
+  }
 
   await updateRestockLastPing({
     notificationIds: notifications.map((notification) => notification.id),

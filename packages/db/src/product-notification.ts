@@ -156,6 +156,10 @@ export async function updatePriceDropLastPing(
   const { notificationIds } = options;
   const now = new Date();
 
+  if (notificationIds.length === 0) {
+    return;
+  }
+
   await db
     .update(productNotifications)
     .set({ lastPriceDropPing: now })
@@ -167,6 +171,10 @@ export async function updateRestockLastPing(
 ): Promise<void> {
   const { notificationIds } = options;
   const now = new Date();
+
+  if (notificationIds.length === 0) {
+    return;
+  }
 
   await db
     .update(productNotifications)
