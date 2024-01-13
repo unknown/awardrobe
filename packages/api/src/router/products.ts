@@ -50,21 +50,9 @@ export const productsRouter = router({
       }
 
       const details = await adapter.getListingDetails(externalListingId).catch(async (error) => {
-        if (error instanceof AdaptersError) {
-          if (error.name === "PRODUCT_NOT_FOUND") {
-            console.error(`Product ${externalListingId} not found`);
-            return null;
-          } else if (error.name === "INVALID_RESPONSE") {
-            console.error(error);
-            return null;
-          }
-        }
-        throw error;
+        console.error(error);
+        throw new Error("Error retrieving product details");
       });
-
-      if (!details) {
-        return;
-      }
 
       const brand = await findBrand({ brandHandle: details.brand });
       if (!brand) {
