@@ -107,9 +107,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   return (
     <ProductInfoProvider
       productPublicId={product.publicId}
-      variant={variant}
       variants={variants}
-      listings={listings}
+      variantListings={listings}
     >
       <section className="space-y-12">
         <div className="container max-w-4xl">

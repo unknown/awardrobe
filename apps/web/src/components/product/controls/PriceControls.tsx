@@ -7,9 +7,9 @@ import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
 export function PriceControls() {
-  const { listings, isPending } = useProductInfo();
+  const { variantListings, isPending } = useProductInfo();
 
-  const cheapestListing = listings.reduce((cheapest, listing) => {
+  const cheapestListing = variantListings.reduce((cheapest, listing) => {
     const cheapestPrice = cheapest?.prices.at(-1)?.priceInCents;
     const listingPrice = listing.prices.at(-1)?.priceInCents;
     if (
@@ -20,7 +20,7 @@ export function PriceControls() {
       return listing;
     }
     return cheapest;
-  }, listings[0]);
+  }, variantListings[0]);
 
   const productUrl = cheapestListing?.productUrl;
   const storeName = cheapestListing?.storeListing.store.name;

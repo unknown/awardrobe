@@ -32,7 +32,7 @@ export function AddNotificationDialog({
   attributesOptions,
   attributes: initialAttributes,
 }: AddNotificationDialogProps) {
-  const { productPublicId, variants, listings } = useProductInfo();
+  const { productPublicId, variants, variantListings: listings } = useProductInfo();
 
   const cheapestPriceInCents =
     listings.reduce(

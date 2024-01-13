@@ -21,9 +21,9 @@ export type PricesChartProps = {
 };
 
 export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
-  const { isPending, listings } = useProductInfo();
+  const { isPending, variantListings } = useProductInfo();
 
-  const cleanedListings: ChartListing[] = listings.map((listing) => {
+  const cleanedListings: ChartListing[] = variantListings.map((listing) => {
     const { prices } = listing;
 
     const lastPrice = prices?.at(-1);
@@ -46,7 +46,7 @@ export function ProductChart({ augmentCurrentPrice = true }: PricesChartProps) {
     <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
       <p className="text-muted-foreground">Loading...</p>
     </div>
-  ) : listings.length === 0 ? (
+  ) : variantListings.length === 0 ? (
     <div className="bg-gradient-radial from-background absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 to-transparent p-16 text-center">
       <h2 className="text-xl font-medium">No price history</h2>
       <p className="text-muted-foreground">
