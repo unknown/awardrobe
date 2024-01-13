@@ -35,6 +35,10 @@ export type ProductVariantListingWithPrices = ProductVariantListing & {
   storeListing: StoreListingWithStore;
 };
 
+export type ProductVariantWithProduct = ProductVariant & {
+  product: Product;
+};
+
 export type ProductWithBrand = Product & {
   collection: Collection & {
     brand: Brand;

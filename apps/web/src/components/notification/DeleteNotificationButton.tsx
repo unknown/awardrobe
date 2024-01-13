@@ -11,12 +11,12 @@ type DeleteNotificationButtonProps = {
 };
 
 export function DeleteNotificationButton({ notification }: DeleteNotificationButtonProps) {
-  const { product } = useProductInfo();
+  const { productPublicId } = useProductInfo();
 
   const utils = api.useUtils();
   const removeNotification = api.notifications.delete.useMutation({
     onSuccess: async () => {
-      await utils.notifications.list.invalidate({ productPublicId: product.publicId });
+      await utils.notifications.list.invalidate({ productPublicId });
     },
     onError: (err) => {
       toast.error(

@@ -4,7 +4,6 @@ import { Fragment } from "react";
 import { Bell } from "@icons/Bell";
 import { Button } from "@ui/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@ui/Popover";
-import { toast } from "sonner";
 
 import { AddNotificationDialog } from "@/components/notification/AddNotificationDialog";
 import { DeleteNotificationButton } from "@/components/notification/DeleteNotificationButton";
@@ -13,9 +12,9 @@ import { api } from "@/trpc/react";
 import { formatCurrency } from "@/utils/utils";
 
 export function NotificationPopover() {
-  const { product } = useProductInfo();
+  const { productPublicId } = useProductInfo();
 
-  const listNotifications = api.notifications.list.useQuery({ productPublicId: product.publicId });
+  const listNotifications = api.notifications.list.useQuery({ productPublicId });
   const notifications = listNotifications.data;
 
   return (

@@ -67,7 +67,10 @@ export async function findProductByPublicId(options: FindProductByPublicIdOption
 
   const existingProduct = await db.query.products.findFirst({
     where: eq(products.publicId, productPublicId),
-    with: { variants: true, collection: { with: { brand: true } } },
+    with: {
+      variants: { with: { product: true } },
+      collection: { with: { brand: true } },
+    },
   });
 
   return existingProduct ?? null;
@@ -168,7 +171,7 @@ export function findCollectionProducts(options: FindProductWithVariantsOptions) 
   return db.query.products.findMany({
     where: eq(products.collectionId, collectionId),
     with: {
-      variants: true,
+      variants: { with: { product: true } },
       collection: { with: { brand: true } },
     },
   });

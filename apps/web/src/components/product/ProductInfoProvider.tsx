@@ -2,18 +2,13 @@
 
 import { createContext, TransitionStartFunction, useContext, useTransition } from "react";
 
-import {
-  FullProduct,
-  Price,
-  ProductVariant,
-  ProductVariantListingWithPrices,
-  Public,
-} from "@awardrobe/db";
+import { ProductVariantListingWithPrices, ProductVariantWithProduct, Public } from "@awardrobe/db";
 
 type ProductInfoContextValue = {
-  product: Public<FullProduct>;
+  productPublicId: string;
   productOptions: Record<string, string[]>;
-  variant: Public<ProductVariant> | null;
+  variant: Public<ProductVariantWithProduct> | null;
+  variants: Public<ProductVariantWithProduct>[];
   attributes: Record<string, string>;
   listings: ProductVariantListingWithPrices[];
   isPending: boolean;
@@ -22,9 +17,10 @@ type ProductInfoContextValue = {
 
 // TODO: is this the best way to do this?
 export const ProductInfoContext = createContext<ProductInfoContextValue>({
-  product: {} as Public<FullProduct>,
+  productPublicId: "",
   productOptions: {},
   variant: null,
+  variants: [],
   attributes: {},
   listings: [],
   isPending: false,
@@ -32,9 +28,10 @@ export const ProductInfoContext = createContext<ProductInfoContextValue>({
 });
 
 type ProductInfoProviderProps = {
-  product: Public<FullProduct>;
+  productPublicId: string;
   productOptions: Record<string, string[]>;
-  variant: Public<ProductVariant> | null;
+  variant: Public<ProductVariantWithProduct> | null;
+  variants: Public<ProductVariantWithProduct>[];
   attributes: Record<string, string>;
   listings: ProductVariantListingWithPrices[];
   children: React.ReactNode;

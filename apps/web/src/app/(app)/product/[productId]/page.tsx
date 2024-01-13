@@ -47,8 +47,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const products = await findCollectionProducts({
     collectionId: product.collectionId,
   });
-  const variants = products.flatMap((product) => product.variants);
 
+  const variants = products.flatMap((product) => product.variants);
   const productOptions: Record<string, string[]> = {};
   variants.forEach(({ attributes }) => {
     attributes.forEach(({ name, value }) => {
@@ -105,9 +105,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <ProductInfoProvider
-      product={product}
+      productPublicId={product.publicId}
       productOptions={productOptions}
       variant={variant}
+      variants={variants}
       attributes={attributes}
       listings={listings}
     >

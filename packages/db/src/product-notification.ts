@@ -78,7 +78,15 @@ export async function findUserNotifications(
           db
             .selectDistinct({ productVariantId: productVariants.id })
             .from(productVariants)
-            .where(eq(productVariants.productId, product.id)),
+            .where(
+              inArray(
+                productVariants.productId,
+                db
+                  .selectDistinct({ productId: products.id })
+                  .from(products)
+                  .where(eq(products.collectionId, product.collectionId)),
+              ),
+            ),
         ),
       ),
     columns: { id: false, productId: false, productVariantId: false },
