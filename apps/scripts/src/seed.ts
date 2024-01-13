@@ -10,7 +10,7 @@ import {
   findOrCreateStoreListing,
   findProduct,
   findStore,
-  findStoreListings,
+  findStoreListingsFromExternalIds,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct, meilisearch, Product } from "@awardrobe/meilisearch-types";
@@ -126,7 +126,7 @@ async function seedUniqloUS() {
     "E463996-000",
   ];
 
-  const existingListings = await findStoreListings({
+  const existingListings = await findStoreListingsFromExternalIds({
     externalListingIds: listingIds,
     storeId: uniqlo.id,
   });

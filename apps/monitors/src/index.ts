@@ -4,7 +4,7 @@ import { getAdapter } from "@awardrobe/adapters";
 import {
   findFrequentStoreListings,
   findPeriodicStoreListings,
-  findStoreListings,
+  findStoreListingsFromExternalIds,
   findStores,
   Store,
   StoreListingWithStore,
@@ -113,7 +113,7 @@ async function main() {
         continue;
       }
 
-      const existingListings = await findStoreListings({
+      const existingListings = await findStoreListingsFromExternalIds({
         storeId: store.id,
         externalListingIds: Array.from(listingIds),
       });

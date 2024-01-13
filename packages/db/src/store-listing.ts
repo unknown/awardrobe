@@ -40,13 +40,13 @@ export async function findOrCreateStoreListing(
   return created;
 }
 
-export type FindStoreListingsOptions = {
+export type FindStoreListingsFromExternalIdsOptions = {
   externalListingIds: string[];
   storeId: number;
 };
 
-export async function findStoreListings(
-  options: FindStoreListingsOptions,
+export async function findStoreListingsFromExternalIds(
+  options: FindStoreListingsFromExternalIdsOptions,
 ): Promise<StoreListing[]> {
   const { externalListingIds, storeId } = options;
 
