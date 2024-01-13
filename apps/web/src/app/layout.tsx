@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://awardrobe.co"),
+  metadataBase: new URL("https://www.awardrobe.co"),
   title: {
     default: "Awardrobe",
     template: "%s — Awardrobe",
@@ -22,7 +22,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://awardrobe.co",
+    url: "https://www.awardrobe.co",
     title: "Awardrobe — Shop for clothes smarter",
     description: "Research price history and stock availability to save money.",
     siteName: "Awardrobe",

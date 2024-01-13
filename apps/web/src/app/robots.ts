@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://awardrobe.co/sitemap.xml",
-    host: "https://awardrobe.co",
+    sitemap: "https://www.awardrobe.co/sitemap.xml",
+    host: "https://www.awardrobe.co",
   };
 }
