@@ -1,22 +1,24 @@
-import { downloadImage, getAdapter } from "@awardrobe/adapters";
+import { getAdapter } from "@awardrobe/adapters";
 import { db } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 
 async function main() {
-  const products = await db.query.products.findMany({ with: { store: true } });
+  const listings = await db.query.storeListings.findMany({ with: { store: true } });
 
-  console.log(`Fixing ${products.length} products`);
+  console.log(`Fixing ${listings.length} listings`);
 
-  for (const product of products) {
-    const adapter = getAdapter(product.store.handle);
+  for (const listing of listings) {
+    const adapter = getAdapter(listing.store.handle);
 
     if (!adapter) {
-      console.log(`No adapter found for ${product.store.handle}`);
+      console.log(`No adapter found for ${listing.store.handle}`);
       continue;
     }
 
-    const details = await adapter.getProductDetails(product.productCode).catch(() => {
-      console.log(`Failed to fetch details for ${product.store.handle} ${product.productCode}`);
+    const details = await adapter.getListingDetails(listing.externalListingId).catch(() => {
+      console.log(
+        `Failed to fetch details for ${listing.store.name} - ${listing.externalListingId}`,
+      );
       return null;
     });
 
@@ -24,15 +26,18 @@ async function main() {
       continue;
     }
 
-    if (!details.imageUrl) {
-      console.log(`No image found for ${product.store.handle} ${product.productCode}`);
-      continue;
-    }
+    for (const product of details.products) {
+      if (!product.imageUrl) {
+        console.log(`No image found for ${listing.store.handle} ${product.productId}`);
+        continue;
+      }
 
-    await downloadImage(details.imageUrl)
-      .then(async (imageBuffer) => addProductImage(product.publicId, imageBuffer))
-      .then(() => console.log(`Added image for ${product.store.handle} ${product.productCode}`))
-      .catch(() => console.error("Failed to add image"));
+      await addProductImage(product.productId, product.imageUrl)
+        .then(() => console.log(`Added image for ${listing.store.handle} ${product.productId}`))
+        .catch(() => {
+          console.log(`Failed to add image for ${listing.store.handle} ${product.productId}`);
+        });
+    }
   }
 }
 
