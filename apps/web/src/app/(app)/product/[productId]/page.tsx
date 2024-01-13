@@ -138,7 +138,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         </div>
         <div className="container max-w-4xl space-y-3">
           <h2 className="text-xl font-medium">Price History</h2>
-          <DateRangeControl initialDateRange={dateRange} />
+          <DateRangeControl dateRange={dateRange} />
           <div className="h-[20rem] sm:h-[24rem] md:h-[28rem]">
             <ProductChart />
           </div>
