@@ -58,10 +58,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   });
 
   const attributes: Record<string, string> = {};
-  if (Object.keys(attributesParams).length > 0) {
-    Object.entries(attributesParams).forEach(([name, value]) => {
-      if (attributesOptions[name]?.includes(value)) {
-        attributes[name] = value;
+  const hasParamsAttributes = Object.keys(attributesParams).length > 0;
+  if (hasParamsAttributes) {
+    Object.entries(attributesOptions).forEach(([name, values]) => {
+      const paramsValue = attributesParams[name];
+      if (paramsValue && values.includes(paramsValue)) {
+        attributes[name] = paramsValue;
       }
     });
   } else {

@@ -61,10 +61,9 @@ export function VariantControls() {
                 });
 
                 const pathname = `/product/${variant ? variant.product.publicId : productPublicId}`;
-                const params = new URLSearchParams({
-                  ...attributes,
-                  ...Object.fromEntries(searchParams),
-                  [name]: value,
+                const params = new URLSearchParams(searchParams);
+                Object.entries({ ...attributes, [name]: value }).forEach(([name, value]) => {
+                  params.set(name, value);
                 });
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               });
