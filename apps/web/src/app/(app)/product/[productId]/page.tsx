@@ -8,6 +8,7 @@ import {
 } from "@awardrobe/db";
 import { getProductPath } from "@awardrobe/media-store";
 
+import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { DateRangeControl } from "@/components/product/controls/DateRangeControls";
 import { PriceControls } from "@/components/product/controls/PriceControls";
 import { VariantControls } from "@/components/product/controls/VariantControls";
@@ -128,7 +129,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 <h1 className="text-3xl font-medium">{product.name}</h1>
               </div>
               <VariantControls />
-              <PriceControls />
+              <div className="flex flex-wrap gap-3">
+                <PriceControls />
+                <NotificationPopover />
+              </div>
             </div>
           </div>
         </div>

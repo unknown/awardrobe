@@ -3,7 +3,6 @@
 import { buttonVariants } from "@ui/Button";
 import { twMerge } from "tailwind-merge";
 
-import { NotificationPopover } from "@/components/notification/NotificationPopover";
 import { useProductInfo } from "@/components/product/ProductInfoProvider";
 import { formatCurrency } from "@/utils/utils";
 
@@ -29,25 +28,22 @@ export function PriceControls() {
   const lastPrice = cheapestListing?.prices.at(-1);
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <a
-        className={twMerge(
-          buttonVariants({ variant: "primary" }),
-          "text-md bg-sky-500 font-medium text-white hover:bg-sky-600",
-        )}
-        href={productUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {isPending
-          ? "Loading..."
-          : isUnavailable
-            ? "Unavailable"
-            : lastPrice
-              ? `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`
-              : "See price"}
-      </a>
-      <NotificationPopover />
-    </div>
+    <a
+      className={twMerge(
+        buttonVariants({ variant: "primary" }),
+        "text-md bg-sky-500 font-medium text-white hover:bg-sky-600",
+      )}
+      href={productUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {isPending
+        ? "Loading..."
+        : isUnavailable
+          ? "Unavailable"
+          : lastPrice
+            ? `${formatCurrency(lastPrice.priceInCents)} at ${storeName}`
+            : "See price"}
+    </a>
   );
 }
