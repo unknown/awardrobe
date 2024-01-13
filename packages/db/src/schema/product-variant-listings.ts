@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, int, mysqlTable, serial, text, unique } from "drizzle-orm/mysql-core";
+import { boolean, index, int, mysqlTable, serial, text, unique } from "drizzle-orm/mysql-core";
 
 import { prices } from "./prices";
 import { productVariants } from "./product-variants";
@@ -20,6 +20,9 @@ export const productVariantListings = mysqlTable(
       productVariantListing.storeListingId,
       productVariantListing.productVariantId,
     ),
+    storeListingIdIdx: index("storeListingIdIdx").on(productVariantListing.storeListingId),
+    productVariantIdIdx: index("productVariantIdIdx").on(productVariantListing.productVariantId),
+    latestPriceIdIdx: index("latestPriceIdIdx").on(productVariantListing.latestPriceId),
   }),
 );
 

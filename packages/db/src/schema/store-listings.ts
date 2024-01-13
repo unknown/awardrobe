@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
+import { boolean, index, int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
 
 import { productVariantListings } from "./product-variant-listings";
 import { stores } from "./stores";
@@ -13,6 +13,7 @@ export const storeListings = mysqlTable(
     active: boolean("active").notNull().default(true),
   },
   (storeListing) => ({
+    storeIdIdx: index("storeIdIdx").on(storeListing.storeId),
     storeIdListingIdUnq: unique("storeIdListingIdUnq").on(
       storeListing.storeId,
       storeListing.externalListingId,

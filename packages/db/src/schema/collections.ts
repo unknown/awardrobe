@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlTable, serial, unique, varchar } from "drizzle-orm/mysql-core";
 
 import { brands } from "./brands";
 import { products } from "./products";
@@ -12,6 +12,7 @@ export const collections = mysqlTable(
     externalCollectionId: varchar("externalCollectionId", { length: 255 }).notNull(),
   },
   (collection) => ({
+    brandIdIdx: index("brandIdIdx").on(collection.brandId),
     brandIdCollectionIdUnq: unique("brandIdCollectionIdUnq").on(
       collection.brandId,
       collection.externalCollectionId,
