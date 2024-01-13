@@ -3,48 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@ui/Button";
 
-import { Price, Public } from "@awardrobe/db";
-
-import { ProductChart } from "@/components/product/ProductChart";
-
-const mockPrices: Public<Price>[] = [
-  {
-    timestamp: new Date("2023-07-21"),
-    priceInCents: 2000,
-    inStock: true,
-  },
-  {
-    timestamp: new Date("2023-07-24"),
-    priceInCents: 2000,
-    inStock: false,
-  },
-  {
-    timestamp: new Date("2023-07-28"),
-    priceInCents: 1500,
-    inStock: false,
-  },
-  {
-    timestamp: new Date("2023-07-30"),
-    priceInCents: 1500,
-    inStock: true,
-  },
-  {
-    timestamp: new Date("2023-08-04"),
-    priceInCents: 1500,
-    inStock: false,
-  },
-  {
-    timestamp: new Date("2023-08-07"),
-    priceInCents: 1500,
-    inStock: true,
-  },
-  {
-    timestamp: new Date("2023-08-10"),
-    priceInCents: 1500,
-    inStock: true,
-  },
-];
-
 export default async function IndexPage() {
   return (
     <Fragment>
@@ -125,38 +83,6 @@ export default async function IndexPage() {
               </a>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="space-y-6 bg-slate-50 py-8 dark:bg-transparent md:py-12 lg:py-24">
-        <div className="container max-w-4xl space-y-8 md:space-y-12">
-          <div className="space-y-4 text-center">
-            <h2 className="text-xl font-bold sm:text-2xl md:text-3xl lg:text-4xl">How it works</h2>
-            <p className="text-muted-foreground sm:text-lg">
-              Our tools are designed to save you both your time and your money.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 justify-center gap-8 md:grid-cols-2">
-            <div className="bg-background rounded-lg border p-6">
-              <h3 className="mb-2 text-xl font-medium md:mb-3">Add products</h3>
-              <p className="text-muted-foreground mb-6">
-                Find or add products that interest you, and we’ll start tracking the product for
-                you.
-              </p>
-              <Image src="/add-products.png" width="1000" height="576" alt="Multiple screens" />
-            </div>
-            <div className="bg-background rounded-lg border p-6">
-              <h3 className="mb-2 text-xl font-medium md:mb-3">Track prices</h3>
-              <p className="text-muted-foreground mb-6">
-                See how prices have changed over time to get the best deals.
-              </p>
-              <div className="relative aspect-video">
-                <ProductChart prices={mockPrices} augmentCurrentPrice={false} />
-              </div>
-            </div>
-          </div>
-          <p className="text-muted-foreground mb-6 text-center md:text-lg">
-            Other tools coming soon!
-          </p>
         </div>
       </section>
     </Fragment>
