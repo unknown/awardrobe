@@ -11,6 +11,7 @@ import {
   Price,
   Store,
 } from "@awardrobe/db";
+import { logger } from "@awardrobe/logger";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -37,10 +38,10 @@ export async function insertStoreListing(externalListingId: string, store: Store
   const details = await adapter.getListingDetails(externalListingId).catch(async (error) => {
     if (error instanceof AdaptersError) {
       if (error.name === "PRODUCT_NOT_FOUND") {
-        console.error(`Product ${externalListingId} not found`);
+        logger.error(`Product ${externalListingId} not found`);
         return null;
       } else if (error.name === "INVALID_RESPONSE") {
-        console.error(error);
+        logger.error(error);
         return null;
       }
     }
@@ -124,7 +125,7 @@ export async function pollStoreListing(storeListingId: number) {
           return null;
         } else if (error.name === "INVALID_RESPONSE") {
           // TODO: log this better
-          console.error(error);
+          logger.error(error);
           return null;
         }
       }
@@ -153,7 +154,7 @@ export async function pollStoreListing(storeListingId: number) {
 
     if (!product) {
       // TODO: create the product
-      console.error(`Product ${productDetails.productId} not found`);
+      logger.error(`Product ${productDetails.productId} not found`);
       continue;
     }
 
@@ -165,7 +166,7 @@ export async function pollStoreListing(storeListingId: number) {
       );
 
       if (!productVariantListing) {
-        console.log(
+        logger.info(
           `Creating new variant for ${product.name}: ${JSON.stringify(variantDetails.attributes)}`,
         );
 

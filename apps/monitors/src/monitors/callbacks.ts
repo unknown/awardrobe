@@ -11,6 +11,7 @@ import {
   updateStoreListings,
 } from "@awardrobe/db";
 import { PriceNotificationEmail, render, resend, StockNotificationEmail } from "@awardrobe/emails";
+import { logger } from "@awardrobe/logger";
 
 // TODO: config file?
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
@@ -18,7 +19,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.awardrobe.co";
 export async function handleDelistedListing(options: { listing: StoreListing }) {
   const { listing } = options;
 
-  console.log(`Delisting ${listing.externalListingId}`);
+  logger.info(`Delisting ${listing.externalListingId}`);
 
   await updateStoreListings({ listingIds: [listing.id], active: false });
 
@@ -51,7 +52,7 @@ export async function handlePriceDrop(options: {
     url.searchParams.set(name, value);
   });
 
-  console.log(`Price drop for ${product.name} - ${product.externalProductId} ${description}`);
+  logger.info(`Price drop for ${product.name} - ${product.externalProductId} ${description}`);
 
   const notifications = await findPriceDropNotifications({
     variantId: productVariantListing.productVariantId,
@@ -102,7 +103,7 @@ export async function handleRestock(options: {
     url.searchParams.set(name, value);
   });
 
-  console.log(`Restock for ${product.name} - ${product.externalProductId} ${description}`);
+  logger.info(`Restock for ${product.name} - ${product.externalProductId} ${description}`);
 
   const notifications = await findRestockNotifications({
     variantId: productVariantListing.productVariantId,

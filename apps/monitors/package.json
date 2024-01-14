@@ -13,6 +13,7 @@
     "@awardrobe/adapters": "workspace:^",
     "@awardrobe/db": "workspace:^",
     "@awardrobe/emails": "workspace:^",
+    "@awardrobe/logger": "workspace:^",
     "@awardrobe/media-store": "workspace:^",
     "@awardrobe/meilisearch-types": "workspace:^",
     "@awardrobe/proxies": "workspace:^",

@@ -61,6 +61,9 @@ importers:
       '@awardrobe/emails':
         specifier: workspace:^
         version: link:../../packages/emails
+      '@awardrobe/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
       '@awardrobe/media-store':
         specifier: workspace:^
         version: link:../../packages/media-store
