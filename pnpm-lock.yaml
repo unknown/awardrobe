@@ -474,6 +474,9 @@ importers:
 
   packages/logger:
     dependencies:
+      '@logsnag/node':
+        specifier: ^1.0.1
+        version: 1.0.1
       winston:
         specifier: ^3.11.0
         version: 3.11.0
@@ -2096,6 +2099,10 @@ packages:
       '@jridgewell/resolve-uri': 3.1.1
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
+
+  /@logsnag/node@1.0.1:
+    resolution: {integrity: sha512-JW2S1KN91XyOb0oG2PblboZ1Ys4mkOSMn83GDYjM8CXzcFbkYFMnlFQoEgP0Y5z+1A56hOO+a7uLsvxO5IdUFA==}
+    dev: false
 
   /@manypkg/find-root@2.2.1:
     resolution: {integrity: sha512-34NlypD5mmTY65cFAK7QPgY5Tzt0qXR4ZRXdg97xAlkiLuwXUPBEXy5Hsqzd+7S2acsLxUz6Cs50rlDZQr4xUA==}
