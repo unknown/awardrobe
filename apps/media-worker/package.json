@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules .wrangler",
+    "clean": "rm -rf .turbo node_modules",
     "deploy": "wrangler deploy --tsconfig=tsconfig.json",
-    "dev": "wrangler dev --port=3002 --tsconfig=tsconfig.json"
+    "dev": "wrangler dev --port=3002 --tsconfig=tsconfig.json --log-level=warn"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
