@@ -1,28 +1,42 @@
-import PgBoss, { Job } from "pg-boss";
+import { Job } from "pg-boss";
 
-import { getAdapter } from "@awardrobe/adapters";
-import {
-  findFrequentStoreListings,
-  findPeriodicStoreListings,
-  findStoreListingsFromExternalIds,
-  findStores,
-  Store,
-  updateStoreListings,
-} from "@awardrobe/db";
-import { logger } from "@awardrobe/logger";
+import { Store } from "@awardrobe/db";
+import { logger, logsnag } from "@awardrobe/logger";
 import { proxies } from "@awardrobe/proxies";
 
-import { insertStoreListing, pollStoreListing } from "./monitors";
+import {
+  insertListing,
+  pollStoreListing,
+  pollStoreListingsFrequent,
+  pollStoreListingsPeriodic,
+  updateStores,
+} from "./handlers/listings";
+import { boss } from "./utils/pgboss";
+
+if (!process.env.PG_DATABASE_URL) {
+  throw new Error("Missing PG_DATABASE_URL");
+}
+
+function logUnhandledRejection(reason: any): never {
+  logger.error(reason);
+
+  logsnag.track({
+    channel: "errors",
+    event: "Unhandled worker rejection",
+    tags: {
+      environment: process.env.NODE_ENV === "production" ? "production" : "development",
+    },
+    notify: true,
+  });
+
+  // throw again so that pg-boss retries still happen
+  throw reason;
+}
 
 async function main() {
   const { numSuccesses, numFailures } = await proxies.testProxies();
   logger.debug(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
-  if (!process.env.PG_DATABASE_URL) {
-    throw new Error("Missing PG_DATABASE_URL");
-  }
-
-  const boss = new PgBoss(process.env.PG_DATABASE_URL);
   await boss.start();
 
   const schedules = await boss.getSchedules();
@@ -32,35 +46,14 @@ async function main() {
   await boss.schedule("poll-store-listings-periodic", "0 0 * * *");
   await boss.schedule("update-store-listings", "0 12 * * *");
 
-  boss.on("error", (error) => console.error(error));
+  boss.on("error", (error) => logger.error(error));
 
   await boss.work("poll-store-listings-frequent", async () => {
-    const listings = await findFrequentStoreListings();
-    logger.debug(`[Frequent] Updating ${listings.length} store listings`);
-
-    await boss.insert(
-      listings.map((listing) => ({
-        name: "poll-store-listing",
-        data: { storeListingId: listing.id },
-        singletonKey: listing.id.toString(),
-        priority: 10,
-        expireInSeconds: 3 * 60 * 60,
-      })),
-    );
+    await pollStoreListingsFrequent().catch(logUnhandledRejection);
   });
 
   await boss.work("poll-store-listings-periodic", async () => {
-    const listings = await findPeriodicStoreListings();
-    logger.debug(`[Periodic] Updating ${listings.length} store listings`);
-
-    await boss.insert(
-      listings.map((listing) => ({
-        name: "poll-store-listing",
-        data: { storeListingId: listing.id },
-        singletonKey: listing.id.toString(),
-        expireInSeconds: 3 * 60 * 60,
-      })),
-    );
+    await pollStoreListingsPeriodic().catch(logUnhandledRejection);
   });
 
   await boss.work(
@@ -74,7 +67,7 @@ async function main() {
     async (job: Job<{ storeListingId: number }>) => {
       const { storeListingId } = job.data;
 
-      await pollStoreListing(storeListingId);
+      await pollStoreListing(storeListingId).catch(logUnhandledRejection);
     },
   );
 
@@ -89,62 +82,12 @@ async function main() {
     async (job: Job<{ externalListingId: string; store: Store }>) => {
       const { externalListingId, store } = job.data;
 
-      await insertStoreListing(externalListingId, store);
-      logger.info(`Inserted ${externalListingId} for ${store.name}`);
+      await insertListing(externalListingId, store).catch(logUnhandledRejection);
     },
   );
 
   await boss.work("update-store-listings", async () => {
-    const stores = await findStores();
-    logger.debug(`Updating listings for ${stores.length} stores`);
-
-    for (const store of stores) {
-      const adapter = getAdapter(store.handle);
-
-      if (!adapter) {
-        console.error(`No adapter found for ${store.handle}`);
-        continue;
-      }
-
-      const limit = process.env.NODE_ENV === "production" ? undefined : 10;
-      const listingIds = await adapter.getListingIds(limit);
-      if (listingIds.size === 0) {
-        console.warn(`No products found for ${store.handle}`);
-        continue;
-      }
-
-      const existingListings = await findStoreListingsFromExternalIds({
-        storeId: store.id,
-        externalListingIds: Array.from(listingIds),
-      });
-
-      const newExternalListingIds = new Set(listingIds);
-      const reactivatedListingIds: number[] = [];
-      existingListings.forEach((listing) => {
-        if (!listing.active) {
-          reactivatedListingIds.push(listing.id);
-        }
-        newExternalListingIds.delete(listing.externalListingId);
-      });
-
-      logger.info(
-        `Inserting ${newExternalListingIds.size} listings and reactivating ${reactivatedListingIds.length} listings for ${store.handle}`,
-      );
-
-      await updateStoreListings({
-        listingIds: reactivatedListingIds,
-        active: true,
-      });
-
-      await boss.insert(
-        Array.from(newExternalListingIds).map((externalListingId) => ({
-          name: "insert-store-listing",
-          data: { externalListingId, store },
-          singletonKey: `${store.handle}:${externalListingId}`,
-          expireInSeconds: 3 * 60 * 60,
-        })),
-      );
-    }
+    await updateStores().catch(logUnhandledRejection);
   });
 }
 
