@@ -1,0 +1,21 @@
+{
+  "name": "@awardrobe/logger",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "dependencies": {
+    "@logsnag/node": "^1.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@awardrobe/tsconfig": "workspace:^",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

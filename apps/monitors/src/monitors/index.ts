@@ -11,6 +11,7 @@ import {
   Price,
   Store,
 } from "@awardrobe/db";
+import { logger, logsnag } from "@awardrobe/logger";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
 
@@ -37,10 +38,22 @@ export async function insertStoreListing(externalListingId: string, store: Store
   const details = await adapter.getListingDetails(externalListingId).catch(async (error) => {
     if (error instanceof AdaptersError) {
       if (error.name === "PRODUCT_NOT_FOUND") {
-        console.error(`Product ${externalListingId} not found`);
+        logger.error(`Product ${externalListingId} not found`);
         return null;
       } else if (error.name === "INVALID_RESPONSE") {
-        console.error(error);
+        logger.error(error);
+        logsnag.track({
+          channel: "errors",
+          event: "Invalid product details response",
+          description: `#${error.message}${error.cause ? `\n\`\`\`${JSON.stringify(error.cause)}\`\`\`` : ""}`,
+          tags: {
+            environment: process.env.NODE_ENV === "production" ? "production" : "development",
+            store: store.name,
+            listing_id: externalListingId,
+          },
+          parser: "markdown",
+          notify: true,
+        });
         return null;
       }
     }
@@ -123,8 +136,19 @@ export async function pollStoreListing(storeListingId: number) {
           await handleDelistedListing({ listing });
           return null;
         } else if (error.name === "INVALID_RESPONSE") {
-          // TODO: log this better
-          console.error(error);
+          logger.error(error);
+          logsnag.track({
+            channel: "errors",
+            event: "Invalid product details response",
+            description: `#${error.message}${error.cause ? `\n\`\`\`${JSON.stringify(error.cause)}\`\`\`` : ""}`,
+            tags: {
+              environment: process.env.NODE_ENV === "production" ? "production" : "development",
+              store: listing.store.name,
+              listing_id: listing.id,
+            },
+            parser: "markdown",
+            notify: true,
+          });
           return null;
         }
       }
@@ -153,7 +177,7 @@ export async function pollStoreListing(storeListingId: number) {
 
     if (!product) {
       // TODO: create the product
-      console.error(`Product ${productDetails.productId} not found`);
+      logger.error(`Product ${productDetails.productId} not found`);
       continue;
     }
 
@@ -165,7 +189,7 @@ export async function pollStoreListing(storeListingId: number) {
       );
 
       if (!productVariantListing) {
-        console.log(
+        logger.info(
           `Creating new variant for ${product.name}: ${JSON.stringify(variantDetails.attributes)}`,
         );
 

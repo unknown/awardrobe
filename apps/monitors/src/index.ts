@@ -9,13 +9,14 @@ import {
   Store,
   updateStoreListings,
 } from "@awardrobe/db";
+import { logger } from "@awardrobe/logger";
 import { proxies } from "@awardrobe/proxies";
 
 import { insertStoreListing, pollStoreListing } from "./monitors";
 
 async function main() {
   const { numSuccesses, numFailures } = await proxies.testProxies();
-  console.log(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
+  logger.debug(`${numSuccesses} / ${numSuccesses + numFailures} proxies are working`);
 
   if (!process.env.PG_DATABASE_URL) {
     throw new Error("Missing PG_DATABASE_URL");
@@ -35,7 +36,7 @@ async function main() {
 
   await boss.work("poll-store-listings-frequent", async () => {
     const listings = await findFrequentStoreListings();
-    console.log(`[Frequent] Updating ${listings.length} store listings`);
+    logger.debug(`[Frequent] Updating ${listings.length} store listings`);
 
     await boss.insert(
       listings.map((listing) => ({
@@ -50,7 +51,7 @@ async function main() {
 
   await boss.work("poll-store-listings-periodic", async () => {
     const listings = await findPeriodicStoreListings();
-    console.log(`[Periodic] Updating ${listings.length} store listings`);
+    logger.debug(`[Periodic] Updating ${listings.length} store listings`);
 
     await boss.insert(
       listings.map((listing) => ({
@@ -89,13 +90,13 @@ async function main() {
       const { externalListingId, store } = job.data;
 
       await insertStoreListing(externalListingId, store);
-      console.log(`Inserted ${externalListingId} for ${store.name}`);
+      logger.info(`Inserted ${externalListingId} for ${store.name}`);
     },
   );
 
   await boss.work("update-store-listings", async () => {
     const stores = await findStores();
-    console.log(`Updating listings for ${stores.length} stores`);
+    logger.debug(`Updating listings for ${stores.length} stores`);
 
     for (const store of stores) {
       const adapter = getAdapter(store.handle);
@@ -126,7 +127,7 @@ async function main() {
         newExternalListingIds.delete(listing.externalListingId);
       });
 
-      console.log(
+      logger.info(
         `Inserting ${newExternalListingIds.size} listings and reactivating ${reactivatedListingIds.length} listings for ${store.handle}`,
       );
 
