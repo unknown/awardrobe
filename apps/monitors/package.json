@@ -18,10 +18,12 @@
     "@awardrobe/meilisearch-types": "workspace:^",
     "@awardrobe/proxies": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
+    "lodash.isequal": "^4.5.0",
     "pg-boss": "^9.0.3"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
+    "@types/lodash.isequal": "^4.5.8",
     "@types/node": "^20.11.0",
     "@types/node-cron": "^3.0.11",
     "dotenv-cli": "^7.3.0",
