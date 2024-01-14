@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@logsnag/node": "^1.0.1",
+    "@logtail/node": "^0.4.19",
+    "@logtail/winston": "^0.4.19",
     "winston": "^3.11.0"
   },
   "devDependencies": {
