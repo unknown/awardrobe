@@ -1,5 +1,5 @@
 import { auth } from "@awardrobe/auth";
-import { findFeedProducts, findFollowingProducts } from "@awardrobe/db";
+import { findFeaturedFeedProducts, findFollowingFeedProducts } from "@awardrobe/db";
 
 import { Page } from "@/app/(app)/(browse)/home/types";
 import { ProductList } from "@/components/product/list/ProductList";
@@ -15,11 +15,13 @@ export async function HomeProductList({ page }: HomeProductListProps) {
     return <p className="text-center">Sign in to see the products you follow.</p>;
   }
 
+  const limit = 24;
+
   const products =
     page === "Featured"
-      ? await findFeedProducts({ type: "featured", limit: 24 })
+      ? await findFeaturedFeedProducts({ limit })
       : session
-        ? await findFeedProducts({ type: "following", userId: session.user.id, limit: 24 })
+        ? await findFollowingFeedProducts({ userId: session.user.id })
         : [];
 
   return (

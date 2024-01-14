@@ -7,10 +7,7 @@ import { createLatestPrice } from "./price";
 import { findOrCreateProductVariant } from "./product-variant";
 import { prices } from "./schema/prices";
 import { productVariantListings } from "./schema/product-variant-listings";
-import {
-  ProductVariantListingWithLatestPrice,
-  ProductVariantListingWithPrices,
-} from "./schema/types";
+import { ProductVariantListingWithLatestPrice } from "./schema/types";
 
 export type CreateProductVariantListingOptions = {
   productId: number;
@@ -91,9 +88,7 @@ export type FindProductVariantListingsOptions = {
   pricesStartDate: Date;
 };
 
-export async function findProductVariantListings(
-  options: FindProductVariantListingsOptions,
-): Promise<ProductVariantListingWithPrices[]> {
+export async function findProductVariantListings(options: FindProductVariantListingsOptions) {
   const { productVariantId, pricesStartDate } = options;
 
   return db.query.productVariantListings.findMany({
