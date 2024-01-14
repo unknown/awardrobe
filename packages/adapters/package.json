@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "axios": "^1.6.5",
-    "node-html-parser": "^6.1.11",
+    "node-html-parser": "^6.1.12",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@awardrobe/proxied-axios": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
-    "@types/node": "^20.10.3",
+    "@types/node": "^20.11.0",
     "typescript": "^5.3.3"
   }
 }
