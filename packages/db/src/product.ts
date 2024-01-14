@@ -81,46 +81,46 @@ export function findListedProducts(): Promise<Product[]> {
   return db.query.products.findMany();
 }
 
-export type FindFeedProductsOptions = (
-  | {
-      type: "featured";
-    }
-  | { type: "following"; userId: string }
-) & {
+export type FindFeaturedFeedProductsOptions = {
   limit?: number;
 };
 
-export function findFeedProducts(options: FindFeedProductsOptions): Promise<ProductWithBrand[]> {
-  const { type, limit = 24 } = options;
+export function findFeaturedFeedProducts(options: FindFeaturedFeedProductsOptions) {
+  const { limit } = options;
 
-  // TODO: only return products that have at least one variant that is listed
-  switch (type) {
-    case "featured":
-      return db.query.products.findMany({
-        limit,
-        orderBy: (products) =>
-          desc(
-            db
-              .select({ count: count() })
-              .from(productNotifications)
-              .where(eq(productNotifications.productId, products.id)),
-          ),
-        with: { collection: { with: { brand: true } } },
-      });
-    case "following":
-      return db.query.products.findMany({
-        limit,
-        where: (products) =>
-          inArray(
-            products.id,
-            db
-              .selectDistinct({ productId: productNotifications.productId })
-              .from(productNotifications)
-              .where(eq(productNotifications.userId, options.userId)),
-          ),
-        with: { collection: { with: { brand: true } } },
-      });
-  }
+  return db.query.products.findMany({
+    limit,
+    orderBy: (products) =>
+      desc(
+        db
+          .select({ count: count() })
+          .from(productNotifications)
+          .where(eq(productNotifications.productId, products.id)),
+      ),
+    with: { collection: { with: { brand: true } } },
+  });
+}
+
+export type FindFollowingFeedProductsOptions = {
+  userId: string;
+  limit?: number;
+};
+
+export function findFollowingFeedProducts(options: FindFollowingFeedProductsOptions) {
+  const { userId, limit } = options;
+
+  return db.query.products.findMany({
+    limit,
+    where: (products) =>
+      inArray(
+        products.id,
+        db
+          .selectDistinct({ productId: productNotifications.productId })
+          .from(productNotifications)
+          .where(eq(productNotifications.userId, userId)),
+      ),
+    with: { collection: { with: { brand: true } } },
+  });
 }
 
 export type FindFollowingProductsOptions = {
