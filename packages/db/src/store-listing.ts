@@ -4,7 +4,7 @@ import { db } from "./db";
 import { productNotifications } from "./schema/product-notifications";
 import { productVariantListings } from "./schema/product-variant-listings";
 import { storeListings } from "./schema/store-listings";
-import { StoreListing, StoreListingWithStore } from "./schema/types";
+import { StoreListing } from "./schema/types";
 
 export type FindOrCreateStoreListingOptions = {
   externalListingId: string;
@@ -62,7 +62,7 @@ export async function findStoreListingsFromExternalIds(
   });
 }
 
-export async function findFrequentStoreListings(): Promise<StoreListingWithStore[]> {
+export async function findFrequentStoreListings(): Promise<StoreListing[]> {
   return db.query.storeListings.findMany({
     where: (storeListing) =>
       and(
@@ -82,12 +82,11 @@ export async function findFrequentStoreListings(): Promise<StoreListingWithStore
         ),
         eq(storeListing.active, true),
       ),
-    with: { store: true },
   });
 }
 
 // TODO: double check this query
-export async function findPeriodicStoreListings(): Promise<StoreListingWithStore[]> {
+export async function findPeriodicStoreListings(): Promise<StoreListing[]> {
   return db.query.storeListings.findMany({
     where: (storeListing) =>
       and(
@@ -107,8 +106,40 @@ export async function findPeriodicStoreListings(): Promise<StoreListingWithStore
         ),
         eq(storeListing.active, true),
       ),
-    with: { store: true },
   });
+}
+
+export type StoreListingPollData = NonNullable<
+  Awaited<
+    ReturnType<
+      typeof db.query.storeListings.findFirst<{
+        with: {
+          store: true;
+          productVariantListings: { with: { latestPrice: true; productVariant: true } };
+        };
+      }>
+    >
+  >
+>;
+
+export type FindStoreListingPollDataOptions = {
+  storeListingId: number;
+};
+
+export async function findStoreListingPollData(
+  options: FindStoreListingPollDataOptions,
+): Promise<StoreListingPollData | null> {
+  const { storeListingId } = options;
+
+  const storeListing = await db.query.storeListings.findFirst({
+    where: eq(storeListings.id, storeListingId),
+    with: {
+      store: true,
+      productVariantListings: { with: { latestPrice: true, productVariant: true } },
+    },
+  });
+
+  return storeListing ?? null;
 }
 
 export type UpdateStoreListingsOptions = {

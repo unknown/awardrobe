@@ -22,17 +22,8 @@ export type NotificationWithVariant = ProductNotification & {
   productVariant: ProductVariant;
 };
 
-export type StoreListingWithStore = StoreListing & {
-  store: Store;
-};
-
 export type ProductVariantListingWithLatestPrice = ProductVariantListing & {
   latestPrice: Price | null;
-};
-
-export type ProductVariantListingWithPrices = ProductVariantListing & {
-  prices: Price[];
-  storeListing: StoreListingWithStore;
 };
 
 export type ProductVariantWithProduct = ProductVariant & {

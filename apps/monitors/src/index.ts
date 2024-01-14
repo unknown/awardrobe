@@ -7,7 +7,6 @@ import {
   findStoreListingsFromExternalIds,
   findStores,
   Store,
-  StoreListingWithStore,
   updateStoreListings,
 } from "@awardrobe/db";
 import { proxies } from "@awardrobe/proxies";
@@ -41,7 +40,7 @@ async function main() {
     await boss.insert(
       listings.map((listing) => ({
         name: "poll-store-listing",
-        data: { listing },
+        data: { storeListingId: listing.id },
         singletonKey: listing.id.toString(),
         priority: 10,
         expireInSeconds: 3 * 60 * 60,
@@ -56,7 +55,7 @@ async function main() {
     await boss.insert(
       listings.map((listing) => ({
         name: "poll-store-listing",
-        data: { listing },
+        data: { storeListingId: listing.id },
         singletonKey: listing.id.toString(),
         expireInSeconds: 3 * 60 * 60,
       })),
@@ -71,10 +70,10 @@ async function main() {
       teamRefill: true,
       newJobCheckInterval: 500,
     },
-    async (job: Job<{ listing: StoreListingWithStore }>) => {
-      const { listing } = job.data;
+    async (job: Job<{ storeListingId: number }>) => {
+      const { storeListingId } = job.data;
 
-      await pollStoreListing(listing);
+      await pollStoreListing(storeListingId);
     },
   );
 

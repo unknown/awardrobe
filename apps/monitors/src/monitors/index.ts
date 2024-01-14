@@ -1,14 +1,15 @@
 import { AdaptersError, getAdapter, PriceDatum } from "@awardrobe/adapters";
 import {
   createProduct,
+  createProductVariantListing,
   findBrand,
   findOrCreateCollection,
   findOrCreateProductVariantListing,
   findOrCreateStoreListing,
   findProduct,
+  findStoreListingPollData,
   Price,
   Store,
-  StoreListingWithStore,
 } from "@awardrobe/db";
 import { addProductImage } from "@awardrobe/media-store";
 import { addProduct } from "@awardrobe/meilisearch-types";
@@ -102,7 +103,13 @@ export async function insertStoreListing(externalListingId: string, store: Store
   }
 }
 
-export async function pollStoreListing(listing: StoreListingWithStore) {
+export async function pollStoreListing(storeListingId: number) {
+  const listing = await findStoreListingPollData({ storeListingId });
+
+  if (!listing) {
+    throw new Error(`Failed to find listing ${storeListingId}`);
+  }
+
   const adapter = getAdapter(listing.store.handle);
   if (!adapter) {
     throw new Error(`No adapter found for ${listing.store.handle}`);
@@ -138,8 +145,7 @@ export async function pollStoreListing(listing: StoreListingWithStore) {
     brandId: brand.id,
   });
 
-  const allHandlers: Promise<void>[] = [];
-  details.products.forEach(async (productDetails) => {
+  for (const productDetails of details.products) {
     const product = await findProduct({
       collectionId: collection.id,
       externalProductId: productDetails.productId,
@@ -148,31 +154,42 @@ export async function pollStoreListing(listing: StoreListingWithStore) {
     if (!product) {
       // TODO: create the product
       console.error(`Product ${productDetails.productId} not found`);
-      return;
+      continue;
     }
 
-    productDetails.variants.forEach(async (variantDetails) => {
-      const productVariantListing = await findOrCreateProductVariantListing({
-        variantDetails,
-        productId: product.id,
-        storeListingId: listing.id,
-      });
+    for (const variantDetails of productDetails.variants) {
+      const productVariantListing = listing.productVariantListings.find(
+        (listing) =>
+          JSON.stringify(listing.productVariant.attributes) ===
+          JSON.stringify(variantDetails.attributes),
+      );
+
+      if (!productVariantListing) {
+        console.log(
+          `Creating new variant for ${product.name}: ${JSON.stringify(variantDetails.attributes)}`,
+        );
+
+        await createProductVariantListing({
+          productId: product.id,
+          storeListingId: listing.id,
+          variantDetails,
+        });
+
+        continue;
+      }
 
       const flags = getFlags(variantDetails.price, productVariantListing.latestPrice);
-
-      if (flags.isOutdated) {
-        allHandlers.push(handleOutdatedVariant({ variantDetails, productVariantListing }));
-      }
-      if (flags.hasPriceDropped) {
-        allHandlers.push(handlePriceDrop({ product, variantDetails, productVariantListing }));
-      }
-      if (flags.hasRestocked) {
-        allHandlers.push(handleRestock({ product, variantDetails, productVariantListing }));
-      }
-    });
-  });
-
-  await Promise.allSettled(allHandlers);
+      await Promise.all([
+        flags.isOutdated ? handleOutdatedVariant({ variantDetails, productVariantListing }) : null,
+        flags.hasPriceDropped
+          ? handlePriceDrop({ product, variantDetails, productVariantListing })
+          : null,
+        flags.hasRestocked
+          ? handleRestock({ product, variantDetails, productVariantListing })
+          : null,
+      ]);
+    }
+  }
 }
 
 function getFlags(price: PriceDatum, latestPrice: Price | null) {
