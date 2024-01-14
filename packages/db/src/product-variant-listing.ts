@@ -7,7 +7,7 @@ import { createLatestPrice } from "./price";
 import { findOrCreateProductVariant } from "./product-variant";
 import { prices } from "./schema/prices";
 import { productVariantListings } from "./schema/product-variant-listings";
-import { ProductVariantListingWithLatestPrice } from "./schema/types";
+import { ProductVariantListing } from "./schema/types";
 
 export type CreateProductVariantListingOptions = {
   productId: number;
@@ -17,7 +17,7 @@ export type CreateProductVariantListingOptions = {
 
 export async function createProductVariantListing(
   options: CreateProductVariantListingOptions,
-): Promise<ProductVariantListingWithLatestPrice> {
+): Promise<ProductVariantListing> {
   const { productId, storeListingId, variantDetails } = options;
 
   const productVariant = await findOrCreateProductVariant({
@@ -39,15 +39,12 @@ export async function createProductVariantListing(
     throw new Error("Could not create product variant listing");
   }
 
-  const latestPrice = await createLatestPrice({
+  await createLatestPrice({
     price: variantDetails.price,
     productVariantListingId: created.id,
   });
 
-  return {
-    ...created,
-    latestPrice,
-  };
+  return created;
 }
 
 export type FindOrCreateProductVariantListingOptions = {
@@ -58,7 +55,7 @@ export type FindOrCreateProductVariantListingOptions = {
 
 export async function findOrCreateProductVariantListing(
   options: FindOrCreateProductVariantListingOptions,
-): Promise<ProductVariantListingWithLatestPrice> {
+): Promise<ProductVariantListing> {
   const { productId, storeListingId, variantDetails } = options;
 
   const productVariant = await findOrCreateProductVariant({
@@ -71,9 +68,6 @@ export async function findOrCreateProductVariantListing(
       eq(productVariantListings.storeListingId, storeListingId),
       eq(productVariantListings.productVariantId, productVariant.id),
     ),
-    with: {
-      latestPrice: true,
-    },
   });
 
   if (productVariantListing) {

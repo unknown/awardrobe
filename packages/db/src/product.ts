@@ -6,7 +6,7 @@ import { db } from "./db";
 import { createProductVariants } from "./product-variant";
 import { productNotifications } from "./schema/product-notifications";
 import { products } from "./schema/products";
-import type { FullProduct, Product, ProductWithBrand, Public } from "./schema/types";
+import type { Product } from "./schema/types";
 import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductOptions = {

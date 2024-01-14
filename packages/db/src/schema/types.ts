@@ -22,31 +22,6 @@ export type NotificationWithVariant = ProductNotification & {
   productVariant: ProductVariant;
 };
 
-export type ProductVariantListingWithLatestPrice = ProductVariantListing & {
-  latestPrice: Price | null;
-};
-
-export type ProductVariantWithProduct = ProductVariant & {
-  product: Product;
-};
-
-export type ProductWithBrand = Product & {
-  collection: Collection & {
-    brand: Brand;
-  };
-};
-
-export type FullProduct = Product & {
-  variants: ProductVariant[];
-  collection: Collection & {
-    brand: Brand;
-  };
-};
-
-export type ProductVariantWithPrice = ProductVariant & {
-  latestPrice: Price | null;
-};
-
 export type PublicPrice = Omit<Price, "id" | "productVariantListingId">;
 export type PublicProductNotification = Omit<
   ProductNotification,
