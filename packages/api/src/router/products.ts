@@ -88,7 +88,7 @@ export const productsRouter = router({
 
           revalidatePath("/(app)/(browse)/search", "page");
 
-          await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
+          await Promise.all([addProductToSearchPromise, addImagePromise]);
         }
 
         const storeListing = await findOrCreateStoreListing({

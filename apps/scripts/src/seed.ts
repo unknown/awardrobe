@@ -88,7 +88,7 @@ async function addListing(storeId: number, listingId: string, details: ListingDe
         ? addProductImage(product.publicId, productDetails.imageUrl)
         : undefined;
 
-      await Promise.allSettled([addProductToSearchPromise, addImagePromise]);
+      await Promise.all([addProductToSearchPromise, addImagePromise]);
     }
 
     const storeListing = await findOrCreateStoreListing({
@@ -152,7 +152,7 @@ async function seedUniqloUS() {
 }
 
 async function seedStores() {
-  return Promise.allSettled(
+  return Promise.all(
     stores.map(async (store) => {
       const existingStore = await findStore({ storeHandle: store.handle });
 
@@ -167,7 +167,7 @@ async function seedStores() {
 }
 
 async function seedBrands() {
-  return Promise.allSettled(
+  return Promise.all(
     brands.map(async (brand) => {
       const existingBrand = await findBrand({ brandHandle: brand.handle });
 

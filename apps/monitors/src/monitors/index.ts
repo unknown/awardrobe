@@ -85,7 +85,7 @@ export async function insertStoreListing(externalListingId: string, store: Store
 
       const revalidatePromise = fetch(revalidateUrl.toString());
 
-      await Promise.allSettled([addProductToSearchPromise, addImagePromise, revalidatePromise]);
+      await Promise.all([addProductToSearchPromise, addImagePromise, revalidatePromise]);
     }
 
     const storeListing = await findOrCreateStoreListing({ externalListingId, storeId: store.id });
