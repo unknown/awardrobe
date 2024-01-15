@@ -16,15 +16,6 @@ export function Footer({ className }: FooterProps) {
           >
             dmo
           </a>
-          . Open source on{" "}
-          <a
-            className="underline underline-offset-4"
-            href="https://github.com/unknown/awardrobe"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
           .
         </p>
       </div>
