@@ -181,6 +181,7 @@ export const AbercrombieUS: StoreAdapter = {
 
         return {
           attributes,
+          variantId: item.shortSku,
           productUrl: getProductUrl(product, item),
           price: {
             timestamp,

@@ -100,6 +100,7 @@ export const LevisUS: StoreAdapter = {
       }
 
       return {
+        variantId: variant.upc,
         attributes: [{ name: "Color", value: colorName }, ...attributes],
         productUrl: `https://www.levi.com/US/en_US${url}`,
         price: {

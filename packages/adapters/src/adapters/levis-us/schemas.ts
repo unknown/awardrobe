@@ -24,6 +24,7 @@ const baseProductsSchema = z.object({
     z.object({
       comingSoon: z.boolean(),
       displaySizeDescription: z.string(),
+      upc: z.string(),
       url: z.string(),
       priceData: z.object({
         formattedValue: z.string(),
