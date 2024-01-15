@@ -11,16 +11,18 @@ import { generatePublicId } from "./utils/public-id";
 
 export type CreateProductVariantOptions = {
   productId: number;
+  externalProductVariantId: string;
   variantAttributes: VariantAttribute[];
 };
 
 export async function createProductVariant(
   options: CreateProductVariantOptions,
 ): Promise<ProductVariant> {
-  const { productId, variantAttributes } = options;
+  const { productId, externalProductVariantId, variantAttributes } = options;
 
   const productVariantsTable = await db.insert(productVariants).values({
     productId,
+    externalProductVariantId,
     publicId: generatePublicId(),
     attributes: variantAttributes,
   });
@@ -48,6 +50,7 @@ export async function createProductVariants(options: CreateProductVariantsOption
     variants.map((variantInfo) => ({
       productId,
       publicId: generatePublicId(),
+      externalProductVariantId: variantInfo.variantId,
       attributes: variantInfo.attributes,
       productUrl: variantInfo.productUrl,
     })),
@@ -68,18 +71,19 @@ export function findProductVariants(options: FindProductVariants): Promise<Produ
 
 export type FindOrCreateProductVariantOptions = {
   productId: number;
+  externalProductVariantId: string;
   variantAttributes: VariantAttribute[];
 };
 
 export async function findOrCreateProductVariant(
   options: FindOrCreateProductVariantOptions,
 ): Promise<ProductVariant> {
-  const { productId, variantAttributes } = options;
+  const { productId, externalProductVariantId } = options;
 
   const existing = await db.query.productVariants.findFirst({
     where: and(
       eq(productVariants.productId, productId),
-      sql`${productVariants.attributes} = cast(${JSON.stringify(variantAttributes)} as json)`,
+      eq(productVariants.externalProductVariantId, externalProductVariantId),
     ),
   });
 

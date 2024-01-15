@@ -13,6 +13,7 @@ export type VariantAttribute = {
 };
 
 export type VariantDetails = {
+  variantId: string;
   attributes: VariantAttribute[];
   productUrl: string;
   price: PriceDatum;

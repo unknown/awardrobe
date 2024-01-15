@@ -22,6 +22,7 @@ export async function createProductVariantListing(
 
   const productVariant = await findOrCreateProductVariant({
     productId,
+    externalProductVariantId: variantDetails.variantId,
     variantAttributes: variantDetails.attributes,
   });
 
@@ -60,6 +61,7 @@ export async function findOrCreateProductVariantListing(
 
   const productVariant = await findOrCreateProductVariant({
     productId,
+    externalProductVariantId: variantDetails.variantId,
     variantAttributes: variantDetails.attributes,
   });
 

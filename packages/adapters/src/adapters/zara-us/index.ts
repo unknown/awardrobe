@@ -83,6 +83,7 @@ export const ZaraUS: StoreAdapter = {
       const productUrl = `https://www.zara.com/us/en/${seo.keyword}-p${seo.seoProductId}.html?v1=${color.productId}`;
       return color.sizes.map((size) => ({
         productUrl,
+        variantId: size.sku.toString(),
         attributes: [
           { name: detail.colorSelectorLabel, value: `${color.id} ${color.name}` },
           { name: "Size", value: size.name },

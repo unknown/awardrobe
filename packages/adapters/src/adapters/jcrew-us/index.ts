@@ -90,6 +90,7 @@ export const JCrewUS: StoreAdapter = {
 
         return {
           attributes,
+          variantId: variant.product_id,
           productUrl: "", // TODO: implement
           price: {
             timestamp,

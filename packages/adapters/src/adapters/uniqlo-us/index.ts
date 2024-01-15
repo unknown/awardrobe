@@ -170,6 +170,7 @@ export const UniqloUS: StoreAdapter = {
 
       variants.push({
         attributes,
+        variantId: variant.l2Id,
         productUrl: getProductUrl(productId, { color, size, pld }),
         price: {
           timestamp,

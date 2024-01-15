@@ -5,6 +5,7 @@ import {
   int,
   mysqlTable,
   serial,
+  unique,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -30,11 +31,19 @@ export const productVariants = mysqlTable(
     id: serial("id").primaryKey(),
     publicId: varchar("publicId", { length: 12 }).notNull(),
     productId: int("productId").notNull(),
+    externalProductVariantId: varchar("externalProductVariantId", { length: 255 }).notNull(),
     attributes: attributesType("attributes").notNull(),
   },
   (productVariant) => ({
     publicIdIdx: uniqueIndex("publicIdIdx").on(productVariant.publicId),
     productIdIx: index("productIdIx").on(productVariant.productId),
+    externalProductVariantIdIdx: index("externalProductVariantIdIdx").on(
+      productVariant.externalProductVariantId,
+    ),
+    productIdExternalProductVariantIdUnq: unique("productIdExternalProductVariantIdUnq").on(
+      productVariant.productId,
+      productVariant.externalProductVariantId,
+    ),
   }),
 );
 
