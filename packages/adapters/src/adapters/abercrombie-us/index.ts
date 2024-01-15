@@ -14,10 +14,18 @@ function getProductUrl(product: Product, item: Item) {
 }
 
 function getImageUrl(product: Product) {
-  const imageId = product.imageSet.prod[0]?.id;
+  const prodImageId = product.imageSet["prod"]?.[0]?.id ?? null;
 
+  let imageId = prodImageId;
   if (!imageId) {
-    return null;
+    const fallbackKey = Object.keys(product.imageSet)[0];
+    if (!fallbackKey) {
+      return null;
+    }
+    imageId = product.imageSet[fallbackKey]?.[0]?.id ?? null;
+    if (!imageId) {
+      return null;
+    }
   }
 
   return `https://img.abercrombie.com/is/image/anf/${imageId}.jpg?policy=product-large`;

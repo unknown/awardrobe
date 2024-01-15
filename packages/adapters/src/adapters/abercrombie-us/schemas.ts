@@ -29,9 +29,7 @@ const productSchema = z.object({
   longDesc: z.string(),
   lowContractPrice: z.number().optional(),
   highContractPrice: z.number().optional(),
-  imageSet: z.object({
-    prod: z.array(z.object({ id: z.string() })),
-  }),
+  imageSet: z.record(z.array(z.object({ id: z.string() }))),
   items: z.array(itemSchema),
 });
 export type Product = z.infer<typeof productSchema>;
