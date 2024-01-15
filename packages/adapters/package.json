@@ -17,7 +17,7 @@
   "devDependencies": {
     "@awardrobe/proxied-axios": "workspace:^",
     "@awardrobe/tsconfig": "workspace:^",
-    "@types/node": "^20.11.0",
+    "@types/node": "^20.11.1",
     "typescript": "^5.3.3"
   }
 }
