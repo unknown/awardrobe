@@ -81,8 +81,8 @@ importers:
         version: 9.0.3
     devDependencies:
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       '@types/node-cron':
         specifier: ^3.0.11
         version: 3.0.11
@@ -121,8 +121,8 @@ importers:
         version: link:../../packages/tsconfig
     devDependencies:
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       dotenv-cli:
         specifier: ^7.3.0
         version: 7.3.0
@@ -275,8 +275,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       '@types/react':
         specifier: ^18.2.47
         version: 18.2.47
@@ -330,8 +330,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -373,8 +373,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -398,8 +398,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -429,8 +429,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       dotenv-cli:
         specifier: ^7.3.0
         version: 7.3.0
@@ -463,8 +463,8 @@ importers:
         specifier: ^0.4.4
         version: 0.4.4(tailwindcss@3.4.1)
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       '@types/react':
         specifier: ^18.2.47
         version: 18.2.47
@@ -491,8 +491,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -510,8 +510,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -529,8 +529,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       dotenv-cli:
         specifier: ^7.3.0
         version: 7.3.0
@@ -551,8 +551,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -573,8 +573,8 @@ importers:
         specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
-        specifier: ^20.11.0
-        version: 20.11.0
+        specifier: ^20.11.4
+        version: 20.11.4
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -3644,11 +3644,11 @@ packages:
   /@types/node-forge@1.3.11:
     resolution: {integrity: sha512-FQx220y22OKNTqaByeBGqHWYz4cl94tpcxeFdvBo3wjG6XPBuZ0BNgNZRV5J5TFmmcsJ4IzsLkmGRiQbnYsBEQ==}
     dependencies:
-      '@types/node': 20.11.0
+      '@types/node': 20.11.4
     dev: true
 
-  /@types/node@20.11.0:
-    resolution: {integrity: sha512-o9bjXmDNcF7GbM4CNQpmi+TutCgap/K3w1JyKgxAjqx41zp9qlIAVFi0IhCNsJcXolEqLWhbFbEeL0PvYm4pcQ==}
+  /@types/node@20.11.4:
+    resolution: {integrity: sha512-6I0fMH8Aoy2lOejL3s4LhyIYX34DPwY8bl5xlNjBvUEk8OHrcuzsFt+Ied4LvJihbtXPM+8zUqdydfIti86v9g==}
     dependencies:
       undici-types: 5.26.5
     dev: true

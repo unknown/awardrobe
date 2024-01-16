@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
-    "@types/node": "^20.11.0",
+    "@types/node": "^20.11.4",
     "dotenv-cli": "^7.3.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
