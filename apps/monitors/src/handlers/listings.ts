@@ -1,5 +1,3 @@
-import isEqual from "lodash.isequal";
-
 import { AdaptersError, getAdapter, PriceDatum, VariantDetails } from "@awardrobe/adapters";
 import {
   createLatestPrice,
@@ -129,8 +127,8 @@ export async function pollStoreListing(storeListingId: number) {
 
     const variantHandlers: Promise<void>[] = [];
     for (const variantDetails of productDetails.variants) {
-      const productVariantListing = listing.productVariantListings.find((listing) =>
-        isEqual(listing.productVariant.attributes, variantDetails.attributes),
+      const productVariantListing = listing.productVariantListings.find(
+        (listing) => listing.productVariant.externalProductVariantId === variantDetails.variantId,
       );
 
       if (!productVariantListing) {
