@@ -127,6 +127,7 @@ export async function pollStoreListing(storeListingId: number) {
       continue;
     }
 
+    const variantHandlers: Promise<void>[] = [];
     for (const variantDetails of productDetails.variants) {
       const productVariantListing = listing.productVariantListings.find((listing) =>
         isEqual(listing.productVariant.attributes, variantDetails.attributes),
@@ -147,16 +148,17 @@ export async function pollStoreListing(storeListingId: number) {
       }
 
       const flags = getFlags(variantDetails.price, productVariantListing.latestPrice);
-      await Promise.all([
-        flags.isOutdated ? handleOutdatedVariant(variantDetails, productVariantListing) : null,
-        flags.hasPriceDropped
-          ? handlePriceDrop(product, variantDetails, productVariantListing)
-          : null,
-        flags.hasRestocked
-          ? handleRestock({ product, variantDetails, productVariantListing })
-          : null,
-      ]);
+      if (flags.isOutdated) {
+        variantHandlers.push(handleOutdatedVariant(variantDetails, productVariantListing));
+      }
+      if (flags.hasPriceDropped) {
+        variantHandlers.push(handlePriceDrop(product, variantDetails, productVariantListing));
+      }
+      if (flags.hasRestocked) {
+        variantHandlers.push(handleRestock({ product, variantDetails, productVariantListing }));
+      }
     }
+    await Promise.all(variantHandlers);
   }
 }
 
