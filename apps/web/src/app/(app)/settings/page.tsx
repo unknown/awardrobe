@@ -20,6 +20,10 @@ export default async function ProfilePage() {
     <section className="container max-w-4xl space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
       <section className="space-y-2">
+        <h2 className="text-xl font-bold">Name</h2>
+        <div className="space-y-6">{session.user.name}</div>
+      </section>
+      <section className="space-y-2">
         <h2 className="text-xl font-bold">Email</h2>
         <div className="space-y-6">{session.user.email}</div>
       </section>

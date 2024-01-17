@@ -16,12 +16,16 @@ import { auth } from "@awardrobe/auth";
 
 export async function UserAccountNav() {
   const session = await auth();
-  return session ? <ProfileButton email={session.user.email ?? null} /> : <LoginButton />;
+  return session ? (
+    <ProfileButton name={session.user.name ?? session.user.email ?? null} />
+  ) : (
+    <LoginButton />
+  );
 }
 
-type ProfileButtonProps = { email: string | null };
+type ProfileButtonProps = { name: string | null };
 
-function ProfileButton({ email }: ProfileButtonProps) {
+function ProfileButton({ name }: ProfileButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -32,7 +36,7 @@ function ProfileButton({ email }: ProfileButtonProps) {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
-        {email ? <DropdownMenuLabel>{email}</DropdownMenuLabel> : null}
+        <DropdownMenuLabel>{name}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>

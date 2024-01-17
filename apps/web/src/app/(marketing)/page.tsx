@@ -1,7 +1,8 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@ui/Button";
+import { Button, buttonVariants } from "@ui/Button";
+import { twMerge } from "tailwind-merge";
 
 export default async function IndexPage() {
   return (
@@ -20,10 +21,11 @@ export default async function IndexPage() {
             </p>
           </div>
           <div className="space-x-4 pt-14">
-            <Link href="/home">
-              <Button size="lg" className="h-12 px-8 text-sm sm:text-base">
-                Get started
-              </Button>
+            <Link
+              href="/home"
+              className={twMerge(buttonVariants({ size: "lg" }), "h-12 px-8 text-sm sm:text-base")}
+            >
+              Get started
             </Link>
           </div>
           <div className="pt-12 md:pt-20 lg:pt-44">
