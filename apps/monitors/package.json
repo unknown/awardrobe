@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
-    "@types/node": "^20.11.0",
+    "@types/node": "^20.11.5",
     "@types/node-cron": "^3.0.11",
     "dotenv-cli": "^7.3.0",
     "tsup": "^8.0.1",
