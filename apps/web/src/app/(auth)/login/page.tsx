@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge";
 
 import { auth } from "@awardrobe/auth";
 
-import { LoginForm } from "@/components/LoginForm";
+import { LoginButton } from "@/components/LoginButton";
 
 export default async function LoginPage() {
   const session = await auth();
@@ -25,13 +25,10 @@ export default async function LoginPage() {
       >
         Back
       </Link>
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-2xl font-semibold">Log In</h1>
-          <p className="text-muted-foreground text-sm">
-            Enter your email to sign in to your account
-          </p>
-          <LoginForm />
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[360px]">
+        <div className="flex flex-col gap-6">
+          <h1 className="text-2xl font-semibold">Awardrobe</h1>
+          <LoginButton className="text-md h-12 font-medium" />
         </div>
       </div>
     </div>

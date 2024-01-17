@@ -1,10 +1,9 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth from "next-auth";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
-import EmailProvider from "next-auth/providers/email";
+import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "@awardrobe/db";
-import { resend, SignInEmail } from "@awardrobe/emails";
 
 export type { Session } from "next-auth";
 
@@ -20,16 +19,10 @@ export const config = {
   adapter: DrizzleAdapter(db),
   pages: { signIn: "/login" },
   providers: [
-    EmailProvider({
-      sendVerificationRequest: async ({ identifier, url }) => {
-        await resend.emails.send({
-          to: [identifier],
-          from: "Awardrobe <notifications@getawardrobe.com>",
-          subject: "Sign in to Awardrobe",
-          react: SignInEmail({ url }),
-        });
-      },
-    }),
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET
+  })
   ],
   callbacks: {
     session({ session, user }) {
