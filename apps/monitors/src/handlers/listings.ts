@@ -120,8 +120,27 @@ export async function pollStoreListing(storeListingId: number) {
     });
 
     if (!product) {
-      // TODO: create the product
-      logger.error(`Product ${productDetails.productId} not found`);
+      const product = await createProduct({
+        productDetails,
+        collectionId: collection.id,
+      });
+
+      const addProductToSearchPromise = addProduct({
+        id: product.publicId,
+        name: product.name,
+        brand: brand.name,
+      });
+
+      const addImagePromise = productDetails.imageUrl
+        ? addProductImage(product.publicId, productDetails.imageUrl)
+        : undefined;
+
+      const revalidatePromise = fetch(revalidateUrl.toString());
+
+      await Promise.all([addProductToSearchPromise, addImagePromise, revalidatePromise]);
+
+      logger.info(`Created new product for ${brand.name}: ${productDetails.productId}`);
+
       continue;
     }
 
@@ -132,15 +151,15 @@ export async function pollStoreListing(storeListingId: number) {
       );
 
       if (!productVariantListing) {
-        logger.info(
-          `Creating new variant for ${product.name}: ${JSON.stringify(variantDetails.attributes)}`,
-        );
-
         await createProductVariantListing({
           productId: product.id,
           storeListingId: listing.id,
           variantDetails,
         });
+
+        logger.info(
+          `Created new variant for ${product.name}: ${JSON.stringify(variantDetails.attributes)}`,
+        );
 
         continue;
       }
