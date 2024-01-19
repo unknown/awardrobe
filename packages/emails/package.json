@@ -11,10 +11,10 @@
     "emails:preview": "email preview ./src/emails --port 3001"
   },
   "dependencies": {
-    "@react-email/components": "0.0.12",
+    "@react-email/components": "0.0.14",
     "react": "^18.2.0",
-    "react-email": "^1.10.0",
-    "resend": "^2.1.0"
+    "react-email": "^1.10.1",
+    "resend": "^3.0.0"
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",

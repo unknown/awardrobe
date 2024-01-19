@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@awardrobe/adapters": "workspace:^",
-    "@planetscale/database": "^1.13.0",
+    "@planetscale/database": "^1.14.0",
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.29.3",
-    "mysql2": "^3.7.0",
+    "mysql2": "^3.7.1",
     "nanoid": "^3.3.7"
   },
   "devDependencies": {
