@@ -4,6 +4,7 @@ import {
   int,
   mysqlTable,
   serial,
+  text,
   unique,
   uniqueIndex,
   varchar,
@@ -21,6 +22,7 @@ export const products = mysqlTable(
     collectionId: int("collectionId").notNull(),
     externalProductId: varchar("externalProductId", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
   },
   (product) => ({
     publicIdIdx: uniqueIndex("publicIdIdx").on(product.publicId),

@@ -19,9 +19,10 @@ export async function createProduct(options: CreateProductOptions): Promise<Prod
 
   const productTable = await db.insert(products).values({
     collectionId,
-    name: productDetails.name,
-    externalProductId: productDetails.productId,
     publicId: generatePublicId(),
+    externalProductId: productDetails.productId,
+    name: productDetails.name,
+    description: productDetails.description,
   });
 
   const product = await db.query.products.findFirst({
