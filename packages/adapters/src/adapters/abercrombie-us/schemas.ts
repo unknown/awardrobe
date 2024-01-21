@@ -24,7 +24,7 @@ export type Item = z.infer<typeof itemSchema>;
 const productSchema = z.object({
   productId: z.string(),
   collection: z.string(),
-  productSeoToken: z.string(),
+  productSeoToken: z.string().optional(),
   name: z.string(),
   longDesc: z.string(),
   lowContractPrice: z.number().optional(),

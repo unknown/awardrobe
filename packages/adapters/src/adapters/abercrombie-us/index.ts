@@ -8,7 +8,17 @@ import { ProductDetails, StoreAdapter, VariantAttribute, VariantDetails } from "
 import { collectionSchema, Item, Product, searchSchema } from "./schemas";
 
 function getProductUrl(product: Product, item: Item) {
-  const productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
+  let productUrl: URL;
+  if (product.productSeoToken) {
+    productUrl = new URL(`https://www.abercrombie.com/shop/us/${product.productSeoToken}`);
+  } else {
+    productUrl = new URL(`https://www.abercrombie.com/shop/ProductDisplay`);
+    productUrl.searchParams.set("catalogId", "10901");
+    productUrl.searchParams.set("productId", product.productId);
+    productUrl.searchParams.set("storeId", "10051");
+    productUrl.searchParams.set("langId", "-1");
+    productUrl.searchParams.set("collectionId", product.collection);
+  }
   productUrl.searchParams.set("seq", item.swatchSequence);
   return productUrl.toString();
 }
