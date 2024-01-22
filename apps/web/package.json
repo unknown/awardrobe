@@ -35,7 +35,7 @@
     "@trpc/react-query": "next",
     "@trpc/server": "next",
     "@vercel/analytics": "^1.1.2",
-    "@vercel/speed-insights": "^1.0.5",
+    "@vercel/speed-insights": "^1.0.6",
     "@visx/axis": "^3.5.0",
     "@visx/curve": "^3.3.0",
     "@visx/event": "^3.3.0",
