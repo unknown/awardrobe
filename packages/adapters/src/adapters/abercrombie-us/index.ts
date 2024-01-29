@@ -77,6 +77,10 @@ export const AbercrombieUS: StoreAdapter = {
       }
     }
 
+    // invalid collection ids
+    listingIds.delete("GIFTCARD");
+    listingIds.delete("EGIFTCARD");
+
     return listingIds;
   },
 
