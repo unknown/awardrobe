@@ -62,7 +62,7 @@
     "@types/d3-array": "^3.2.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.11.8",
-    "@types/react": "^18.2.48",
+    "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.17",
     "dotenv-cli": "^7.3.0",
