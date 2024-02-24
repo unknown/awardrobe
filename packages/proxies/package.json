@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@awardrobe/tsconfig": "workspace:^",
-    "@types/node": "^20.11.8",
+    "@types/node": "^20.11.20",
     "typescript": "^5.3.3"
   }
 }
